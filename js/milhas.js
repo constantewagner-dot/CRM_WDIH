@@ -1,138 +1,157 @@
 /* ============================================================
-   milhas.js — Gestão de Milhas
-   (Planos: Gestão Mensal, Consultoria Premium, Plano de Indicação)
+   milhas.js — Módulo de Milhas
    ============================================================ */
 
 const MilhasModule = {
     init() {
         this.render();
-        document.getElementById('btn-nova-milha').addEventListener('click', () => this.abrirModal());
     },
-    refresh() { this.render(); },
 
     render() {
+        const list = document.getElementById('milhas-list');
+        if (!list) return;
+
         const milhas = DB.getMilhas();
-        const clientes = DB.getClientes();
-        const tbody = document.getElementById('milhas-tbody');
-        const empty = document.getElementById('milhas-empty');
-        if (!tbody) return;
-
-        if (!milhas.length) {
-            tbody.innerHTML = '';
-            if (empty) empty.style.display = 'block';
-            return;
-        }
-        if (empty) empty.style.display = 'none';
-
-        tbody.innerHTML = milhas.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm)).map(m => {
-            const cliente = clientes.find(c => c.id === m.clienteId);
-            return `
-                <tr>
-                    <td><strong>${cliente ? cliente.nome : '—'}</strong></td>
-                    <td><span class="badge badge-plano">${m.tipoPlano || '—'}</span></td>
-                    <td>${m.objetivo || '—'}</td>
-                    <td>${this.fmtData(m.dataFechamento)}</td>
-                    <td>${this.fmtData(m.dataApresentacaoDiagnostico)}</td>
-                    <td>${this.fmtData(m.dataApresentacaoPlano)}</td>
-                    <td>${this.fmtData(m.dataApresentacaoRelatorio)}</td>
-                    <td>${this.statusBadge(m.status)}</td>
-                    <td class="venda-actions">
-                        <button class="btn-sm btn-sm-primary" onclick="MilhasModule.abrirModal('${m.id}')" title="Editar">✏️</button>
-                        <button class="btn-sm btn-sm-danger" onclick="MilhasModule.excluir('${m.id}')" title="Excluir">🗑️</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        list.innerHTML = milhas.length
+            ? `
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Programa</th>
+                        <th>Quantidade</th>
+                        <th>Valor</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${milhas.map(m => `
+                        <tr>
+                            <td>${m.cliente || '—'}</td>
+                            <td>${m.programa || '—'}</td>
+                            <td>${(m.quantidade || 0).toLocaleString('pt-BR')}</td>
+                            <td>${AppModule.formatCurrency(m.valor)}</td>
+                            <td>${m.data || '—'}</td>
+                            <td>
+                                <button class="btn-icon" onclick="MilhasModule.editarRegistro('${m.id}')">✏️</button>
+                                <button class="btn-icon" onclick="MilhasModule.excluirRegistro('${m.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`
+            : '<p style="color:var(--gray-500);">Nenhum registro de milhas</p>';
     },
 
-    statusBadge(status) {
-        const map = {
-            'Em andamento': 'badge-info',
-            'Concluído': 'badge-success',
-            'Cancelado': 'badge-danger'
-        };
-        return `<span class="badge ${map[status] || 'badge-info'}">${status || 'Em andamento'}</span>`;
-    },
-
-    fmtData(d) {
-        if (!d) return '—';
-        return new Date(d.includes('T') ? d : d + 'T00:00:00').toLocaleDateString('pt-BR');
-    },
-
-    abrirModal(milhaId) {
-        const milha = milhaId ? DB.getMilhas().find(m => m.id === milhaId) : null;
-        const clientes = DB.getClientes();
-        const planos = DB.getPlanosMilhas();
-
-        const optionsClientes = clientes.map(c => `<option value="${c.id}" ${milha && milha.clienteId === c.id ? 'selected' : ''}>${c.nome}</option>`).join('');
-        const optionsPlanos = planos.map(p => `<option value="${p}" ${milha && milha.tipoPlano === p ? 'selected' : ''}>${p}</option>`).join('');
-
-        const status = milha ? milha.status : 'Em andamento';
-
-        const html = `
-            <form id="form-milha" onsubmit="MilhasModule.salvar(event, '${milhaId || ''}')">
-                <div class="form-row">
-                    <div class="form-group"><label>Cliente</label><select id="m-cliente"><option value="">Selecione...</option>${optionsClientes}</select></div>
-                    <div class="form-group"><label>💎 Tipo de Plano</label><select id="m-plano">${optionsPlanos}</select></div>
-                </div>
-                <div class="form-group"><label>🎯 Objetivo Definido</label><textarea id="m-objetivo" rows="2">${milha ? milha.objetivo || '' : ''}</textarea></div>
-                <div class="form-group"><label>🔍 Diagnóstico do Cliente</label><textarea id="m-diagnostico" rows="3">${milha ? milha.diagnostico || '' : ''}</textarea></div>
-                <div class="form-row">
-                    <div class="form-group"><label>📅 Data de Fechamento</label><input type="date" id="m-data-fechamento" value="${milha ? milha.dataFechamento || '' : ''}"></div>
-                    <div class="form-group"><label>📊 Apresentação do Diagnóstico</label><input type="date" id="m-data-diagnostico" value="${milha ? milha.dataApresentacaoDiagnostico || '' : ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>📋 Apresentação dos Planos</label><input type="date" id="m-data-plano" value="${milha ? milha.dataApresentacaoPlano || '' : ''}"></div>
-                    <div class="form-group"><label>📑 Relatório para o Cliente</label><input type="date" id="m-data-relatorio" value="${milha ? milha.dataApresentacaoRelatorio || '' : ''}"></div>
-                </div>
-                <div class="form-group"><label>Status</label><select id="m-status"><option ${status === 'Em andamento' ? 'selected' : ''}>Em andamento</option><option ${status === 'Concluído' ? 'selected' : ''}>Concluído</option><option ${status === 'Cancelado' ? 'selected' : ''}>Cancelado</option></select></div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="AppModule.fecharModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">💾 Salvar</button>
-                </div>
-            </form>
+    novoRegistro() {
+        const body = `
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="mlh-cliente" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Programa</label>
+                <select id="mlh-programa" class="form-control">
+                    ${DB.getProgramas().map(p => `<option>${p}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="mlh-quantidade" class="form-control" step="1">
+            </div>
+            <div class="form-group">
+                <label>Valor</label>
+                <input type="number" id="mlh-valor" class="form-control" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="mlh-data" class="form-control">
+            </div>
         `;
-        AppModule.abrirModal(milha ? 'Editar Card de Milhas' : 'Novo Card de Milhas', html);
+
+        AppModule.openModal('Novo Registro de Milhas', body, `
+            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="MilhasModule.salvarRegistro()">Salvar</button>
+        `);
     },
 
-    salvar(event, milhaId) {
-        event.preventDefault();
-
-        const dados = {
-            id: milhaId || DB.gerarId('milha'),
-            clienteId: document.getElementById('m-cliente').value || null,
-            tipoPlano: document.getElementById('m-plano').value,
-            objetivo: document.getElementById('m-objetivo').value.trim(),
-            diagnostico: document.getElementById('m-diagnostico').value.trim(),
-            dataFechamento: document.getElementById('m-data-fechamento').value,
-            dataApresentacaoDiagnostico: document.getElementById('m-data-diagnostico').value,
-            dataApresentacaoPlano: document.getElementById('m-data-plano').value,
-            dataApresentacaoRelatorio: document.getElementById('m-data-relatorio').value,
-            status: document.getElementById('m-status').value
+    salvarRegistro() {
+        const registro = {
+            id: AppModule.generateId(),
+            cliente: document.getElementById('mlh-cliente').value,
+            programa: document.getElementById('mlh-programa').value,
+            quantidade: parseInt(document.getElementById('mlh-quantidade').value) || 0,
+            valor: parseFloat(document.getElementById('mlh-valor').value) || 0,
+            data: document.getElementById('mlh-data').value
         };
 
-        if (milhaId) {
-            const existente = DB.getMilhas().find(m => m.id === milhaId);
-            if (existente) {
-                Object.assign(existente, dados);
-                DB.saveMilha(existente);
-            }
-        } else {
-            dados.titulo = 'Gestão de Milhas';
-            dados.criadoEm = new Date().toISOString();
-            DB.saveMilha(dados);
-            DB.logAtividade('milhas', `Card de Gestão de Milhas criado manualmente`);
-        }
-
-        AppModule.fecharModal();
+        DB.saveMilha(registro);
+        AppModule.closeModal();
+        AppModule.showToast('Registro salvo!', 'success');
         this.render();
-        AppModule.showToast('Card de Milhas salvo!', 'success');
+        AppModule.updateDashboard();
     },
 
-    excluir(id) {
-        if (!confirm('Excluir este card de gestão de milhas?')) return;
-        DB.deleteMilha(id);
+    editarRegistro(id) {
+        const milhas = DB.getMilhas();
+        const m = milhas.find(x => x.id === id);
+        if (!m) return;
+
+        const body = `
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="mlh-cliente" class="form-control" value="${m.cliente || ''}">
+            </div>
+            <div class="form-group">
+                <label>Programa</label>
+                <select id="mlh-programa" class="form-control">
+                    ${DB.getProgramas().map(p => `<option ${p === m.programa ? 'selected' : ''}>${p}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="mlh-quantidade" class="form-control" step="1" value="${m.quantidade || 0}">
+            </div>
+            <div class="form-group">
+                <label>Valor</label>
+                <input type="number" id="mlh-valor" class="form-control" step="0.01" value="${m.valor || 0}">
+            </div>
+            <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="mlh-data" class="form-control" value="${m.data || ''}">
+            </div>
+        `;
+
+        AppModule.openModal('Editar Registro', body, `
+            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="MilhasModule.atualizarRegistro('${id}')">Atualizar</button>
+        `);
+    },
+
+    atualizarRegistro(id) {
+        const milhas = DB.getMilhas();
+        const m = milhas.find(x => x.id === id);
+        if (!m) return;
+
+        m.cliente = document.getElementById('mlh-cliente').value;
+        m.programa = document.getElementById('mlh-programa').value;
+        m.quantidade = parseInt(document.getElementById('mlh-quantidade').value) || 0;
+        m.valor = parseFloat(document.getElementById('mlh-valor').value) || 0;
+        m.data = document.getElementById('mlh-data').value;
+
+        DB.saveMilha(m);
+        AppModule.closeModal();
+        AppModule.showToast('Registro atualizado!', 'success');
         this.render();
-        AppModule.showToast('Card excluído', 'info');
+        AppModule.updateDashboard();
+    },
+
+    excluirRegistro(id) {
+        if (!confirm('Excluir este registro?')) return;
+        DB.deleteMilha(id);
+        AppModule.showToast('Registro excluído.', 'danger');
+        this.render();
+        AppModule.updateDashboard();
     }
 };

@@ -6,6 +6,7 @@ const AppModule = {
     init() {
         this.setupNavigation();
         this.setupSidebar();
+        this.setupModal();
         this.updateDashboard();
     },
 
@@ -22,11 +23,13 @@ const AppModule = {
     navigateTo(page) {
         // Atualiza nav
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+        const navItem = document.querySelector(`[data-page="${page}"]`);
+        if (navItem) navItem.classList.add('active');
 
         // Atualiza páginas
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(`page-${page}`)?.classList.add('active');
+        const pageEl = document.getElementById(`page-${page}`);
+        if (pageEl) pageEl.classList.add('active');
 
         // Atualiza título
         const titles = {
@@ -39,21 +42,39 @@ const AppModule = {
             clientes: 'Clientes',
             config: 'Configurações'
         };
-        document.getElementById('page-title').textContent = titles[page] || page;
+        const titleEl = document.getElementById('page-title');
+        if (titleEl) titleEl.textContent = titles[page] || page;
 
         // Atualiza conteúdo
-        if (page === 'dashboard') this.updateDashboard();
-        if (page === 'pipeline') PipelineModule.render();
-        if (page === 'vendas') VendasModule.render();
-        if (page === 'checkin') CheckinModule.render();
-        if (page === 'milhas') MilhasModule.render();
-        if (page === 'comissoes') ComissoesModule.render();
-        if (page === 'clientes') ClientesModule.render();
+        try {
+            if (page === 'dashboard') this.updateDashboard();
+            if (page === 'pipeline') PipelineModule.render();
+            if (page === 'vendas') VendasModule.render();
+            if (page === 'checkin') CheckinModule.render();
+            if (page === 'milhas') MilhasModule.render();
+            if (page === 'comissoes') ComissoesModule.render();
+            if (page === 'clientes') ClientesModule.render();
+        } catch (e) {
+            console.error(`Erro ao renderizar ${page}:`, e);
+        }
     },
 
     setupSidebar() {
-        document.getElementById('btn-toggle-sidebar')?.addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('collapsed');
+        const btn = document.getElementById('btn-toggle-sidebar');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) sidebar.classList.toggle('collapsed');
+            });
+        }
+    },
+
+    setupModal() {
+        const overlay = document.getElementById('modal-overlay');
+        if (!overlay) return;
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) this.closeModal();
         });
     },
 
@@ -63,31 +84,39 @@ const AppModule = {
         const checkins = DB.getCheckins();
         const milhas = DB.getMilhas();
 
-        document.getElementById('stat-negocios').textContent = negocios.length;
-        
+        const setText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+
+        setText('stat-negocios', negocios.length);
+
         const totalVendas = vendas.reduce((sum, v) => sum + (v.valor || 0), 0);
-        document.getElementById('stat-vendas').textContent = `R$ ${totalVendas.toLocaleString('pt-BR')}`;
-        
-        document.getElementById('stat-checkins').textContent = checkins.length;
-        
+        setText('stat-vendas', `R$ ${totalVendas.toLocaleString('pt-BR')}`);
+
+        setText('stat-checkins', checkins.length);
+
         const totalMilhas = milhas.reduce((sum, m) => sum + (m.quantidade || 0), 0);
-        document.getElementById('stat-milhas').textContent = totalMilhas.toLocaleString('pt-BR');
+        setText('stat-milhas', totalMilhas.toLocaleString('pt-BR'));
 
         // Últimos negócios
-        const ultimos = negocios.slice(-5).reverse();
         const el = document.getElementById('dashboard-negocios');
         if (el) {
-            el.innerHTML = ultimos.length ? ultimos.map(n => `
-                <div style="padding:8px 0;border-bottom:1px solid var(--gray-100);">
-                    <strong>${n.cliente || 'Sem nome'}</strong> - ${n.stage || 'Sem etapa'}
-                    <br><small style="color:var(--gray-500);">${n.servico || ''}</small>
-                </div>
-            `).join('') : '<p style="color:var(--gray-500);">Nenhum negócio cadastrado</p>';
+            const ultimos = negocios.slice(-5).reverse();
+            el.innerHTML = ultimos.length
+                ? ultimos.map(n => `
+                    <div style="padding:8px 0;border-bottom:1px solid var(--gray-100);">
+                        <strong>${n.cliente || 'Sem nome'}</strong> — ${n.stage || 'Sem etapa'}
+                        <br><small style="color:var(--gray-500);">${n.servico || ''}</small>
+                    </div>
+                `).join('')
+                : '<p style="color:var(--gray-500);">Nenhum negócio cadastrado</p>';
         }
     },
 
     showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
+        if (!container) return;
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
@@ -96,17 +125,24 @@ const AppModule = {
     },
 
     openModal(title, bodyHTML, footerHTML = '') {
+        const overlay = document.getElementById('modal-overlay');
+        if (!overlay) return;
         document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-body').innerHTML = bodyHTML;
         document.getElementById('modal-footer').innerHTML = footerHTML;
-        document.getElementById('modal-overlay').classList.add('active');
+        overlay.classList.add('active');
     },
 
     closeModal() {
-        document.getElementById('modal-overlay').classList.remove('active');
+        const overlay = document.getElementById('modal-overlay');
+        if (overlay) overlay.classList.remove('active');
     },
 
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    },
+
+    formatCurrency(value) {
+        return `R$ ${(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     }
 };
