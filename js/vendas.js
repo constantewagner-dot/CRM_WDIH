@@ -1,46 +1,59 @@
-/* ============================================================
-   vendas.js — Vendas (formato do backup: valorVenda, tipoVenda)
-   ============================================================ */
-
 const VendasModule = {
     init() { this.render(); },
 
-    render() {
-        const el = document.getElementById('vendas-list');
-        if (!el) return;
-        const vendas = DB.getVendas();
+    lucroDe(v) { return (Number(v.valorVenda) || 0) - (Number(v.valorOriginal) || 0); },
 
-        el.innerHTML = vendas.length ? `
-            <table class="table">
-                <thead><tr>
-                    <th>Cliente</th><th>Título</th><th>Serviço</th><th>Valor</th>
-                    <th>Tipo</th><th>Terceiro</th><th>Ações</th>
-                </tr></thead>
-                <tbody>${vendas.map(v => `
-                    <tr>
-                        <td>${DB.getClienteNome(v.clienteId)}</td>
-                        <td>${v.titulo || '—'}</td>
-                        <td>${v.servico || '—'}</td>
-                        <td><strong>${AppModule.formatCurrency(v.valorVenda)}</strong></td>
-                        <td>${v.tipoVenda === 'milhas_terceiros' ? 'Milhas (3ºs)' : (v.tipoVenda || '—')}</td>
-                        <td>${v.nomeTerceiro || '—'}</td>
-                        <td>
-                            <button class="btn-icon" onclick="VendasModule.editarVenda('${v.id}')">✏️</button>
-                            <button class="btn-icon btn-danger" onclick="VendasModule.excluirVenda('${v.id}')">🗑️</button>
-                        </td>
-                    </tr>`).join('')}
-                </tbody>
-            </table>` : '<p style="color:var(--gray-500);">Nenhuma venda registrada</p>';
+    render() {
+        const resumoEl = document.getElementById('vendas-resumo');
+        const listEl = document.getElementById('vendas-list');
+        const vendas = DB.getVendas();
+        const agencia = DB.getAgencia();
+        const pct = agencia.comissaoPercentual || 10;
+
+        const totalOriginal = vendas.reduce((s, v) => s + (Number(v.valorOriginal) || 0), 0);
+        const totalFinal = vendas.reduce((s, v) => s + (Number(v.valorVenda) || 0), 0);
+        const totalLucro = totalFinal - totalOriginal;
+        const totalComissao = totalFinal * (pct / 100);
+
+        if (resumoEl) {
+            resumoEl.innerHTML = `
+                <div class="mini-stat"><h4>Valor Original</h4><div class="valor">${AppModule.formatCurrency(totalOriginal)}</div></div>
+                <div class="mini-stat"><h4>Valor Final</h4><div class="valor">${AppModule.formatCurrency(totalFinal)}</div></div>
+                <div class="mini-stat"><h4>Lucro</h4><div class="valor ${totalLucro >= 0 ? 'lucro-pos' : 'lucro-neg'}">${AppModule.formatCurrency(totalLucro)}</div></div>
+                <div class="mini-stat"><h4>Comissões (${pct}%)</h4><div class="valor">${AppModule.formatCurrency(totalComissao)}</div></div>`;
+        }
+
+        if (listEl) {
+            listEl.innerHTML = vendas.length ? `
+                <div class="table-wrap"><table class="table">
+                    <thead><tr>
+                        <th>Cliente</th><th>Título</th><th>Serviço</th>
+                        <th>Valor Original</th><th>Valor Final</th><th>Lucro</th><th>Ações</th>
+                    </tr></thead>
+                    <tbody>${vendas.map(v => {
+                        const lucro = this.lucroDe(v);
+                        return `<tr>
+                            <td>${DB.getClienteNome(v.clienteId)}</td>
+                            <td>${v.titulo || '—'}</td>
+                            <td>${v.servico || '—'}</td>
+                            <td>${AppModule.formatCurrency(v.valorOriginal)}</td>
+                            <td><strong>${AppModule.formatCurrency(v.valorVenda)}</strong></td>
+                            <td class="${lucro >= 0 ? 'lucro-pos' : 'lucro-neg'}">${AppModule.formatCurrency(lucro)}</td>
+                            <td>
+                                <button class="btn-icon" onclick="VendasModule.editarVenda('${v.id}')">✏️</button>
+                                <button class="btn-icon btn-danger" onclick="VendasModule.excluirVenda('${v.id}')">🗑️</button>
+                            </td>
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                </table></div>` : '<p style="color:var(--gray-500);">Nenhuma venda registrada</p>';
+        }
     },
 
     novaVenda() {
-        const clientes = DB.getClientes();
         const body = `
             <div class="form-group"><label>Cliente</label>
-                <select id="vnd-clienteId" class="form-control">
-                    <option value="">— Selecione —</option>
-                    ${clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
-                </select>
+                <select id="vnd-clienteId" class="form-control">${DB.clienteOptions()}</select>
             </div>
             <div class="form-group"><label>Título</label><input type="text" id="vnd-titulo" class="form-control"></div>
             <div class="form-group"><label>Serviço</label>
@@ -48,7 +61,7 @@ const VendasModule = {
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Valor Original</label><input type="number" id="vnd-valorOriginal" class="form-control" step="0.01"></div>
-                <div class="form-group"><label>Valor da Venda</label><input type="number" id="vnd-valorVenda" class="form-control" step="0.01"></div>
+                <div class="form-group"><label>Valor Final</label><input type="number" id="vnd-valorVenda" class="form-control" step="0.01"></div>
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Tipo</label>
@@ -59,11 +72,6 @@ const VendasModule = {
                     </select>
                 </div>
                 <div class="form-group"><label>Nome do Terceiro</label><input type="text" id="vnd-nomeTerceiro" class="form-control"></div>
-            </div>
-            <div class="form-group"><label>Precisa de Check-in?</label>
-                <select id="vnd-necessidadeCheckin" class="form-control">
-                    <option value="nao">Não</option><option value="sim">Sim</option>
-                </select>
             </div>`;
 
         AppModule.openModal('Nova Venda', body, `
@@ -82,7 +90,6 @@ const VendasModule = {
             valorVenda: parseFloat(document.getElementById('vnd-valorVenda').value) || 0,
             tipoVenda: document.getElementById('vnd-tipoVenda').value,
             nomeTerceiro: document.getElementById('vnd-nomeTerceiro').value,
-            necessidadeCheckin: document.getElementById('vnd-necessidadeCheckin').value,
             novo: false,
             criadoEm: new Date().toISOString(),
             atualizadoEm: new Date().toISOString()
@@ -98,13 +105,9 @@ const VendasModule = {
     editarVenda(id) {
         const v = DB.getVendas().find(x => x.id === id);
         if (!v) return;
-        const clientes = DB.getClientes();
         const body = `
             <div class="form-group"><label>Cliente</label>
-                <select id="vnd-clienteId" class="form-control">
-                    <option value="">— Selecione —</option>
-                    ${clientes.map(c => `<option value="${c.id}" ${c.id === v.clienteId ? 'selected' : ''}>${c.nome}</option>`).join('')}
-                </select>
+                <select id="vnd-clienteId" class="form-control">${DB.clienteOptions(v.clienteId)}</select>
             </div>
             <div class="form-group"><label>Título</label><input type="text" id="vnd-titulo" class="form-control" value="${v.titulo || ''}"></div>
             <div class="form-group"><label>Serviço</label>
@@ -112,7 +115,7 @@ const VendasModule = {
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Valor Original</label><input type="number" id="vnd-valorOriginal" class="form-control" step="0.01" value="${v.valorOriginal || 0}"></div>
-                <div class="form-group"><label>Valor da Venda</label><input type="number" id="vnd-valorVenda" class="form-control" step="0.01" value="${v.valorVenda || 0}"></div>
+                <div class="form-group"><label>Valor Final</label><input type="number" id="vnd-valorVenda" class="form-control" step="0.01" value="${v.valorVenda || 0}"></div>
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Tipo</label>
@@ -121,12 +124,6 @@ const VendasModule = {
                     </select>
                 </div>
                 <div class="form-group"><label>Nome do Terceiro</label><input type="text" id="vnd-nomeTerceiro" class="form-control" value="${v.nomeTerceiro || ''}"></div>
-            </div>
-            <div class="form-group"><label>Precisa de Check-in?</label>
-                <select id="vnd-necessidadeCheckin" class="form-control">
-                    <option value="nao" ${v.necessidadeCheckin !== 'sim' ? 'selected' : ''}>Não</option>
-                    <option value="sim" ${v.necessidadeCheckin === 'sim' ? 'selected' : ''}>Sim</option>
-                </select>
             </div>`;
 
         AppModule.openModal('Editar Venda', body, `
@@ -144,7 +141,6 @@ const VendasModule = {
         v.valorVenda = parseFloat(document.getElementById('vnd-valorVenda').value) || 0;
         v.tipoVenda = document.getElementById('vnd-tipoVenda').value;
         v.nomeTerceiro = document.getElementById('vnd-nomeTerceiro').value;
-        v.necessidadeCheckin = document.getElementById('vnd-necessidadeCheckin').value;
         v.atualizadoEm = new Date().toISOString();
         DB.saveVenda(v);
         DB.addAtividade('venda', `Venda "${v.titulo}" atualizada`);

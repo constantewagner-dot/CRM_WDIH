@@ -1,17 +1,13 @@
-/* ============================================================
-   clientes.js — Clientes (formato do backup: cpf, status, notas)
-   ============================================================ */
-
 const ClientesModule = {
     init() { this.render(); },
 
     render() {
         const el = document.getElementById('clientes-list');
         if (!el) return;
-        const clientes = DB.getClientes();
+        const clientes = DB.getClientesOrdenados();
 
         el.innerHTML = clientes.length ? `
-            <table class="table">
+            <div class="table-wrap"><table class="table">
                 <thead><tr>
                     <th>Nome</th><th>Telefone</th><th>CPF</th><th>Status</th><th>Notas</th><th>Ações</th>
                 </tr></thead>
@@ -20,7 +16,7 @@ const ClientesModule = {
                         <td><strong>${c.nome || '—'}</strong><br><small style="color:var(--gray-500);">${c.email || ''}</small></td>
                         <td>${c.telefone || '—'}</td>
                         <td>${c.cpf || '—'}</td>
-                        <td><span class="badge badge-${(c.status || 'ativo').toLowerCase()}">${c.status || 'Ativo'}</span></td>
+                        <td><span class="badge ${c.status === 'Ativo' ? 'badge-ativo' : 'badge-inativo'}">${c.status || 'Ativo'}</span></td>
                         <td>${c.notas || '—'}</td>
                         <td>
                             <button class="btn-icon" onclick="ClientesModule.editarCliente('${c.id}')">✏️</button>
@@ -28,7 +24,7 @@ const ClientesModule = {
                         </td>
                     </tr>`).join('')}
                 </tbody>
-            </table>` : '<p style="color:var(--gray-500);">Nenhum cliente cadastrado</p>';
+            </table></div>` : '<p style="color:var(--gray-500);">Nenhum cliente cadastrado</p>';
     },
 
     novoCliente() {

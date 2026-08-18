@@ -1,7 +1,3 @@
-/* ============================================================
-   app.js — Módulo principal
-   ============================================================ */
-
 const AppModule = {
     init() {
         this.setupNavigation();
@@ -11,9 +7,9 @@ const AppModule = {
     },
 
     formatCurrency(value) {
-        return 'R$ ' + (Number(value) || 0).toLocaleString('pt-BR', {
-            minimumFractionDigits: 2, maximumFractionDigits: 2
-        });
+        const n = Number(value) || 0;
+        const abs = Math.abs(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return (n < 0 ? '-R$ ' : 'R$ ') + abs;
     },
 
     formatDate(iso) {
@@ -30,10 +26,7 @@ const AppModule = {
 
     setupNavigation() {
         document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.navigateTo(item.dataset.page);
-            });
+            item.addEventListener('click', (e) => { e.preventDefault(); this.navigateTo(item.dataset.page); });
         });
     },
 
@@ -48,8 +41,7 @@ const AppModule = {
 
         const titles = {
             dashboard: 'Dashboard', pipeline: 'Pipeline', vendas: 'Vendas',
-            viagens: 'Viagens', checkin: 'Check-in', milhas: 'Milhas',
-            comissoes: 'Comissões', clientes: 'Clientes', config: 'Configurações'
+            viagens: 'Viagens', milhas: 'Milhas', clientes: 'Clientes', config: 'Configurações'
         };
         const t = document.getElementById('page-title');
         if (t) t.textContent = titles[page] || page;
@@ -59,13 +51,9 @@ const AppModule = {
             if (page === 'pipeline') PipelineModule.render();
             if (page === 'vendas') VendasModule.render();
             if (page === 'viagens') ViagensModule.render();
-            if (page === 'checkin') CheckinModule.render();
             if (page === 'milhas') MilhasModule.render();
-            if (page === 'comissoes') ComissoesModule.render();
             if (page === 'clientes') ClientesModule.render();
-        } catch (e) {
-            console.error('Erro ao renderizar ' + page, e);
-        }
+        } catch (e) { console.error('Erro ao renderizar ' + page, e); }
     },
 
     setupSidebar() {
@@ -78,30 +66,23 @@ const AppModule = {
 
     setupModal() {
         const overlay = document.getElementById('modal-overlay');
-        if (overlay) overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) this.closeModal();
-        });
+        if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) this.closeModal(); });
     },
 
     updateDashboard() {
         const negocios = DB.getNegocios();
         const vendas = DB.getVendas();
         const clientes = DB.getClientes();
+        const viagens = DB.getViagens();
 
-        const ativos = negocios.filter(n =>
-            n.stage !== 'Fechado (Ganho)' && n.stage !== 'Perdido'
-        ).length;
-
+        const ativos = negocios.filter(n => n.stage !== 'Fechado (Ganho)' && n.stage !== 'Perdido').length;
         const totalVendas = vendas.reduce((s, v) => s + (Number(v.valorVenda) || 0), 0);
-
-        const checkinsPendentes = vendas.filter(v =>
-            v.necessidadeCheckin === 'sim' && !v.checkinRealizadoEm
-        ).length;
+        const viagensAtivas = viagens.filter(v => !(v.concluida === true || v.status === 'Concluída')).length;
 
         const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
         set('stat-negocios', ativos);
         set('stat-vendas', this.formatCurrency(totalVendas));
-        set('stat-checkins', checkinsPendentes);
+        set('stat-viagens', viagensAtivas);
         set('stat-clientes', clientes.length);
 
         const el = document.getElementById('dashboard-negocios');
@@ -110,8 +91,8 @@ const AppModule = {
             el.innerHTML = ultimos.length
                 ? ultimos.map(n => `
                     <div style="padding:8px 0;border-bottom:1px solid var(--gray-100);">
-                        <strong>${n.titulo || 'Sem título'}</strong> — ${n.stage || '—'}
-                        <br><small style="color:var(--gray-500);">${DB.getClienteNome(n.clienteId)} · ${n.servico || ''}</small>
+                        <strong>${DB.getClienteNome(n.clienteId)}</strong>
+                        <br><small style="color:var(--gray-500);">${n.titulo || '—'} · ${n.stage || '—'}</small>
                     </div>`).join('')
                 : '<p style="color:var(--gray-500);">Nenhum negócio cadastrado</p>';
         }
@@ -130,12 +111,9 @@ const AppModule = {
     openModal(title, bodyHTML, footerHTML = '') {
         const o = document.getElementById('modal-overlay');
         if (!o) return;
-        const t = document.getElementById('modal-title');
-        const b = document.getElementById('modal-body');
-        const f = document.getElementById('modal-footer');
-        if (t) t.textContent = title;
-        if (b) b.innerHTML = bodyHTML;
-        if (f) f.innerHTML = footerHTML;
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-body').innerHTML = bodyHTML;
+        document.getElementById('modal-footer').innerHTML = footerHTML;
         o.classList.add('active');
     },
 

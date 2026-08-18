@@ -14,9 +14,7 @@
             <a href="#" class="nav-item" data-page="pipeline">📋 Pipeline</a>
             <a href="#" class="nav-item" data-page="vendas">💰 Vendas</a>
             <a href="#" class="nav-item" data-page="viagens">✈️ Viagens</a>
-            <a href="#" class="nav-item" data-page="checkin">✅ Check-in</a>
             <a href="#" class="nav-item" data-page="milhas">💠 Milhas</a>
-            <a href="#" class="nav-item" data-page="comissoes">💵 Comissões</a>
             <a href="#" class="nav-item" data-page="clientes">👥 Clientes</a>
             <a href="#" class="nav-item" data-page="config">⚙️ Configurações</a>
         </nav>
@@ -34,7 +32,7 @@
                 <div class="dashboard-grid">
                     <div class="card stat-card"><h3>Negócios Ativos</h3><div class="stat-value" id="stat-negocios">0</div></div>
                     <div class="card stat-card"><h3>Vendas (R$)</h3><div class="stat-value" id="stat-vendas">R$ 0</div></div>
-                    <div class="card stat-card"><h3>Check-ins Pendentes</h3><div class="stat-value" id="stat-checkins">0</div></div>
+                    <div class="card stat-card"><h3>Viagens Ativas</h3><div class="stat-value" id="stat-viagens">0</div></div>
                     <div class="card stat-card"><h3>Clientes</h3><div class="stat-value" id="stat-clientes">0</div></div>
                 </div>
                 <div class="card" style="margin-top:20px;">
@@ -52,28 +50,25 @@
             </section>
 
             <section id="page-vendas" class="page">
-                <div class="page-header"><h2>Registro de Vendas</h2><button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button></div>
+                <div class="page-header">
+                    <h2>Vendas</h2>
+                    <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
+                </div>
+                <div class="stats-row" id="vendas-resumo"></div>
                 <div class="card"><div id="vendas-list"></div></div>
             </section>
 
             <section id="page-viagens" class="page">
-                <div class="page-header"><h2>Viagens</h2><button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button></div>
-                <div class="card"><div id="viagens-list"></div></div>
-            </section>
-
-            <section id="page-checkin" class="page">
-                <div class="page-header"><h2>Check-in de Vendas</h2></div>
-                <div class="card"><div id="checkin-list"></div></div>
+                <div class="page-header">
+                    <h2>Viagens</h2>
+                    <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
+                </div>
+                <div id="viagens-list"></div>
             </section>
 
             <section id="page-milhas" class="page">
                 <div class="page-header"><h2>Controle de Milhas</h2><button class="btn btn-primary" onclick="MilhasModule.novoRegistro()">+ Novo Registro</button></div>
                 <div class="card"><div id="milhas-list"></div></div>
-            </section>
-
-            <section id="page-comissoes" class="page">
-                <div class="page-header"><h2>Comissões</h2></div>
-                <div class="card"><div id="comissoes-list"></div></div>
             </section>
 
             <section id="page-clientes" class="page">
@@ -83,67 +78,69 @@
 
             <section id="page-config" class="page">
                 <div class="page-header"><h2>Configurações</h2></div>
-
-                <div class="card">
-                    <h3>Dados da Agência</h3>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
-                        <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
-                        <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
-                        <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
+                <div class="config-grid">
+                    <div class="card config-full">
+                        <h3>Dados da Agência</h3>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
+                            <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
+                            <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
+                            <div class="form-group"><label>Comissão padrão (%)</label><input type="number" id="cfg-agencia-comissao" class="form-control" step="0.1"></div>
+                        </div>
+                        <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()">Salvar</button>
                     </div>
-                    <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()">Salvar</button>
-                </div>
 
-                <div class="card">
-                    <h3>Etapas do Pipeline (arraste para reordenar)</h3>
-                    <div id="cfg-pipeline-list"></div>
-                    <div class="form-inline" style="margin-top:12px;">
-                        <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nome da nova etapa">
-                        <button class="btn btn-primary" onclick="ConfigModule.adicionarEtapa()">+ Adicionar</button>
+                    <div class="card">
+                        <h3>Etapas do Pipeline</h3>
+                        <div id="cfg-pipeline-list"></div>
+                        <div class="form-inline" style="margin-top:12px;">
+                            <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nova etapa">
+                            <button class="btn btn-primary" onclick="ConfigModule.adicionarEtapa()">+ Adicionar</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h3>Serviços</h3><div id="cfg-servicos-list"></div>
-                    <div class="form-inline" style="margin-top:12px;">
-                        <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Nome do serviço">
-                        <button class="btn btn-primary" onclick="ConfigModule.adicionarServico()">+ Adicionar</button>
+                    <div class="card">
+                        <h3>Serviços</h3><div id="cfg-servicos-list"></div>
+                        <div class="form-inline" style="margin-top:12px;">
+                            <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Novo serviço">
+                            <button class="btn btn-primary" onclick="ConfigModule.adicionarServico()">+ Adicionar</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h3>Companhias Aéreas</h3><div id="cfg-companhias-list"></div>
-                    <div class="form-inline" style="margin-top:12px;">
-                        <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nome da companhia">
-                        <button class="btn btn-primary" onclick="ConfigModule.adicionarCompanhia()">+ Adicionar</button>
+                    <div class="card">
+                        <h3>Companhias Aéreas</h3><div id="cfg-companhias-list"></div>
+                        <div class="form-inline" style="margin-top:12px;">
+                            <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nova companhia">
+                            <button class="btn btn-primary" onclick="ConfigModule.adicionarCompanhia()">+ Adicionar</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h3>Programas de Milhas</h3><div id="cfg-programas-list"></div>
-                    <div class="form-inline" style="margin-top:12px;">
-                        <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Nome do programa">
-                        <button class="btn btn-primary" onclick="ConfigModule.adicionarPrograma()">+ Adicionar</button>
+                    <div class="card">
+                        <h3>Programas de Milhas</h3><div id="cfg-programas-list"></div>
+                        <div class="form-inline" style="margin-top:12px;">
+                            <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Novo programa">
+                            <button class="btn btn-primary" onclick="ConfigModule.adicionarPrograma()">+ Adicionar</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h3>Cartões de Crédito</h3><div id="cfg-cartoes-list"></div>
-                    <div class="form-inline" style="margin-top:12px;">
-                        <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Nome do cartão">
-                        <button class="btn btn-primary" onclick="ConfigModule.adicionarCartao()">+ Adicionar</button>
+                    <div class="card">
+                        <h3>Cartões de Crédito</h3><div id="cfg-cartoes-list"></div>
+                        <div class="form-inline" style="margin-top:12px;">
+                            <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Novo cartão">
+                            <button class="btn btn-primary" onclick="ConfigModule.adicionarCartao()">+ Adicionar</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h3>Backup e Restauração</h3>
-                    <div class="btn-group">
-                        <button class="btn btn-secondary" id="btn-export-json">📥 Exportar JSON</button>
-                        <button class="btn btn-secondary" id="btn-export-csv">📊 Exportar CSV</button>
-                        <button class="btn btn-primary" id="btn-import-backup">📤 Importar Backup</button>
-                        <input type="file" id="import-file" accept=".json,application/json" style="display:none;">
-                        <button class="btn btn-danger" id="btn-reset-data">🗑️ Resetar Dados</button>
+                    <div class="card config-full">
+                        <h3>Backup e Restauração</h3>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" id="btn-export-json">📥 Exportar JSON</button>
+                            <button class="btn btn-secondary" id="btn-export-csv">📊 Exportar CSV</button>
+                            <button class="btn btn-primary" id="btn-import-backup">📤 Importar Backup</button>
+                            <input type="file" id="import-file" accept=".json,application/json" style="display:none;">
+                            <button class="btn btn-danger" id="btn-reset-data">🗑️ Resetar Dados</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -166,9 +163,7 @@
     <script src="js/pipeline.js"></script>
     <script src="js/vendas.js"></script>
     <script src="js/viagens.js"></script>
-    <script src="js/checkin.js"></script>
     <script src="js/milhas.js"></script>
-    <script src="js/comissoes.js"></script>
     <script src="js/clientes.js"></script>
     <script src="js/backup.js"></script>
     <script>
@@ -179,9 +174,7 @@
                 PipelineModule.init();
                 VendasModule.init();
                 ViagensModule.init();
-                CheckinModule.init();
                 MilhasModule.init();
-                ComissoesModule.init();
                 ClientesModule.init();
                 BackupModule.init();
             } catch (e) {

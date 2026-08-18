@@ -40,23 +40,50 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .card { background: #fff; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
 .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--gray-700); }
 
+/* ===== Config 2 colunas ===== */
+.config-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; align-items: start; }
+.config-grid .card { margin-bottom: 0; }
+.config-full { grid-column: 1 / -1; }
+
+/* ===== Resumo de vendas ===== */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.mini-stat { background: #fff; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.mini-stat h4 { font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.mini-stat .valor { font-size: 20px; font-weight: 700; }
+
+/* ===== Pipeline ===== */
 .pipeline-board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 12px; align-items: flex-start; }
 .pipeline-column { background: var(--gray-100); border-radius: var(--radius); padding: 12px; min-width: 240px; max-width: 260px; flex-shrink: 0; }
 .pipeline-column-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 600; font-size: 13px; }
 .pipeline-column-body { display: flex; flex-direction: column; gap: 8px; min-height: 60px; margin-bottom: 8px; }
 .pipeline-card { background: #fff; border-radius: var(--radius-sm); padding: 12px; box-shadow: var(--shadow); cursor: grab; display: flex; flex-direction: column; gap: 4px; }
-.pipeline-card strong { font-size: 14px; color: var(--royal); }
-.pipeline-card small { color: var(--gray-700); font-size: 12px; }
 .pipeline-card.dragging { opacity: .5; }
+.pipeline-cliente { font-size: 14px; color: var(--royal); font-weight: 700; }
+.pipeline-titulo { font-size: 12px; color: var(--gray-700); }
+.pipeline-card small { color: var(--gray-500); font-size: 11px; }
 .card-actions { display: flex; gap: 4px; justify-content: flex-end; margin-top: 6px; }
 
+/* ===== Viagens (cards) ===== */
+.viagem-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+.viagem-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.viagem-cliente { font-size: 15px; font-weight: 700; color: var(--royal); display: block; }
+.viagem-destino { font-size: 13px; color: var(--gray-500); display: block; margin-top: 2px; }
+.viagem-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.viagem-info { background: var(--gray-50); border-radius: var(--radius-sm); padding: 8px 10px; }
+.viagem-info label { display: block; font-size: 10px; color: var(--gray-500); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+.viagem-info span { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+
+/* ===== Formulários ===== */
 .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .form-inline { display: flex; gap: 8px; }
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-700); margin-bottom: 4px; }
 .form-control { width: 100%; padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; background: #fff; }
 .form-control:focus { outline: none; border-color: var(--royal); box-shadow: 0 0 0 3px rgba(26,58,107,.08); }
+.check-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--gray-700); cursor: pointer; }
+.check-success { color: var(--success); }
 
+/* ===== Botões ===== */
 .btn { padding: 8px 16px; border-radius: var(--radius-sm); border: none; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
 .btn-primary { background: var(--royal); color: #fff; }
 .btn-primary:hover { background: var(--royal-light); }
@@ -70,35 +97,44 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-icon.btn-danger { color: var(--danger); }
 .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* ===== Tabelas ===== */
+.table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--gray-100); font-size: 13px; }
 .table th { font-weight: 600; color: var(--gray-500); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; background: var(--gray-50); }
 .table tbody tr:hover { background: var(--gray-50); }
 
+/* ===== Badges ===== */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
 .badge-pendente { background: var(--warning-light); color: #92400e; }
-.badge-confirmado { background: var(--royal-extra-light); color: var(--royal); }
-.badge-realizado { background: var(--success-light); color: #065f46; }
-.badge-cancelado { background: var(--danger-light); color: #991b1b; }
 .badge-concluida { background: var(--success-light); color: #065f46; }
+.badge-emandamento { background: var(--royal-extra-light); color: var(--royal); }
+.badge-ativo { background: var(--success-light); color: #065f46; }
+.badge-inativo { background: var(--gray-100); color: var(--gray-500); }
 
+/* ===== Lucro ===== */
+.lucro-pos { color: var(--success); font-weight: 600; }
+.lucro-neg { color: var(--danger); font-weight: 600; }
+
+/* ===== Listas de config ===== */
 .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--gray-100); font-size: 13px; }
 .list-item:last-child { border-bottom: none; }
-
 .stage-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--gray-100); cursor: grab; }
 .stage-item:last-child { border-bottom: none; }
 .stage-item.dragging { opacity: .5; }
 .drag-handle { color: var(--gray-300); cursor: grab; font-size: 16px; }
 .stage-input { flex: 1; }
 
+/* ===== Modal ===== */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.active { display: flex; }
-.modal { background: #fff; border-radius: var(--radius); width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal { background: #fff; border-radius: var(--radius); width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--gray-200); }
 .modal-header h3 { font-size: 16px; font-weight: 600; }
 .modal-body { padding: 20px; }
 .modal-footer { padding: 12px 20px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 8px; }
 
+/* ===== Toast ===== */
 #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
 .toast { padding: 12px 20px; border-radius: var(--radius-sm); color: #fff; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); animation: slideIn .3s ease; }
 .toast-success { background: var(--success); }
@@ -106,6 +142,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .toast-info { background: var(--royal); }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-@media (max-width: 1024px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } .stats-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) { .config-grid { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } .viagem-info-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .dashboard-grid { grid-template-columns: 1fr; } .content-area { padding: 16px; } }

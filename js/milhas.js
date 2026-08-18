@@ -1,7 +1,3 @@
-/* ============================================================
-   milhas.js — Controle de Milhas
-   ============================================================ */
-
 const MilhasModule = {
     init() { this.render(); },
 
@@ -11,7 +7,7 @@ const MilhasModule = {
         const milhas = DB.getMilhas();
 
         el.innerHTML = milhas.length ? `
-            <table class="table">
+            <div class="table-wrap"><table class="table">
                 <thead><tr>
                     <th>Cliente</th><th>Programa</th><th>Quantidade</th><th>Valor</th><th>Data</th><th>Ações</th>
                 </tr></thead>
@@ -22,22 +18,16 @@ const MilhasModule = {
                         <td>${(m.quantidade || 0).toLocaleString('pt-BR')}</td>
                         <td>${AppModule.formatCurrency(m.valor)}</td>
                         <td>${AppModule.formatDate(m.data)}</td>
-                        <td>
-                            <button class="btn-icon" onclick="MilhasModule.excluirRegistro('${m.id}')">🗑️</button>
-                        </td>
+                        <td><button class="btn-icon btn-danger" onclick="MilhasModule.excluirRegistro('${m.id}')">🗑️</button></td>
                     </tr>`).join('')}
                 </tbody>
-            </table>` : '<p style="color:var(--gray-500);">Nenhum registro de milhas</p>';
+            </table></div>` : '<p style="color:var(--gray-500);">Nenhum registro de milhas</p>';
     },
 
     novoRegistro() {
-        const clientes = DB.getClientes();
         const body = `
             <div class="form-group"><label>Cliente</label>
-                <select id="mlh-clienteId" class="form-control">
-                    <option value="">— Selecione —</option>
-                    ${clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
-                </select>
+                <select id="mlh-clienteId" class="form-control">${DB.clienteOptions()}</select>
             </div>
             <div class="form-group"><label>Programa</label>
                 <select id="mlh-programa" class="form-control">${DB.getProgramas().map(p => `<option>${p}</option>`).join('')}</select>

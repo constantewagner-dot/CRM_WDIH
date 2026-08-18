@@ -1,7 +1,3 @@
-/* ============================================================
-   pipeline.js — Pipeline (Kanban) com drag & drop
-   ============================================================ */
-
 const PipelineModule = {
     init() { this.render(); },
 
@@ -10,7 +6,6 @@ const PipelineModule = {
     render() {
         const board = document.getElementById('pipeline-board');
         if (!board) return;
-
         const stages = this.getStages();
         const negocios = DB.getNegocios();
 
@@ -21,8 +16,7 @@ const PipelineModule = {
                      ondragover="PipelineModule.allowDrop(event)"
                      ondrop="PipelineModule.drop(event, '${stage}')">
                     <div class="pipeline-column-header">
-                        <span>${stage}</span>
-                        <span class="badge">${itens.length}</span>
+                        <span>${stage}</span><span class="badge">${itens.length}</span>
                     </div>
                     <div class="pipeline-column-body">
                         ${itens.map(n => this.cardHTML(n)).join('')}
@@ -36,13 +30,13 @@ const PipelineModule = {
         return `
             <div class="pipeline-card" draggable="true" data-id="${n.id}"
                  ondragstart="PipelineModule.dragStart(event, '${n.id}')">
-                <strong>${n.titulo || 'Sem título'}</strong>
-                <small>${DB.getClienteNome(n.clienteId)}</small>
+                <span class="pipeline-cliente">${DB.getClienteNome(n.clienteId)}</span>
+                <span class="pipeline-titulo">${n.titulo || 'Sem título'}</span>
                 <small>${n.servico || ''}</small>
-                ${Number(n.valor) ? `<small style="color:var(--gray-500);">${AppModule.formatCurrency(n.valor)}</small>` : ''}
+                ${Number(n.valor) ? `<small>${AppModule.formatCurrency(n.valor)}</small>` : ''}
                 <div class="card-actions">
-                    <button class="btn-icon" onclick="PipelineModule.editarNegocio('${n.id}')" title="Editar">✏️</button>
-                    <button class="btn-icon btn-danger" onclick="PipelineModule.excluirNegocio('${n.id}')" title="Excluir">🗑️</button>
+                    <button class="btn-icon" onclick="PipelineModule.editarNegocio('${n.id}')">✏️</button>
+                    <button class="btn-icon btn-danger" onclick="PipelineModule.excluirNegocio('${n.id}')">🗑️</button>
                 </div>
             </div>`;
     },
@@ -50,34 +44,25 @@ const PipelineModule = {
     dragStart(e, id) {
         e.dataTransfer.setData('text/plain', id);
         e.dataTransfer.effectAllowed = 'move';
-        setTimeout(() => e.target.classList.add('dragging'), 0);
     },
-
     allowDrop(e) { e.preventDefault(); },
-
     drop(e, stage) {
         e.preventDefault();
         const id = e.dataTransfer.getData('text/plain');
-        const negocios = DB.getNegocios();
-        const n = negocios.find(x => x.id === id);
+        const n = DB.getNegocios().find(x => x.id === id);
         if (!n || n.stage === stage) return;
         n.stage = stage;
         n.atualizadoEm = new Date().toISOString();
         DB.saveNegocio(n);
-        DB.addAtividade('pipeline', `Negócio "${n.titulo}" movido para "${stage}"`);
         this.render();
         AppModule.updateDashboard();
     },
 
     novoNegocio(stage) {
         const stages = this.getStages();
-        const clientes = DB.getClientes();
         const body = `
             <div class="form-group"><label>Cliente</label>
-                <select id="neg-clienteId" class="form-control">
-                    <option value="">— Selecione —</option>
-                    ${clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
-                </select>
+                <select id="neg-clienteId" class="form-control">${DB.clienteOptions()}</select>
             </div>
             <div class="form-group"><label>Título</label><input type="text" id="neg-titulo" class="form-control"></div>
             <div class="form-group"><label>Serviço</label>
@@ -109,7 +94,6 @@ const PipelineModule = {
             atualizadoEm: new Date().toISOString()
         };
         DB.saveNegocio(n);
-        DB.addAtividade('pipeline', `Novo negócio: ${n.titulo}`);
         AppModule.closeModal();
         this.render();
         AppModule.updateDashboard();
@@ -120,13 +104,9 @@ const PipelineModule = {
         const n = DB.getNegocios().find(x => x.id === id);
         if (!n) return;
         const stages = this.getStages();
-        const clientes = DB.getClientes();
         const body = `
             <div class="form-group"><label>Cliente</label>
-                <select id="neg-clienteId" class="form-control">
-                    <option value="">— Selecione —</option>
-                    ${clientes.map(c => `<option value="${c.id}" ${c.id === n.clienteId ? 'selected' : ''}>${c.nome}</option>`).join('')}
-                </select>
+                <select id="neg-clienteId" class="form-control">${DB.clienteOptions(n.clienteId)}</select>
             </div>
             <div class="form-group"><label>Título</label><input type="text" id="neg-titulo" class="form-control" value="${n.titulo || ''}"></div>
             <div class="form-group"><label>Serviço</label>

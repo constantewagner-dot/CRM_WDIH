@@ -1,7 +1,3 @@
-/* ============================================================
-   config.js — Configurações + reordenação do pipeline
-   ============================================================ */
-
 const ConfigModule = {
     init() {
         this.carregarAgencia();
@@ -19,6 +15,7 @@ const ConfigModule = {
         set('cfg-agencia-cnpj', a.cnpj);
         set('cfg-agencia-telefone', a.telefone);
         set('cfg-agencia-email', a.email);
+        set('cfg-agencia-comissao', a.comissaoPercentual || 10);
     },
 
     salvarAgencia() {
@@ -26,17 +23,16 @@ const ConfigModule = {
             nome: document.getElementById('cfg-agencia-nome').value,
             cnpj: document.getElementById('cfg-agencia-cnpj').value,
             telefone: document.getElementById('cfg-agencia-telefone').value,
-            email: document.getElementById('cfg-agencia-email').value
+            email: document.getElementById('cfg-agencia-email').value,
+            comissaoPercentual: parseFloat(document.getElementById('cfg-agencia-comissao').value) || 10
         });
         AppModule.showToast('Dados da agência salvos!', 'success');
     },
 
-    /* ---------- Pipeline (reordenação) ---------- */
     renderPipeline() {
         const list = document.getElementById('cfg-pipeline-list');
         if (!list) return;
         const stages = DB.getPipelineStages();
-
         list.innerHTML = stages.map((s, i) => `
             <div class="stage-item" draggable="true" data-index="${i}">
                 <span class="drag-handle">⠿</span>
@@ -45,32 +41,21 @@ const ConfigModule = {
                 <button class="btn-icon" onclick="ConfigModule.moverEtapa(${i}, 1)" ${i === stages.length - 1 ? 'disabled' : ''}>↓</button>
                 <button class="btn-icon btn-danger" onclick="ConfigModule.removerEtapa(${i})">🗑️</button>
             </div>`).join('');
-
         this.setupDragDrop();
     },
 
     setupDragDrop() {
         const items = document.querySelectorAll('.stage-item');
         let dragged = null;
-
         items.forEach(item => {
-            item.addEventListener('dragstart', (e) => {
-                dragged = item;
-                item.classList.add('dragging');
-            });
-            item.addEventListener('dragend', () => {
-                item.classList.remove('dragging');
-                dragged = null;
-                this.salvarOrdem();
-            });
+            item.addEventListener('dragstart', () => { dragged = item; item.classList.add('dragging'); });
+            item.addEventListener('dragend', () => { item.classList.remove('dragging'); dragged = null; this.salvarOrdem(); });
             item.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 if (!dragged || dragged === item) return;
                 const rect = item.getBoundingClientRect();
                 const after = e.clientY > rect.top + rect.height / 2;
-                const parent = item.parentNode;
-                if (after) parent.insertBefore(dragged, item.nextSibling);
-                else parent.insertBefore(dragged, item);
+                item.parentNode.insertBefore(dragged, after ? item.nextSibling : item);
             });
         });
     },
@@ -118,7 +103,6 @@ const ConfigModule = {
         AppModule.showToast('Etapa removida.', 'danger');
     },
 
-    /* ---------- Listas genéricas ---------- */
     renderLista(containerId, items, fnRemover) {
         const list = document.getElementById(containerId);
         if (!list) return;
