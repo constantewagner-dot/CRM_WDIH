@@ -18,12 +18,18 @@ const AppModule = {
         this.updateDashboard();
     },
 
+    formatCurrency(value) {
+        return 'R$ ' + (Number(value) || 0).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    },
+
     setupNavigation() {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                const page = item.dataset.page;
-                this.navigateTo(page);
+                this.navigateTo(item.dataset.page);
             });
         });
     },
@@ -76,7 +82,6 @@ const AppModule = {
     setupModal() {
         const overlay = document.getElementById('modal-overlay');
         if (!overlay) return;
-
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) this.closeModal();
         });
@@ -96,7 +101,7 @@ const AppModule = {
         setText('stat-negocios', negocios.length);
 
         const totalVendas = vendas.reduce((sum, v) => sum + (v.valor || 0), 0);
-        setText('stat-vendas', formatCurrency(totalVendas));
+        setText('stat-vendas', this.formatCurrency(totalVendas));
 
         setText('stat-checkins', checkins.length);
 
