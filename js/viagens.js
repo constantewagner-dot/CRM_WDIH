@@ -3,7 +3,14 @@
    ============================================================ */
 
 const ViagensModule = {
-    init() { this.render(); },
+    init() {
+        // Proteção: se o db.js antigo estiver em cache, não quebra
+        if (typeof DB.getViagens !== 'function') {
+            console.warn('DB.getViagens ausente — módulo de viagens desativado.');
+            return;
+        }
+        this.render();
+    },
 
     render() {
         const el = document.getElementById('viagens-list');
