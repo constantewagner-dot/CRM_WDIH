@@ -1,179 +1,152 @@
 /* ============================================================
    db.js — Camada de dados (localStorage)
+   Chaves alinhadas ao formato do backup JSON (versão 2.x)
    ============================================================ */
 
 const DB = {
-    _get(key) {
+    KEYS: {
+        agencia: 'wdih_agencia',
+        clientes: 'wdih_clientes',
+        negocios: 'wdih_negocios',
+        vendas: 'wdih_vendas',
+        viagens: 'wdih_viagens',
+        transacoes: 'wdih_transacoes',
+        servicos: 'wdih_servicos',
+        pipelineStages: 'wdih_pipelineStages',
+        companhias: 'wdih_companhias',
+        programas: 'wdih_programas',
+        cartoes: 'wdih_cartoes',
+        atividades: 'wdih_atividades',
+        milhas: 'wdih_milhas'
+    },
+
+    read(key, fallback) {
         try {
-            const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : null;
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : fallback;
         } catch (e) {
-            console.error(`Erro ao ler ${key}:`, e);
-            return null;
+            console.error('Erro ao ler ' + key, e);
+            return fallback;
         }
     },
 
-    _set(key, value) {
+    write(key, value) {
         try {
             localStorage.setItem(key, JSON.stringify(value));
             return true;
         } catch (e) {
-            console.error(`Erro ao salvar ${key}:`, e);
+            console.error('Erro ao gravar ' + key, e);
             return false;
         }
     },
 
-    // Agência
-    getAgencia() {
-        return this._get('wdih_agencia') || {};
-    },
-    setAgencia(data) {
-        return this._set('wdih_agencia', data);
-    },
+    // ---- Agência ----
+    getAgencia() { return this.read(this.KEYS.agencia, {}); },
+    setAgencia(d) { return this.write(this.KEYS.agencia, d); },
 
-    // Pipeline
-    getPipelineStages() {
-        return this._get('wdih_pipeline_stages') || [
-            'Prospecção', 'Qualificação', 'Proposta', 'Negociação', 'Fechado'
-        ];
-    },
-    setPipelineStages(stages) {
-        return this._set('wdih_pipeline_stages', stages);
-    },
-
-    // Negócios
-    getNegocios() {
-        return this._get('wdih_negocios') || [];
-    },
-    saveNegocio(negocio) {
-        const negocios = this.getNegocios();
-        const idx = negocios.findIndex(n => n.id === negocio.id);
-        if (idx >= 0) {
-            negocios[idx] = negocio;
-        } else {
-            negocios.push(negocio);
-        }
-        return this._set('wdih_negocios', negocios);
-    },
-    deleteNegocio(id) {
-        const negocios = this.getNegocios().filter(n => n.id !== id);
-        return this._set('wdih_negocios', negocios);
-    },
-
-    // Serviços
-    getServicos() {
-        return this._get('wdih_servicos') || ['Pacote Nacional', 'Pacote Internacional', 'Passagens', 'Cruzeiro'];
-    },
-    setServicos(s) {
-        return this._set('wdih_servicos', s);
-    },
-
-    // Companhias
-    getCompanhias() {
-        return this._get('wdih_companhias') || ['LATAM', 'GOL', 'AZUL'];
-    },
-    setCompanhias(s) {
-        return this._set('wdih_companhias', s);
-    },
-
-    // Programas
-    getProgramas() {
-        return this._get('wdih_programas') || ['Latam Pass', 'Smiles', 'TudoAzul'];
-    },
-    setProgramas(s) {
-        return this._set('wdih_programas', s);
-    },
-
-    // Cartões
-    getCartoes() {
-        return this._get('wdih_cartoes') || ['Itaú', 'Bradesco', 'Santander'];
-    },
-    setCartoes(s) {
-        return this._set('wdih_cartoes', s);
-    },
-
-    // Vendas
-    getVendas() {
-        return this._get('wdih_vendas') || [];
-    },
-    saveVenda(venda) {
-        const vendas = this.getVendas();
-        const idx = vendas.findIndex(v => v.id === venda.id);
-        if (idx >= 0) {
-            vendas[idx] = venda;
-        } else {
-            vendas.push(venda);
-        }
-        return this._set('wdih_vendas', vendas);
-    },
-    deleteVenda(id) {
-        const vendas = this.getVendas().filter(v => v.id !== id);
-        return this._set('wdih_vendas', vendas);
-    },
-
-    // Check-ins
-    getCheckins() {
-        return this._get('wdih_checkins') || [];
-    },
-    saveCheckin(checkin) {
-        const checkins = this.getCheckins();
-        const idx = checkins.findIndex(c => c.id === checkin.id);
-        if (idx >= 0) {
-            checkins[idx] = checkin;
-        } else {
-            checkins.push(checkin);
-        }
-        return this._set('wdih_checkins', checkins);
-    },
-    deleteCheckin(id) {
-        const checkins = this.getCheckins().filter(c => c.id !== id);
-        return this._set('wdih_checkins', checkins);
-    },
-
-    // Milhas
-    getMilhas() {
-        return this._get('wdih_milhas') || [];
-    },
-    saveMilha(milha) {
-        const milhas = this.getMilhas();
-        const idx = milhas.findIndex(m => m.id === milha.id);
-        if (idx >= 0) {
-            milhas[idx] = milha;
-        } else {
-            milhas.push(milha);
-        }
-        return this._set('wdih_milhas', milhas);
-    },
-    deleteMilha(id) {
-        const milhas = this.getMilhas().filter(m => m.id !== id);
-        return this._set('wdih_milhas', milhas);
-    },
-
-    // Clientes
-    getClientes() {
-        return this._get('wdih_clientes') || [];
+    // ---- Clientes ----
+    getClientes() { return this.read(this.KEYS.clientes, []); },
+    setClientes(lista) { return this.write(this.KEYS.clientes, lista); },
+    getClienteById(id) { return this.getClientes().find(c => c.id === id); },
+    getClienteNome(id) {
+        const c = this.getClienteById(id);
+        return c ? c.nome : (id || '—');
     },
     saveCliente(cliente) {
-        const clientes = this.getClientes();
-        const idx = clientes.findIndex(c => c.id === cliente.id);
-        if (idx >= 0) {
-            clientes[idx] = cliente;
-        } else {
-            clientes.push(cliente);
-        }
-        return this._set('wdih_clientes', clientes);
+        const lista = this.getClientes();
+        const i = lista.findIndex(c => c.id === cliente.id);
+        if (i >= 0) lista[i] = cliente; else lista.push(cliente);
+        return this.setClientes(lista);
     },
-    deleteCliente(id) {
-        const clientes = this.getClientes().filter(c => c.id !== id);
-        return this._set('wdih_clientes', clientes);
+    deleteCliente(id) { return this.setClientes(this.getClientes().filter(c => c.id !== id)); },
+
+    // ---- Negócios ----
+    getNegocios() { return this.read(this.KEYS.negocios, []); },
+    setNegocios(lista) { return this.write(this.KEYS.negocios, lista); },
+    saveNegocio(n) {
+        const lista = this.getNegocios();
+        const i = lista.findIndex(x => x.id === n.id);
+        if (i >= 0) lista[i] = n; else lista.push(n);
+        return this.setNegocios(lista);
+    },
+    deleteNegocio(id) { return this.setNegocios(this.getNegocios().filter(x => x.id !== id)); },
+
+    // ---- Vendas ----
+    getVendas() { return this.read(this.KEYS.vendas, []); },
+    setVendas(lista) { return this.write(this.KEYS.vendas, lista); },
+    saveVenda(v) {
+        const lista = this.getVendas();
+        const i = lista.findIndex(x => x.id === v.id);
+        if (i >= 0) lista[i] = v; else lista.push(v);
+        return this.setVendas(lista);
+    },
+    deleteVenda(id) { return this.setVendas(this.getVendas().filter(x => x.id !== id)); },
+
+    // ---- Viagens ----
+    getViagens() { return this.read(this.KEYS.viagens, []); },
+    setViagens(lista) { return this.write(this.KEYS.viagens, lista); },
+    saveViagem(v) {
+        const lista = this.getViagens();
+        const i = lista.findIndex(x => x.id === v.id);
+        if (i >= 0) lista[i] = v; else lista.push(v);
+        return this.setViagens(lista);
+    },
+    deleteViagem(id) { return this.setViagens(this.getViagens().filter(x => x.id !== id)); },
+
+    // ---- Milhas ----
+    getMilhas() { return this.read(this.KEYS.milhas, []); },
+    setMilhas(lista) { return this.write(this.KEYS.milhas, lista); },
+    saveMilha(m) {
+        const lista = this.getMilhas();
+        const i = lista.findIndex(x => x.id === m.id);
+        if (i >= 0) lista[i] = m; else lista.push(m);
+        return this.setMilhas(lista);
+    },
+    deleteMilha(id) { return this.setMilhas(this.getMilhas().filter(x => x.id !== id)); },
+
+    // ---- Listas de configuração ----
+    getPipelineStages() {
+        return this.read(this.KEYS.pipelineStages, [
+            'Lead / Contato Inicial', 'Qualificação / Reunião',
+            'Pendente Envio Proposta', 'Proposta Enviada',
+            'Fechado (Ganho)', 'Perdido', 'Negócios Futuros'
+        ]);
+    },
+    setPipelineStages(l) { return this.write(this.KEYS.pipelineStages, l); },
+
+    getServicos() {
+        return this.read(this.KEYS.servicos, [
+            'Emissão de Passagens', 'Seguro Viagem', 'Hospedagem',
+            'Pacotes de Viagem', 'Aluguel de Carro', 'Consultoria de Milhas',
+            'Transfer / Transporte', 'Cruzeiros'
+        ]);
+    },
+    setServicos(l) { return this.write(this.KEYS.servicos, l); },
+
+    getCompanhias() {
+        return this.read(this.KEYS.companhias, ['LATAM', 'Gol', 'Azul', 'American Airlines', 'Delta', 'United', 'Air France', 'Emirates']);
+    },
+    setCompanhias(l) { return this.write(this.KEYS.companhias, l); },
+
+    getProgramas() {
+        return this.read(this.KEYS.programas, ['Smiles', 'LATAM Pass', 'TudoAzul', 'Livelo', 'Esfera', 'Miles&More', 'Flying Blue']);
+    },
+    setProgramas(l) { return this.write(this.KEYS.programas, l); },
+
+    getCartoes() {
+        return this.read(this.KEYS.cartoes, ['C6 Bank', 'XP', 'Santander', 'Bradesco', 'Itaú', 'Banco do Brasil', 'Nubank', 'Inter']);
+    },
+    setCartoes(l) { return this.write(this.KEYS.cartoes, l); },
+
+    getAtividades() { return this.read(this.KEYS.atividades, []); },
+    addAtividade(tipo, descricao) {
+        const lista = this.getAtividades();
+        lista.unshift({ tipo, descricao, data: new Date().toISOString() });
+        return this.write(this.KEYS.atividades, lista);
     },
 
-    // Reset
+    // ---- Reset ----
     resetAll() {
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('wdih_')) {
-                localStorage.removeItem(key);
-            }
-        });
+        Object.values(this.KEYS).forEach(k => localStorage.removeItem(k));
     }
 };

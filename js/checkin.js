@@ -1,148 +1,59 @@
 /* ============================================================
-   checkin.js — Módulo de Check-in
+   checkin.js — Check-in das vendas com necessidade de check-in
    ============================================================ */
 
 const CheckinModule = {
-    init() {
-        this.render();
-    },
+    init() { this.render(); },
 
     render() {
-        const list = document.getElementById('checkin-list');
-        if (!list) return;
+        const el = document.getElementById('checkin-list');
+        if (!el) return;
+        const vendas = DB.getVendas().filter(v => v.necessidadeCheckin === 'sim');
 
-        const checkins = DB.getCheckins();
-        list.innerHTML = checkins.length
-            ? `
+        el.innerHTML = vendas.length ? `
             <table class="table">
-                <thead>
+                <thead><tr>
+                    <th>Cliente</th><th>Venda</th><th>Terceiro</th><th>Status</th><th>Ações</th>
+                </tr></thead>
+                <tbody>${vendas.map(v => {
+                    const feito = !!v.checkinRealizadoEm;
+                    return `
                     <tr>
-                        <th>Cliente</th>
-                        <th>Data</th>
-                        <th>Status</th>
-                        <th>Observações</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${checkins.map(c => `
-                        <tr>
-                            <td>${c.cliente || '—'}</td>
-                            <td>${c.data || '—'}</td>
-                            <td><span class="badge badge-${c.status || 'pendente'}">${c.status || 'Pendente'}</span></td>
-                            <td>${c.obs || ''}</td>
-                            <td>
-                                <button class="btn-icon" onclick="CheckinModule.editarCheckin('${c.id}')">✏️</button>
-                                <button class="btn-icon" onclick="CheckinModule.excluirCheckin('${c.id}')">🗑️</button>
-                            </td>
-                        </tr>
-                    `).join('')}
+                        <td>${DB.getClienteNome(v.clienteId)}</td>
+                        <td>${v.titulo || '—'}</td>
+                        <td>${v.nomeTerceiro || '—'}</td>
+                        <td>${feito
+                            ? `<span class="badge badge-realizado">Realizado em ${AppModule.formatDate(v.checkinRealizadoEm)}</span>`
+                            : `<span class="badge badge-pendente">Pendente</span>`}
+                        </td>
+                        <td>${feito
+                            ? `<button class="btn btn-sm btn-secondary" onclick="CheckinModule.desfazer('${v.id}')">Desfazer</button>`
+                            : `<button class="btn btn-sm btn-primary" onclick="CheckinModule.marcar('${v.id}')">Marcar feito</button>`}
+                        </td>
+                    </tr>`;
+                }).join('')}
                 </tbody>
-            </table>`
-            : '<p style="color:var(--gray-500);">Nenhum check-in cadastrado</p>';
+            </table>` : '<p style="color:var(--gray-500);">Nenhuma venda pendente de check-in 🎉</p>';
     },
 
-    novoCheckin() {
-        const body = `
-            <div class="form-group">
-                <label>Cliente</label>
-                <input type="text" id="chk-cliente" class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Data</label>
-                <input type="date" id="chk-data" class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Status</label>
-                <select id="chk-status" class="form-control">
-                    <option value="pendente">Pendente</option>
-                    <option value="confirmado">Confirmado</option>
-                    <option value="realizado">Realizado</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Observações</label>
-                <textarea id="chk-obs" class="form-control"></textarea>
-            </div>
-        `;
-
-        AppModule.openModal('Novo Check-in', body, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="CheckinModule.salvarCheckin()">Salvar</button>
-        `);
-    },
-
-    salvarCheckin() {
-        const checkin = {
-            id: AppModule.generateId(),
-            cliente: document.getElementById('chk-cliente').value,
-            data: document.getElementById('chk-data').value,
-            status: document.getElementById('chk-status').value,
-            obs: document.getElementById('chk-obs').value
-        };
-
-        DB.saveCheckin(checkin);
-        AppModule.closeModal();
-        AppModule.showToast('Check-in salvo!', 'success');
+    marcar(id) {
+        const v = DB.getVendas().find(x => x.id === id);
+        if (!v) return;
+        v.checkinRealizadoEm = new Date().toISOString();
+        v.atualizadoEm = new Date().toISOString();
+        DB.saveVenda(v);
         this.render();
         AppModule.updateDashboard();
+        AppModule.showToast('Check-in realizado!', 'success');
     },
 
-    editarCheckin(id) {
-        const checkins = DB.getCheckins();
-        const c = checkins.find(x => x.id === id);
-        if (!c) return;
-
-        const body = `
-            <div class="form-group">
-                <label>Cliente</label>
-                <input type="text" id="chk-cliente" class="form-control" value="${c.cliente || ''}">
-            </div>
-            <div class="form-group">
-                <label>Data</label>
-                <input type="date" id="chk-data" class="form-control" value="${c.data || ''}">
-            </div>
-            <div class="form-group">
-                <label>Status</label>
-                <select id="chk-status" class="form-control">
-                    ${['pendente', 'confirmado', 'realizado', 'cancelado'].map(s => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Observações</label>
-                <textarea id="chk-obs" class="form-control">${c.obs || ''}</textarea>
-            </div>
-        `;
-
-        AppModule.openModal('Editar Check-in', body, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="CheckinModule.atualizarCheckin('${id}')">Atualizar</button>
-        `);
-    },
-
-    atualizarCheckin(id) {
-        const checkins = DB.getCheckins();
-        const c = checkins.find(x => x.id === id);
-        if (!c) return;
-
-        c.cliente = document.getElementById('chk-cliente').value;
-        c.data = document.getElementById('chk-data').value;
-        c.status = document.getElementById('chk-status').value;
-        c.obs = document.getElementById('chk-obs').value;
-
-        DB.saveCheckin(c);
-        AppModule.closeModal();
-        AppModule.showToast('Check-in atualizado!', 'success');
+    desfazer(id) {
+        const v = DB.getVendas().find(x => x.id === id);
+        if (!v) return;
+        v.checkinRealizadoEm = null;
+        DB.saveVenda(v);
         this.render();
         AppModule.updateDashboard();
-    },
-
-    excluirCheckin(id) {
-        if (!confirm('Excluir este check-in?')) return;
-        DB.deleteCheckin(id);
-        AppModule.showToast('Check-in excluído.', 'danger');
-        this.render();
-        AppModule.updateDashboard();
+        AppModule.showToast('Check-in desfeito.', 'info');
     }
 };

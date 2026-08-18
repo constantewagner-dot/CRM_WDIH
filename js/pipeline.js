@@ -1,25 +1,11 @@
 /* ============================================================
-   pipeline.js — Módulo de Pipeline
+   pipeline.js — Pipeline (Kanban) com drag & drop
    ============================================================ */
 
-// Proteção: garante que a função existe mesmo sem app.js atualizado
-if (typeof window.formatCurrency !== 'function') {
-    window.formatCurrency = function (value) {
-        return 'R$ ' + (Number(value) || 0).toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    };
-}
-
 const PipelineModule = {
-    init() {
-        this.render();
-    },
+    init() { this.render(); },
 
-    getStages() {
-        return DB.getPipelineStages();
-    },
+    getStages() { return DB.getPipelineStages(); },
 
     render() {
         const board = document.getElementById('pipeline-board');
@@ -31,151 +17,154 @@ const PipelineModule = {
         board.innerHTML = stages.map(stage => {
             const itens = negocios.filter(n => n.stage === stage);
             return `
-                <div class="pipeline-column" data-stage="${stage}">
+                <div class="pipeline-column" data-stage="${stage}"
+                     ondragover="PipelineModule.allowDrop(event)"
+                     ondrop="PipelineModule.drop(event, '${stage}')">
                     <div class="pipeline-column-header">
                         <span>${stage}</span>
                         <span class="badge">${itens.length}</span>
                     </div>
-                    <div class="pipeline-column-body" data-stage="${stage}">
+                    <div class="pipeline-column-body">
                         ${itens.map(n => this.cardHTML(n)).join('')}
                     </div>
                     <button class="btn btn-sm btn-secondary" onclick="PipelineModule.novoNegocio('${stage}')">+ Adicionar</button>
-                </div>
-            `;
+                </div>`;
         }).join('');
     },
 
     cardHTML(n) {
         return `
-            <div class="pipeline-card" draggable="true" data-id="${n.id}">
-                <strong>${n.cliente || 'Sem nome'}</strong>
+            <div class="pipeline-card" draggable="true" data-id="${n.id}"
+                 ondragstart="PipelineModule.dragStart(event, '${n.id}')">
+                <strong>${n.titulo || 'Sem título'}</strong>
+                <small>${DB.getClienteNome(n.clienteId)}</small>
                 <small>${n.servico || ''}</small>
-                <small style="color:var(--gray-500);">${formatCurrency(n.valor)}</small>
+                ${Number(n.valor) ? `<small style="color:var(--gray-500);">${AppModule.formatCurrency(n.valor)}</small>` : ''}
                 <div class="card-actions">
                     <button class="btn-icon" onclick="PipelineModule.editarNegocio('${n.id}')" title="Editar">✏️</button>
-                    <button class="btn-icon" onclick="PipelineModule.excluirNegocio('${n.id}')" title="Excluir">🗑️</button>
+                    <button class="btn-icon btn-danger" onclick="PipelineModule.excluirNegocio('${n.id}')" title="Excluir">🗑️</button>
                 </div>
-            </div>
-        `;
+            </div>`;
+    },
+
+    dragStart(e, id) {
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => e.target.classList.add('dragging'), 0);
+    },
+
+    allowDrop(e) { e.preventDefault(); },
+
+    drop(e, stage) {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        const negocios = DB.getNegocios();
+        const n = negocios.find(x => x.id === id);
+        if (!n || n.stage === stage) return;
+        n.stage = stage;
+        n.atualizadoEm = new Date().toISOString();
+        DB.saveNegocio(n);
+        DB.addAtividade('pipeline', `Negócio "${n.titulo}" movido para "${stage}"`);
+        this.render();
+        AppModule.updateDashboard();
     },
 
     novoNegocio(stage) {
         const stages = this.getStages();
-        const stageAtual = stage || stages[0];
-
+        const clientes = DB.getClientes();
         const body = `
-            <div class="form-group">
-                <label>Cliente</label>
-                <input type="text" id="neg-cliente" class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Serviço</label>
-                <select id="neg-servico" class="form-control">
-                    ${DB.getServicos().map(s => `<option>${s}</option>`).join('')}
+            <div class="form-group"><label>Cliente</label>
+                <select id="neg-clienteId" class="form-control">
+                    <option value="">— Selecione —</option>
+                    ${clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
                 </select>
             </div>
-            <div class="form-group">
-                <label>Valor</label>
-                <input type="number" id="neg-valor" class="form-control" step="0.01">
+            <div class="form-group"><label>Título</label><input type="text" id="neg-titulo" class="form-control"></div>
+            <div class="form-group"><label>Serviço</label>
+                <select id="neg-servico" class="form-control">${DB.getServicos().map(s => `<option>${s}</option>`).join('')}</select>
             </div>
-            <div class="form-group">
-                <label>Etapa</label>
-                <select id="neg-stage" class="form-control">
-                    ${stages.map(s => `<option ${s === stageAtual ? 'selected' : ''}>${s}</option>`).join('')}
-                </select>
+            <div class="form-group"><label>Valor</label><input type="number" id="neg-valor" class="form-control" step="0.01"></div>
+            <div class="form-group"><label>Etapa</label>
+                <select id="neg-stage" class="form-control">${stages.map(s => `<option ${s === stage ? 'selected' : ''}>${s}</option>`).join('')}</select>
             </div>
-            <div class="form-group">
-                <label>Observações</label>
-                <textarea id="neg-obs" class="form-control"></textarea>
-            </div>
-        `;
+            <div class="form-group"><label>Descrição</label><textarea id="neg-descricao" class="form-control"></textarea></div>`;
 
         AppModule.openModal('Novo Negócio', body, `
             <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="PipelineModule.salvarNegocio()">Salvar</button>
-        `);
+            <button class="btn btn-primary" onclick="PipelineModule.salvarNegocio()">Salvar</button>`);
     },
 
     salvarNegocio() {
-        const negocio = {
-            id: AppModule.generateId(),
-            cliente: document.getElementById('neg-cliente').value,
+        const n = {
+            id: AppModule.generateId('negocio'),
+            titulo: document.getElementById('neg-titulo').value,
+            clienteId: document.getElementById('neg-clienteId').value,
             servico: document.getElementById('neg-servico').value,
             valor: parseFloat(document.getElementById('neg-valor').value) || 0,
+            probabilidade: 50,
             stage: document.getElementById('neg-stage').value,
-            obs: document.getElementById('neg-obs').value,
-            dataCriacao: new Date().toISOString()
+            origemLead: '', campanha: '',
+            descricao: document.getElementById('neg-descricao').value,
+            criadoEm: new Date().toISOString(),
+            atualizadoEm: new Date().toISOString()
         };
-
-        DB.saveNegocio(negocio);
+        DB.saveNegocio(n);
+        DB.addAtividade('pipeline', `Novo negócio: ${n.titulo}`);
         AppModule.closeModal();
-        AppModule.showToast('Negócio criado com sucesso!', 'success');
         this.render();
         AppModule.updateDashboard();
+        AppModule.showToast('Negócio criado!', 'success');
     },
 
     editarNegocio(id) {
-        const negocios = DB.getNegocios();
-        const n = negocios.find(x => x.id === id);
+        const n = DB.getNegocios().find(x => x.id === id);
         if (!n) return;
-
         const stages = this.getStages();
+        const clientes = DB.getClientes();
         const body = `
-            <div class="form-group">
-                <label>Cliente</label>
-                <input type="text" id="neg-cliente" class="form-control" value="${n.cliente || ''}">
-            </div>
-            <div class="form-group">
-                <label>Serviço</label>
-                <select id="neg-servico" class="form-control">
-                    ${DB.getServicos().map(s => `<option ${s === n.servico ? 'selected' : ''}>${s}</option>`).join('')}
+            <div class="form-group"><label>Cliente</label>
+                <select id="neg-clienteId" class="form-control">
+                    <option value="">— Selecione —</option>
+                    ${clientes.map(c => `<option value="${c.id}" ${c.id === n.clienteId ? 'selected' : ''}>${c.nome}</option>`).join('')}
                 </select>
             </div>
-            <div class="form-group">
-                <label>Valor</label>
-                <input type="number" id="neg-valor" class="form-control" step="0.01" value="${n.valor || 0}">
+            <div class="form-group"><label>Título</label><input type="text" id="neg-titulo" class="form-control" value="${n.titulo || ''}"></div>
+            <div class="form-group"><label>Serviço</label>
+                <select id="neg-servico" class="form-control">${DB.getServicos().map(s => `<option ${s === n.servico ? 'selected' : ''}>${s}</option>`).join('')}</select>
             </div>
-            <div class="form-group">
-                <label>Etapa</label>
-                <select id="neg-stage" class="form-control">
-                    ${stages.map(s => `<option ${s === n.stage ? 'selected' : ''}>${s}</option>`).join('')}
-                </select>
+            <div class="form-group"><label>Valor</label><input type="number" id="neg-valor" class="form-control" step="0.01" value="${n.valor || 0}"></div>
+            <div class="form-group"><label>Etapa</label>
+                <select id="neg-stage" class="form-control">${stages.map(s => `<option ${s === n.stage ? 'selected' : ''}>${s}</option>`).join('')}</select>
             </div>
-            <div class="form-group">
-                <label>Observações</label>
-                <textarea id="neg-obs" class="form-control">${n.obs || ''}</textarea>
-            </div>
-        `;
+            <div class="form-group"><label>Descrição</label><textarea id="neg-descricao" class="form-control">${n.descricao || ''}</textarea></div>`;
 
         AppModule.openModal('Editar Negócio', body, `
             <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="PipelineModule.atualizarNegocio('${id}')">Atualizar</button>
-        `);
+            <button class="btn btn-primary" onclick="PipelineModule.atualizarNegocio('${id}')">Atualizar</button>`);
     },
 
     atualizarNegocio(id) {
-        const negocios = DB.getNegocios();
-        const n = negocios.find(x => x.id === id);
+        const n = DB.getNegocios().find(x => x.id === id);
         if (!n) return;
-
-        n.cliente = document.getElementById('neg-cliente').value;
+        n.titulo = document.getElementById('neg-titulo').value;
+        n.clienteId = document.getElementById('neg-clienteId').value;
         n.servico = document.getElementById('neg-servico').value;
         n.valor = parseFloat(document.getElementById('neg-valor').value) || 0;
         n.stage = document.getElementById('neg-stage').value;
-        n.obs = document.getElementById('neg-obs').value;
-
+        n.descricao = document.getElementById('neg-descricao').value;
+        n.atualizadoEm = new Date().toISOString();
         DB.saveNegocio(n);
         AppModule.closeModal();
-        AppModule.showToast('Negócio atualizado!', 'success');
         this.render();
         AppModule.updateDashboard();
+        AppModule.showToast('Negócio atualizado!', 'success');
     },
 
     excluirNegocio(id) {
         if (!confirm('Excluir este negócio?')) return;
         DB.deleteNegocio(id);
-        AppModule.showToast('Negócio excluído.', 'danger');
         this.render();
         AppModule.updateDashboard();
+        AppModule.showToast('Negócio excluído.', 'danger');
     }
 };

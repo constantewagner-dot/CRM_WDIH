@@ -7,56 +7,35 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h2>🏢 CRM WDIH</h2>
-        </div>
+        <div class="sidebar-header"><h2>🏢 CRM WDIH</h2></div>
         <nav class="sidebar-nav">
             <a href="#" class="nav-item active" data-page="dashboard">📊 Dashboard</a>
             <a href="#" class="nav-item" data-page="pipeline">📋 Pipeline</a>
             <a href="#" class="nav-item" data-page="vendas">💰 Vendas</a>
+            <a href="#" class="nav-item" data-page="viagens">✈️ Viagens</a>
             <a href="#" class="nav-item" data-page="checkin">✅ Check-in</a>
-            <a href="#" class="nav-item" data-page="milhas">✈️ Milhas</a>
+            <a href="#" class="nav-item" data-page="milhas">💠 Milhas</a>
             <a href="#" class="nav-item" data-page="comissoes">💵 Comissões</a>
             <a href="#" class="nav-item" data-page="clientes">👥 Clientes</a>
             <a href="#" class="nav-item" data-page="config">⚙️ Configurações</a>
         </nav>
-        <div class="sidebar-footer">
-            <button id="btn-backup" class="btn btn-sm btn-secondary">💾 Backup</button>
-        </div>
     </aside>
 
-    <!-- MAIN -->
     <main class="main-content">
         <header class="topbar">
             <button id="btn-toggle-sidebar" class="btn-icon">☰</button>
             <h1 id="page-title">Dashboard</h1>
-            <div class="topbar-actions">
-                <span id="user-name">Wagner</span>
-            </div>
+            <div class="topbar-actions"><span id="user-name">Wagner</span></div>
         </header>
 
         <div class="content-area">
-            <!-- DASHBOARD -->
             <section id="page-dashboard" class="page active">
                 <div class="dashboard-grid">
-                    <div class="card stat-card">
-                        <h3>Negócios Ativos</h3>
-                        <div class="stat-value" id="stat-negocios">0</div>
-                    </div>
-                    <div class="card stat-card">
-                        <h3>Vendas do Mês</h3>
-                        <div class="stat-value" id="stat-vendas">R$ 0</div>
-                    </div>
-                    <div class="card stat-card">
-                        <h3>Check-ins Pendentes</h3>
-                        <div class="stat-value" id="stat-checkins">0</div>
-                    </div>
-                    <div class="card stat-card">
-                        <h3>Milhas Acumuladas</h3>
-                        <div class="stat-value" id="stat-milhas">0</div>
-                    </div>
+                    <div class="card stat-card"><h3>Negócios Ativos</h3><div class="stat-value" id="stat-negocios">0</div></div>
+                    <div class="card stat-card"><h3>Vendas (R$)</h3><div class="stat-value" id="stat-vendas">R$ 0</div></div>
+                    <div class="card stat-card"><h3>Check-ins Pendentes</h3><div class="stat-value" id="stat-checkins">0</div></div>
+                    <div class="card stat-card"><h3>Clientes</h3><div class="stat-value" id="stat-clientes">0</div></div>
                 </div>
                 <div class="card" style="margin-top:20px;">
                     <h3>Últimos Negócios</h3>
@@ -64,102 +43,60 @@
                 </div>
             </section>
 
-            <!-- PIPELINE -->
             <section id="page-pipeline" class="page">
-                <div class="pipeline-header">
+                <div class="page-header">
                     <h2>Pipeline de Vendas</h2>
                     <button class="btn btn-primary" onclick="PipelineModule.novoNegocio()">+ Novo Negócio</button>
                 </div>
                 <div class="pipeline-board" id="pipeline-board"></div>
             </section>
 
-            <!-- VENDAS -->
             <section id="page-vendas" class="page">
-                <div class="page-header">
-                    <h2>Registro de Vendas</h2>
-                    <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
-                </div>
-                <div class="card">
-                    <div id="vendas-list"></div>
-                </div>
+                <div class="page-header"><h2>Registro de Vendas</h2><button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button></div>
+                <div class="card"><div id="vendas-list"></div></div>
             </section>
 
-            <!-- CHECK-IN -->
+            <section id="page-viagens" class="page">
+                <div class="page-header"><h2>Viagens</h2><button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button></div>
+                <div class="card"><div id="viagens-list"></div></div>
+            </section>
+
             <section id="page-checkin" class="page">
-                <div class="page-header">
-                    <h2>Check-in de Clientes</h2>
-                    <button class="btn btn-primary" onclick="CheckinModule.novoCheckin()">+ Novo Check-in</button>
-                </div>
-                <div class="card">
-                    <div id="checkin-list"></div>
-                </div>
+                <div class="page-header"><h2>Check-in de Vendas</h2></div>
+                <div class="card"><div id="checkin-list"></div></div>
             </section>
 
-            <!-- MILHAS -->
             <section id="page-milhas" class="page">
-                <div class="page-header">
-                    <h2>Controle de Milhas</h2>
-                    <button class="btn btn-primary" onclick="MilhasModule.novoRegistro()">+ Novo Registro</button>
-                </div>
-                <div class="card">
-                    <div id="milhas-list"></div>
-                </div>
+                <div class="page-header"><h2>Controle de Milhas</h2><button class="btn btn-primary" onclick="MilhasModule.novoRegistro()">+ Novo Registro</button></div>
+                <div class="card"><div id="milhas-list"></div></div>
             </section>
 
-            <!-- COMISSÕES -->
             <section id="page-comissoes" class="page">
-                <div class="page-header">
-                    <h2>Comissões</h2>
-                </div>
-                <div class="card">
-                    <div id="comissoes-list"></div>
-                </div>
+                <div class="page-header"><h2>Comissões</h2></div>
+                <div class="card"><div id="comissoes-list"></div></div>
             </section>
 
-            <!-- CLIENTES -->
             <section id="page-clientes" class="page">
-                <div class="page-header">
-                    <h2>Clientes</h2>
-                    <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
-                </div>
-                <div class="card">
-                    <div id="clientes-list"></div>
-                </div>
+                <div class="page-header"><h2>Clientes</h2><button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button></div>
+                <div class="card"><div id="clientes-list"></div></div>
             </section>
 
-            <!-- CONFIGURAÇÕES -->
             <section id="page-config" class="page">
-                <div class="page-header">
-                    <h2>Configurações</h2>
-                </div>
+                <div class="page-header"><h2>Configurações</h2></div>
 
-                <!-- Agência -->
                 <div class="card">
                     <h3>Dados da Agência</h3>
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nome</label>
-                            <input type="text" id="cfg-agencia-nome" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>CNPJ</label>
-                            <input type="text" id="cfg-agencia-cnpj" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Telefone</label>
-                            <input type="text" id="cfg-agencia-telefone" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="cfg-agencia-email" class="form-control">
-                        </div>
+                        <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
+                        <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
+                        <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
                     </div>
                     <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()">Salvar</button>
                 </div>
 
-                <!-- Pipeline -->
                 <div class="card">
-                    <h3>Etapas do Pipeline</h3>
+                    <h3>Etapas do Pipeline (arraste para reordenar)</h3>
                     <div id="cfg-pipeline-list"></div>
                     <div class="form-inline" style="margin-top:12px;">
                         <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nome da nova etapa">
@@ -167,54 +104,45 @@
                     </div>
                 </div>
 
-                <!-- Serviços -->
                 <div class="card">
-                    <h3>Serviços</h3>
-                    <div id="cfg-servicos-list"></div>
+                    <h3>Serviços</h3><div id="cfg-servicos-list"></div>
                     <div class="form-inline" style="margin-top:12px;">
                         <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Nome do serviço">
                         <button class="btn btn-primary" onclick="ConfigModule.adicionarServico()">+ Adicionar</button>
                     </div>
                 </div>
 
-                <!-- Companhias -->
                 <div class="card">
-                    <h3>Companhias Aéreas</h3>
-                    <div id="cfg-companhias-list"></div>
+                    <h3>Companhias Aéreas</h3><div id="cfg-companhias-list"></div>
                     <div class="form-inline" style="margin-top:12px;">
                         <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nome da companhia">
                         <button class="btn btn-primary" onclick="ConfigModule.adicionarCompanhia()">+ Adicionar</button>
                     </div>
                 </div>
 
-                <!-- Programas -->
                 <div class="card">
-                    <h3>Programas de Milhas</h3>
-                    <div id="cfg-programas-list"></div>
+                    <h3>Programas de Milhas</h3><div id="cfg-programas-list"></div>
                     <div class="form-inline" style="margin-top:12px;">
                         <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Nome do programa">
                         <button class="btn btn-primary" onclick="ConfigModule.adicionarPrograma()">+ Adicionar</button>
                     </div>
                 </div>
 
-                <!-- Cartões -->
                 <div class="card">
-                    <h3>Cartões de Crédito</h3>
-                    <div id="cfg-cartoes-list"></div>
+                    <h3>Cartões de Crédito</h3><div id="cfg-cartoes-list"></div>
                     <div class="form-inline" style="margin-top:12px;">
                         <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Nome do cartão">
                         <button class="btn btn-primary" onclick="ConfigModule.adicionarCartao()">+ Adicionar</button>
                     </div>
                 </div>
 
-                <!-- Backup -->
                 <div class="card">
                     <h3>Backup e Restauração</h3>
                     <div class="btn-group">
                         <button class="btn btn-secondary" id="btn-export-json">📥 Exportar JSON</button>
                         <button class="btn btn-secondary" id="btn-export-csv">📊 Exportar CSV</button>
-                        <button class="btn btn-secondary" id="btn-import-backup">📤 Importar Backup</button>
-                        <input type="file" id="import-file" accept=".json" style="display:none;">
+                        <button class="btn btn-primary" id="btn-import-backup">📤 Importar Backup</button>
+                        <input type="file" id="import-file" accept=".json,application/json" style="display:none;">
                         <button class="btn btn-danger" id="btn-reset-data">🗑️ Resetar Dados</button>
                     </div>
                 </div>
@@ -222,48 +150,43 @@
         </div>
     </main>
 
-    <!-- TOAST -->
     <div id="toast-container"></div>
 
-    <!-- MODAL -->
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal" id="modal">
-            <div class="modal-header">
-                <h3 id="modal-title">Título</h3>
-                <button class="btn-icon" onclick="AppModule.closeModal()">✕</button>
-            </div>
+            <div class="modal-header"><h3 id="modal-title">Título</h3><button class="btn-icon" onclick="AppModule.closeModal()">✕</button></div>
             <div class="modal-body" id="modal-body"></div>
             <div class="modal-footer" id="modal-footer"></div>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="js/db.js"></script>
     <script src="js/app.js"></script>
     <script src="js/config.js"></script>
     <script src="js/pipeline.js"></script>
     <script src="js/vendas.js"></script>
+    <script src="js/viagens.js"></script>
     <script src="js/checkin.js"></script>
     <script src="js/milhas.js"></script>
     <script src="js/comissoes.js"></script>
     <script src="js/clientes.js"></script>
     <script src="js/backup.js"></script>
     <script>
-        // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 AppModule.init();
                 ConfigModule.init();
                 PipelineModule.init();
                 VendasModule.init();
+                ViagensModule.init();
                 CheckinModule.init();
                 MilhasModule.init();
                 ComissoesModule.init();
                 ClientesModule.init();
                 BackupModule.init();
-            } catch (error) {
-                console.error('Erro na inicialização:', error);
-                alert('Erro ao carregar o sistema. Verifique o console (F12).');
+            } catch (e) {
+                console.error('Erro na inicialização:', e);
+                alert('Erro ao carregar: ' + e.message);
             }
         });
     </script>

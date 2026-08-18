@@ -1,63 +1,38 @@
 /* ============================================================
-   comissoes.js — Módulo de Comissões
+   comissoes.js — Comissões calculadas sobre as vendas
    ============================================================ */
 
-if (typeof window.formatCurrency !== 'function') {
-    window.formatCurrency = function (value) {
-        return 'R$ ' + (Number(value) || 0).toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    };
-}
-
 const ComissoesModule = {
-    init() {
-        this.render();
-    },
+    init() { this.render(); },
 
     render() {
-        const list = document.getElementById('comissoes-list');
-        if (!list) return;
+        const el = document.getElementById('comissoes-list');
+        if (!el) return;
 
         const vendas = DB.getVendas();
         const agencia = DB.getAgencia();
         const percentual = agencia.comissaoPercentual || 10;
 
-        const comissoes = vendas.map(v => ({
-            ...v,
-            comissao: (v.valor || 0) * (percentual / 100)
-        }));
+        const total = vendas.reduce((s, v) => s + (Number(v.valorVenda) || 0), 0);
+        const comissaoTotal = total * (percentual / 100);
 
-        const totalComissoes = comissoes.reduce((sum, c) => sum + c.comissao, 0);
-
-        list.innerHTML = comissoes.length
-            ? `
-            <div style="margin-bottom:16px;padding:12px;background:var(--gray-50);border-radius:8px;">
-                <strong>Total de Comissões (${percentual}%):</strong> ${formatCurrency(totalComissoes)}
+        el.innerHTML = vendas.length ? `
+            <div style="margin-bottom:16px;padding:14px;background:var(--gray-50);border-radius:8px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div><strong>Total de Vendas:</strong> ${AppModule.formatCurrency(total)}</div>
+                <div><strong>Comissões (${percentual}%):</strong> ${AppModule.formatCurrency(comissaoTotal)}</div>
             </div>
             <table class="table">
-                <thead>
+                <thead><tr>
+                    <th>Cliente</th><th>Venda</th><th>Valor</th><th>Comissão</th>
+                </tr></thead>
+                <tbody>${vendas.map(v => `
                     <tr>
-                        <th>Cliente</th>
-                        <th>Serviço</th>
-                        <th>Valor da Venda</th>
-                        <th>Comissão (${percentual}%)</th>
-                        <th>Data</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${comissoes.map(c => `
-                        <tr>
-                            <td>${c.cliente || '—'}</td>
-                            <td>${c.servico || '—'}</td>
-                            <td>${formatCurrency(c.valor)}</td>
-                            <td><strong>${formatCurrency(c.comissao)}</strong></td>
-                            <td>${c.data || '—'}</td>
-                        </tr>
-                    `).join('')}
+                        <td>${DB.getClienteNome(v.clienteId)}</td>
+                        <td>${v.titulo || '—'}</td>
+                        <td>${AppModule.formatCurrency(v.valorVenda)}</td>
+                        <td><strong>${AppModule.formatCurrency((v.valorVenda || 0) * (percentual / 100))}</strong></td>
+                    </tr>`).join('')}
                 </tbody>
-            </table>`
-            : '<p style="color:var(--gray-500);">Nenhuma venda registrada para calcular comissões</p>';
+            </table>` : '<p style="color:var(--gray-500);">Nenhuma venda para calcular comissões</p>';
     }
 };
