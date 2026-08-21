@@ -29,16 +29,71 @@
 
         <div class="content-area">
             <section id="page-dashboard" class="page active">
-                <div class="dashboard-grid">
-                    <div class="card stat-card"><h3>Negócios Ativos</h3><div class="stat-value" id="stat-negocios">0</div></div>
-                    <div class="card stat-card"><h3>Vendas (R$)</h3><div class="stat-value" id="stat-vendas">R$ 0</div></div>
-                    <div class="card stat-card"><h3>Viagens Ativas</h3><div class="stat-value" id="stat-viagens">0</div></div>
-                    <div class="card stat-card"><h3>Clientes</h3><div class="stat-value" id="stat-clientes">0</div></div>
+
+                <!-- 🚨 ALERTAS -->
+                <div class="card dashboard-alerts" id="dashboard-alertas">
+                    <h3>🚨 Alertas e Ações Prioritárias</h3>
+                    <div id="alertas-list"></div>
                 </div>
-                <div class="card" style="margin-top:20px;">
-                    <h3>Últimos Negócios</h3>
-                    <div id="dashboard-negocios"></div>
+
+                <!-- 💰 KPIs FINANCEIROS -->
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-receita">
+                        <div class="kpi-label">💰 Receita Total</div>
+                        <div class="kpi-value" id="kpi-receita">R$ 0</div>
+                        <div class="kpi-sub" id="kpi-receita-sub">—</div>
+                    </div>
+                    <div class="kpi-card kpi-lucro">
+                        <div class="kpi-label">📈 Lucro Real</div>
+                        <div class="kpi-value" id="kpi-lucro">R$ 0</div>
+                        <div class="kpi-sub" id="kpi-lucro-sub">—</div>
+                    </div>
+                    <div class="kpi-card kpi-margem">
+                        <div class="kpi-label">📊 Margem de Lucro</div>
+                        <div class="kpi-value" id="kpi-margem">0%</div>
+                        <div class="kpi-sub" id="kpi-margem-sub">—</div>
+                    </div>
+                    <div class="kpi-card kpi-ticket">
+                        <div class="kpi-label">🎫 Ticket Médio</div>
+                        <div class="kpi-value" id="kpi-ticket">R$ 0</div>
+                        <div class="kpi-sub" id="kpi-ticket-sub">—</div>
+                    </div>
+                    <div class="kpi-card kpi-conversao">
+                        <div class="kpi-label">🔄 Taxa de Conversão</div>
+                        <div class="kpi-value" id="kpi-conversao">0%</div>
+                        <div class="kpi-sub" id="kpi-conversao-sub">—</div>
+                    </div>
+                    <div class="kpi-card kpi-pipeline">
+                        <div class="kpi-label">💼 Pipeline Ativo</div>
+                        <div class="kpi-value" id="kpi-pipeline">R$ 0</div>
+                        <div class="kpi-sub" id="kpi-pipeline-sub">—</div>
+                    </div>
                 </div>
+
+                <!-- 📊 TOP CLIENTES + MIX DE SERVIÇOS -->
+                <div class="dashboard-grid-2">
+                    <div class="card">
+                        <h3>🏆 Top 5 Clientes (por receita)</h3>
+                        <div id="top-clientes"></div>
+                    </div>
+                    <div class="card">
+                        <h3>🛎️ Mix de Serviços</h3>
+                        <div id="mix-servicos"></div>
+                    </div>
+                </div>
+
+                <!-- 📋 PIPELINE POR ETAPA + ATIVIDADES -->
+                <div class="dashboard-grid-2">
+                    <div class="card">
+                        <h3>📋 Pipeline por Etapa</h3>
+                        <div id="pipeline-etapas"></div>
+                    </div>
+                    <div class="card">
+                        <h3>📢 Atividades Recentes</h3>
+                        <div id="atividades-recentes"></div>
+                    </div>
+                </div>
+
             </section>
 
             <section id="page-pipeline" class="page">
