@@ -30,10 +30,22 @@
         <div class="content-area">
             <section id="page-dashboard" class="page active">
 
-                <!-- 🚨 ALERTAS -->
+                <!-- 🚨 ALERTAS E AÇÕES PRIORITÁRIAS -->
                 <div class="card dashboard-alerts" id="dashboard-alertas">
-                    <h3>🚨 Alertas e Ações Prioritárias</h3>
-                    <div id="alertas-list"></div>
+                    <div class="alerts-header">
+                        <div class="alerts-title">
+                            <h3>🚨 Alertas e Ações Prioritárias</h3>
+                            <span class="alerts-subtitle" id="alerts-subtitle"></span>
+                        </div>
+                        <div class="alerts-stats" id="alerts-stats"></div>
+                    </div>
+                    <div class="alerts-filters" id="alerts-filters">
+                        <button class="alert-filter active" data-filter="all" onclick="AppModule.filterAlertas('all')">Todos</button>
+                        <button class="alert-filter" data-filter="critical" onclick="AppModule.filterAlertas('critical')">🔴 Críticos</button>
+                        <button class="alert-filter" data-filter="warning" onclick="AppModule.filterAlertas('warning')">🟡 Atenção</button>
+                        <button class="alert-filter" data-filter="info" onclick="AppModule.filterAlertas('info')">🔵 Informativos</button>
+                    </div>
+                    <div class="alerts-grid" id="alertas-list"></div>
                 </div>
 
                 <!-- 💰 KPIs FINANCEIROS -->

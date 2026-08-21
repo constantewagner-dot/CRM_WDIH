@@ -1,4 +1,7 @@
 const AppModule = {
+    _alertas: [],
+    _filtroAtivo: 'all',
+
     init() {
         this.setupNavigation();
         this.setupSidebar();
@@ -96,114 +99,171 @@ const AppModule = {
         this.renderAtividades();
     },
 
-    // 🚨 ALERTAS
-    renderAlertas() {
-        const el = document.getElementById('alertas-list');
-        const card = document.getElementById('dashboard-alertas');
-        if (!el) return;
-
+    // ================================================
+    // 🚨 ALERTAS E AÇÕES PRIORITÁRIAS (otimizado)
+    // ================================================
+    coletarAlertas() {
         const alertas = [];
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
 
-        // 1) Viagens próximas (≤7 dias) sem check-in → CRÍTICO
+        // 1) Viagens próximas sem check-in
         DB.getViagens().forEach(v => {
-            if (v.concluida || v.checkinFeito) return;
-            if (!v.dataIda) return;
+            if (v.concluida || v.checkinFeito || !v.dataIda) return;
             const dataIda = new Date(v.dataIda + 'T00:00:00');
             const dias = Math.ceil((dataIda - hoje) / 86400000);
-            if (dias < 0) return; // já passou
+            if (dias < 0) return;
             if (dias <= 3) {
                 alertas.push({
-                    tipo: 'critical',
-                    icon: '🔴',
+                    tipo: 'critical', icon: '🔴',
                     title: `Check-in URGENTE: ${DB.getClienteNome(v.clienteId)}`,
-                    desc: `Viagem para ${v.destino || '—'} em ${dias === 0 ? 'HOJE' : dias + ' dia(s)'} (${this.formatDate(v.dataIda)}). Check-in não realizado.`,
-                    action: 'Ir para Viagens',
-                    page: 'viagens'
+                    desc: `Viagem para ${v.destino || '—'} ${dias === 0 ? 'é HOJE' : `em ${dias} dia(s)`} (${this.formatDate(v.dataIda)}). Check-in não realizado.`,
+                    action: 'Fazer check-in →', page: 'viagens',
+                    tempo: dias === 0 ? 'HOJE' : `${dias} dia(s)`, urgente: true
                 });
             } else if (dias <= 7) {
                 alertas.push({
-                    tipo: 'warning',
-                    icon: '🟡',
+                    tipo: 'warning', icon: '🟡',
                     title: `Viagem próxima: ${DB.getClienteNome(v.clienteId)}`,
                     desc: `Viagem para ${v.destino || '—'} em ${dias} dias (${this.formatDate(v.dataIda)}). Check-in pendente.`,
-                    action: 'Ir para Viagens',
-                    page: 'viagens'
+                    action: 'Ver viagem →', page: 'viagens',
+                    tempo: `${dias} dias`, urgente: false
                 });
             }
         });
 
-        // 2) Negócios parados há mais de 15 dias → ATENÇÃO
+        // 2) Negócios parados
         DB.getNegocios().forEach(n => {
             if (n.stage === 'Fechado (Ganho)' || n.stage === 'Perdido') return;
             const atualizado = new Date(n.atualizadoEm || n.criadoEm);
             const diasParado = Math.floor((Date.now() - atualizado.getTime()) / 86400000);
             if (diasParado >= 15) {
                 alertas.push({
-                    tipo: 'warning',
-                    icon: '⏸️',
+                    tipo: 'warning', icon: '⏸️',
                     title: `Negócio parado: ${DB.getClienteNome(n.clienteId)}`,
                     desc: `"${n.titulo || '—'}" sem atualização há ${diasParado} dias. Etapa: ${n.stage}.`,
-                    action: 'Ir para Pipeline',
-                    page: 'pipeline'
+                    action: 'Ir para Pipeline →', page: 'pipeline',
+                    tempo: `${diasParado} dias parado`, urgente: false
                 });
             }
         });
 
-        // 3) Propostas enviadas há mais de 7 dias → FOLLOW-UP
+        // 3) Propostas aguardando follow-up
         DB.getNegocios().forEach(n => {
             if (n.stage !== 'Proposta Enviada') return;
             const atualizado = new Date(n.atualizadoEm || n.criadoEm);
             const dias = Math.floor((Date.now() - atualizado.getTime()) / 86400000);
             if (dias >= 7) {
                 alertas.push({
-                    tipo: 'info',
-                    icon: '📞',
-                    title: `Follow-up necessário: ${DB.getClienteNome(n.clienteId)}`,
+                    tipo: 'info', icon: '📞',
+                    title: `Follow-up: ${DB.getClienteNome(n.clienteId)}`,
                     desc: `Proposta enviada há ${dias} dias. Hora de cobrar retorno.`,
-                    action: 'Ir para Pipeline',
-                    page: 'pipeline'
+                    action: 'Ir para Pipeline →', page: 'pipeline',
+                    tempo: `há ${dias} dias`, urgente: false
                 });
             }
         });
 
-        // 4) Viagens sem check-in com data passada (atrasadas) → CRÍTICO
+        // 4) Viagens atrasadas
         DB.getViagens().forEach(v => {
-            if (v.concluida || v.checkinFeito) return;
-            if (!v.dataIda) return;
+            if (v.concluida || v.checkinFeito || !v.dataIda) return;
             const dataIda = new Date(v.dataIda + 'T00:00:00');
             const dias = Math.ceil((dataIda - hoje) / 86400000);
             if (dias < 0) {
                 alertas.push({
-                    tipo: 'critical',
-                    icon: '⚠️',
+                    tipo: 'critical', icon: '⚠️',
                     title: `Viagem ATRASADA: ${DB.getClienteNome(v.clienteId)}`,
                     desc: `Viagem para ${v.destino || '—'} era para ${this.formatDate(v.dataIda)} e não foi concluída.`,
-                    action: 'Ir para Viagens',
-                    page: 'viagens'
+                    action: 'Ver viagem →', page: 'viagens',
+                    tempo: 'ATRASADA', urgente: true
                 });
             }
         });
 
-        // Ordena: críticos primeiro
         const ordem = { critical: 0, warning: 1, info: 2 };
         alertas.sort((a, b) => ordem[a.tipo] - ordem[b.tipo]);
+        return alertas;
+    },
 
-        if (alertas.length === 0) {
-            card.classList.add('no-alerts');
-            el.innerHTML = '<div class="no-alerts-msg">✅ Tudo em ordem! Nenhum alerta pendente.</div>';
+    renderAlertas() {
+        const el = document.getElementById('alertas-list');
+        if (!el) return;
+
+        const alertas = this.coletarAlertas();
+        this._alertas = alertas;
+        this._filtroAtivo = 'all';
+
+        // Subtítulo
+        const sub = document.getElementById('alerts-subtitle');
+        if (sub) sub.textContent = alertas.length
+            ? `${alertas.length} ação(ões) precisando de atenção`
+            : 'Nenhuma pendência no momento';
+
+        // Contadores (stats clicáveis)
+        const statsEl = document.getElementById('alerts-stats');
+        if (statsEl) {
+            const critical = alertas.filter(a => a.tipo === 'critical').length;
+            const warning = alertas.filter(a => a.tipo === 'warning').length;
+            const info = alertas.filter(a => a.tipo === 'info').length;
+            statsEl.innerHTML = `
+                <div class="alert-stat critical" onclick="AppModule.filterAlertas('critical')">
+                    <span class="dot"></span> ${critical} Crítico(s)
+                </div>
+                <div class="alert-stat warning" onclick="AppModule.filterAlertas('warning')">
+                    <span class="dot"></span> ${warning} Atenção
+                </div>
+                <div class="alert-stat info" onclick="AppModule.filterAlertas('info')">
+                    <span class="dot"></span> ${info} Informativo(s)
+                </div>`;
+        }
+
+        // Esconde filtros se não houver alertas
+        const filtersEl = document.getElementById('alerts-filters');
+        if (filtersEl) filtersEl.style.display = alertas.length ? 'flex' : 'none';
+
+        this.renderAlertasGrid(alertas, 'all');
+    },
+
+    filterAlertas(filtro) {
+        this._filtroAtual = filtro;
+
+        // Atualiza botões de filtro
+        document.querySelectorAll('.alert-filter').forEach(b => {
+            b.classList.toggle('active', b.dataset.filter === filtro);
+        });
+
+        // Atualiza stats ativos
+        document.querySelectorAll('.alert-stat').forEach(s => {
+            s.classList.toggle('active', s.classList.contains(filtro));
+        });
+
+        this.renderAlertasGrid(this._alertas, filtro);
+    },
+
+    renderAlertasGrid(alertas, filtro) {
+        const el = document.getElementById('alertas-list');
+        if (!el) return;
+
+        const lista = filtro === 'all' ? alertas : alertas.filter(a => a.tipo === filtro);
+
+        if (lista.length === 0) {
+            const msg = alertas.length === 0
+                ? '✅ Tudo em ordem! Nenhuma pendência no momento.'
+                : 'Nenhum alerta nesta categoria ✓';
+            el.innerHTML = `<div class="alerts-empty ${alertas.length === 0 ? 'success' : ''}">${msg}</div>`;
             return;
         }
 
-        card.classList.remove('no-alerts');
-        el.innerHTML = alertas.map(a => `
+        el.innerHTML = lista.map(a => `
             <div class="alert-item alert-${a.tipo}">
                 <div class="alert-icon">${a.icon}</div>
                 <div class="alert-content">
                     <div class="alert-title">${a.title}</div>
                     <div class="alert-desc">${a.desc}</div>
-                    <div class="alert-action" onclick="AppModule.navigateTo('${a.page}')">${a.action} →</div>
+                    <div class="alert-footer">
+                        <span class="alert-action" onclick="AppModule.navigateTo('${a.page}')">${a.action}</span>
+                        <span class="alert-tempo ${a.urgente ? 'urgent' : ''}">${a.tempo}</span>
+                    </div>
                 </div>
             </div>`).join('');
     },
@@ -213,24 +273,17 @@ const AppModule = {
         const vendas = DB.getVendas();
         const negocios = DB.getNegocios();
 
-        // Receita (valor final)
         const receita = vendas.reduce((s, v) => s + (Number(v.valorVenda) || 0), 0);
-        // Lucro
         const lucro = vendas.reduce((s, v) => s + ((Number(v.valorVenda) || 0) - (Number(v.valorOriginal) || 0)), 0);
-        // Margem
         const margem = receita > 0 ? (lucro / receita) * 100 : 0;
-        // Ticket médio
         const ticket = vendas.length > 0 ? receita / vendas.length : 0;
-        // Conversão
         const fechados = negocios.filter(n => n.stage === 'Fechado (Ganho)').length;
         const totalNegocios = negocios.filter(n => n.stage !== 'Perdido').length;
         const conversao = totalNegocios > 0 ? (fechados / totalNegocios) * 100 : 0;
-        // Pipeline ativo
         const pipelineAtivo = negocios
             .filter(n => n.stage !== 'Fechado (Ganho)' && n.stage !== 'Perdido')
             .reduce((s, n) => s + (Number(n.valor) || 0), 0);
 
-        // Comparação com mês anterior (receita)
         const agora = new Date();
         const mesAtual = agora.getMonth();
         const anoAtual = agora.getFullYear();
