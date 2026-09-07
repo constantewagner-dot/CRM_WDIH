@@ -3,252 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM WDIH</title>
+    <title>CRM WDIH — Gestão de Milhas</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header"><h2>🏢 CRM WDIH</h2></div>
-        <nav class="sidebar-nav">
-            <a href="#" class="nav-item active" data-page="dashboard">📊 Dashboard</a>
-            <a href="#" class="nav-item" data-page="pipeline">📋 Pipeline</a>
-            <a href="#" class="nav-item" data-page="vendas">💰 Vendas</a>
-            <a href="#" class="nav-item" data-page="viagens">✈️ Viagens</a>
-            <a href="#" class="nav-item" data-page="milhas">💠 Milhas</a>
-            <a href="#" class="nav-item" data-page="clientes">👥 Clientes</a>
-            <a href="#" class="nav-item" data-page="config">⚙️ Configurações</a>
-        </nav>
-    </aside>
+    <div class="app">
+        <!-- ===================== SIDEBAR ===================== -->
+        <aside class="sidebar">
+            <div class="brand">💠 CRM WDIH</div>
+            <nav class="nav">
+                <button class="nav-item active" data-pagina="dashboard" onclick="AppModule.abrirPagina('dashboard')">📊 <span>Dashboard</span></button>
+                <button class="nav-item" data-pagina="clientes" onclick="AppModule.abrirPagina('clientes')">👥 <span>Clientes</span></button>
+                <button class="nav-item" data-pagina="viagens" onclick="AppModule.abrirPagina('viagens')">✈️ <span>Viagens</span></button>
+                <button class="nav-item" data-pagina="milhas" onclick="AppModule.abrirPagina('milhas')">💠 <span>Milhas</span></button>
+            </nav>
+        </aside>
 
-    <main class="main-content">
-        <header class="topbar">
-            <button id="btn-toggle-sidebar" class="btn-icon">☰</button>
-            <h1 id="page-title">Dashboard</h1>
-            <div class="topbar-actions"><span id="user-name">Wagner</span></div>
-        </header>
-
-        <div class="content-area">
+        <!-- ===================== CONTEÚDO ===================== -->
+        <main class="main">
+            <!-- DASHBOARD -->
             <section id="page-dashboard" class="page active">
-
-                <!-- 🚨 ALERTAS E AÇÕES PRIORITÁRIAS -->
-                <div class="card dashboard-alerts" id="dashboard-alertas">
-                    <div class="alerts-header">
-                        <div class="alerts-title">
-                            <h3>🚨 Alertas e Ações Prioritárias</h3>
-                            <span class="alerts-subtitle" id="alerts-subtitle"></span>
-                        </div>
-                        <div class="alerts-stats" id="alerts-stats"></div>
-                    </div>
-                    <div class="alerts-filters" id="alerts-filters">
-                        <button class="alert-filter active" data-filter="all" onclick="AppModule.filterAlertas('all')">Todos</button>
-                        <button class="alert-filter" data-filter="critical" onclick="AppModule.filterAlertas('critical')">🔴 Críticos</button>
-                        <button class="alert-filter" data-filter="warning" onclick="AppModule.filterAlertas('warning')">🟡 Atenção</button>
-                        <button class="alert-filter" data-filter="info" onclick="AppModule.filterAlertas('info')">🔵 Informativos</button>
-                    </div>
-                    <div class="alerts-grid" id="alertas-list"></div>
-                </div>
-
-                <!-- 💰 KPIs FINANCEIROS -->
-                <div class="kpi-grid">
-                    <div class="kpi-card kpi-receita">
-                        <div class="kpi-label">💰 Receita Total</div>
-                        <div class="kpi-value" id="kpi-receita">R$ 0</div>
-                        <div class="kpi-sub" id="kpi-receita-sub">—</div>
-                    </div>
-                    <div class="kpi-card kpi-lucro">
-                        <div class="kpi-label">📈 Lucro Real</div>
-                        <div class="kpi-value" id="kpi-lucro">R$ 0</div>
-                        <div class="kpi-sub" id="kpi-lucro-sub">—</div>
-                    </div>
-                    <div class="kpi-card kpi-margem">
-                        <div class="kpi-label">📊 Margem de Lucro</div>
-                        <div class="kpi-value" id="kpi-margem">0%</div>
-                        <div class="kpi-sub" id="kpi-margem-sub">—</div>
-                    </div>
-                    <div class="kpi-card kpi-ticket">
-                        <div class="kpi-label">🎫 Ticket Médio</div>
-                        <div class="kpi-value" id="kpi-ticket">R$ 0</div>
-                        <div class="kpi-sub" id="kpi-ticket-sub">—</div>
-                    </div>
-                    <div class="kpi-card kpi-conversao">
-                        <div class="kpi-label">🔄 Taxa de Conversão</div>
-                        <div class="kpi-value" id="kpi-conversao">0%</div>
-                        <div class="kpi-sub" id="kpi-conversao-sub">—</div>
-                    </div>
-                    <div class="kpi-card kpi-pipeline">
-                        <div class="kpi-label">💼 Pipeline Ativo</div>
-                        <div class="kpi-value" id="kpi-pipeline">R$ 0</div>
-                        <div class="kpi-sub" id="kpi-pipeline-sub">—</div>
-                    </div>
-                </div>
-
-                <!-- 📊 TOP CLIENTES + MIX DE SERVIÇOS -->
-                <div class="dashboard-grid-2">
-                    <div class="card">
-                        <h3>🏆 Top 5 Clientes (por receita)</h3>
-                        <div id="top-clientes"></div>
-                    </div>
-                    <div class="card">
-                        <h3>🛎️ Mix de Serviços</h3>
-                        <div id="mix-servicos"></div>
-                    </div>
-                </div>
-
-                <!-- 📋 PIPELINE POR ETAPA + ATIVIDADES -->
-                <div class="dashboard-grid-2">
-                    <div class="card">
-                        <h3>📋 Pipeline por Etapa</h3>
-                        <div id="pipeline-etapas"></div>
-                    </div>
-                    <div class="card">
-                        <h3>📢 Atividades Recentes</h3>
-                        <div id="atividades-recentes"></div>
-                    </div>
-                </div>
-
-            </section>
-
-            <section id="page-pipeline" class="page">
                 <div class="page-header">
-                    <h2>Pipeline de Vendas</h2>
-                    <button class="btn btn-primary" onclick="PipelineModule.novoNegocio()">+ Novo Negócio</button>
+                    <h2>📊 Dashboard</h2>
                 </div>
-                <div class="pipeline-board" id="pipeline-board"></div>
+                <div class="card">
+                    <h3>Visão Geral</h3>
+                    <p>Bem-vindo ao <strong>CRM WDIH</strong>. Utilize o menu lateral para navegar entre os módulos. A área de <strong>Milhas</strong> já está completa com seus dados das planilhas.</p>
+                </div>
             </section>
 
-            <section id="page-vendas" class="page">
+            <!-- CLIENTES -->
+            <section id="page-clientes" class="page">
                 <div class="page-header">
-                    <h2>Vendas</h2>
-                    <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
+                    <h2>👥 Clientes</h2>
                 </div>
-                <div class="stats-row" id="vendas-resumo"></div>
-                <div class="card"><div id="vendas-list"></div></div>
+                <div class="card">
+                    <div class="empty-chart">Módulo de clientes em desenvolvimento.</div>
+                </div>
             </section>
 
+            <!-- VIAGENS -->
             <section id="page-viagens" class="page">
                 <div class="page-header">
-                    <h2>Viagens</h2>
-                    <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
+                    <h2>✈️ Viagens</h2>
                 </div>
-                <div id="viagens-list"></div>
+                <div class="card">
+                    <div class="empty-chart">Módulo de viagens em desenvolvimento.</div>
+                </div>
             </section>
 
+            <!-- MILHAS -->
             <section id="page-milhas" class="page">
-                <div class="page-header"><h2>Controle de Milhas</h2><button class="btn btn-primary" onclick="MilhasModule.novoRegistro()">+ Novo Registro</button></div>
-                <div class="card"><div id="milhas-list"></div></div>
-            </section>
-
-            <section id="page-clientes" class="page">
-                <div class="page-header"><h2>Clientes</h2><button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button></div>
-                <div class="card"><div id="clientes-list"></div></div>
-            </section>
-
-            <section id="page-config" class="page">
-                <div class="page-header"><h2>Configurações</h2></div>
-                <div class="config-grid">
-                    <div class="card config-full">
-                        <h3>Dados da Agência</h3>
-                        <div class="form-grid">
-                            <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
-                            <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
-                            <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
-                            <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
-                            <div class="form-group"><label>Comissão padrão (%)</label><input type="number" id="cfg-agencia-comissao" class="form-control" step="0.1"></div>
-                        </div>
-                        <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()">Salvar</button>
-                    </div>
-
-                    <div class="card">
-                        <h3>Etapas do Pipeline</h3>
-                        <div id="cfg-pipeline-list"></div>
-                        <div class="form-inline" style="margin-top:12px;">
-                            <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nova etapa">
-                            <button class="btn btn-primary" onclick="ConfigModule.adicionarEtapa()">+ Adicionar</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>Serviços</h3><div id="cfg-servicos-list"></div>
-                        <div class="form-inline" style="margin-top:12px;">
-                            <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Novo serviço">
-                            <button class="btn btn-primary" onclick="ConfigModule.adicionarServico()">+ Adicionar</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>Companhias Aéreas</h3><div id="cfg-companhias-list"></div>
-                        <div class="form-inline" style="margin-top:12px;">
-                            <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nova companhia">
-                            <button class="btn btn-primary" onclick="ConfigModule.adicionarCompanhia()">+ Adicionar</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>Programas de Milhas</h3><div id="cfg-programas-list"></div>
-                        <div class="form-inline" style="margin-top:12px;">
-                            <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Novo programa">
-                            <button class="btn btn-primary" onclick="ConfigModule.adicionarPrograma()">+ Adicionar</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>Cartões de Crédito</h3><div id="cfg-cartoes-list"></div>
-                        <div class="form-inline" style="margin-top:12px;">
-                            <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Novo cartão">
-                            <button class="btn btn-primary" onclick="ConfigModule.adicionarCartao()">+ Adicionar</button>
-                        </div>
-                    </div>
-
-                    <div class="card config-full">
-                        <h3>Backup e Restauração</h3>
-                        <div class="btn-group">
-                            <button class="btn btn-secondary" id="btn-export-json">📥 Exportar JSON</button>
-                            <button class="btn btn-secondary" id="btn-export-csv">📊 Exportar CSV</button>
-                            <button class="btn btn-primary" id="btn-import-backup">📤 Importar Backup</button>
-                            <input type="file" id="import-file" accept=".json,application/json" style="display:none;">
-                            <button class="btn btn-danger" id="btn-reset-data">🗑️ Resetar Dados</button>
-                        </div>
-                    </div>
+                <div class="page-header">
+                    <h2>💠 Gestão de Milhas</h2>
                 </div>
+
+                <div class="milhas-tabs" id="milhas-tabs">
+                    <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">📊 Visão Geral</button>
+                    <button class="milhas-tab" data-tab="clubes" onclick="MilhasModule.abrirTab('clubes')">🏦 Clubes</button>
+                    <button class="milhas-tab" data-tab="investimentos" onclick="MilhasModule.abrirTab('investimentos')">📥 Investimentos</button>
+                    <button class="milhas-tab" data-tab="vendas" onclick="MilhasModule.abrirTab('vendas')">💰 Vendas</button>
+                    <button class="milhas-tab" data-tab="orcamento" onclick="MilhasModule.abrirTab('orcamento')">🧾 Orçamento</button>
+                    <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">💳 Cartões</button>
+                    <button class="milhas-tab" data-tab="bilhetes" onclick="MilhasModule.abrirTab('bilhetes')">🎫 Bilhetes</button>
+                </div>
+
+                <div class="milhas-panel active" id="milhas-panel-visao"></div>
+                <div class="milhas-panel" id="milhas-panel-clubes"></div>
+                <div class="milhas-panel" id="milhas-panel-investimentos"></div>
+                <div class="milhas-panel" id="milhas-panel-vendas"></div>
+                <div class="milhas-panel" id="milhas-panel-orcamento"></div>
+                <div class="milhas-panel" id="milhas-panel-cartoes"></div>
+                <div class="milhas-panel" id="milhas-panel-bilhetes"></div>
             </section>
-        </div>
-    </main>
-
-    <div id="toast-container"></div>
-
-    <div id="modal-overlay" class="modal-overlay">
-        <div class="modal" id="modal">
-            <div class="modal-header"><h3 id="modal-title">Título</h3><button class="btn-icon" onclick="AppModule.closeModal()">✕</button></div>
-            <div class="modal-body" id="modal-body"></div>
-            <div class="modal-footer" id="modal-footer"></div>
-        </div>
+        </main>
     </div>
 
-    <script src="js/db.js"></script>
+    <!-- Overlays -->
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+
+    <!-- Scripts -->
     <script src="js/app.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/pipeline.js"></script>
-    <script src="js/vendas.js"></script>
-    <script src="js/viagens.js"></script>
     <script src="js/milhas.js"></script>
-    <script src="js/clientes.js"></script>
-    <script src="js/backup.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                AppModule.init();
-                ConfigModule.init();
-                PipelineModule.init();
-                VendasModule.init();
-                ViagensModule.init();
-                MilhasModule.init();
-                ClientesModule.init();
-                BackupModule.init();
-            } catch (e) {
-                console.error('Erro na inicialização:', e);
-                alert('Erro ao carregar: ' + e.message);
-            }
-        });
-    </script>
 </body>
 </html>
