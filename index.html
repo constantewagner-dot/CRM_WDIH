@@ -1,90 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM WDIH — Gestão de Milhas</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CRM WDIH — Gestão de Milhas</title>
+<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <div class="app">
-        <!-- ===================== SIDEBAR ===================== -->
-        <aside class="sidebar">
-            <div class="brand">💠 CRM WDIH</div>
-            <nav class="nav">
-                <button class="nav-item active" data-pagina="dashboard" onclick="AppModule.abrirPagina('dashboard')">📊 <span>Dashboard</span></button>
-                <button class="nav-item" data-pagina="clientes" onclick="AppModule.abrirPagina('clientes')">👥 <span>Clientes</span></button>
-                <button class="nav-item" data-pagina="viagens" onclick="AppModule.abrirPagina('viagens')">✈️ <span>Viagens</span></button>
-                <button class="nav-item" data-pagina="milhas" onclick="AppModule.abrirPagina('milhas')">💠 <span>Milhas</span></button>
-            </nav>
-        </aside>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">💠 CRM WDIH</div>
+    <nav class="nav">
+      <button class="nav-item active" data-pagina="dashboard" onclick="openPage('dashboard')">📊 <span>Dashboard</span></button>
+      <button class="nav-item" data-pagina="clientes" onclick="openPage('clientes')">👥 <span>Clientes</span></button>
+      <button class="nav-item" data-pagina="viagens" onclick="openPage('viagens')">✈️ <span>Viagens</span></button>
+      <button class="nav-item" data-pagina="milhas" onclick="openPage('milhas')">💠 <span>Milhas</span></button>
+    </nav>
+  </aside>
 
-        <!-- ===================== CONTEÚDO ===================== -->
-        <main class="main">
-            <!-- DASHBOARD -->
-            <section id="page-dashboard" class="page active">
-                <div class="page-header">
-                    <h2>📊 Dashboard</h2>
-                </div>
-                <div class="card">
-                    <h3>Visão Geral</h3>
-                    <p>Bem-vindo ao <strong>CRM WDIH</strong>. Utilize o menu lateral para navegar entre os módulos. A área de <strong>Milhas</strong> já está completa com seus dados das planilhas.</p>
-                </div>
-            </section>
+  <!-- CONTEÚDO -->
+  <main class="main">
 
-            <!-- CLIENTES -->
-            <section id="page-clientes" class="page">
-                <div class="page-header">
-                    <h2>👥 Clientes</h2>
-                </div>
-                <div class="card">
-                    <div class="empty-chart">Módulo de clientes em desenvolvimento.</div>
-                </div>
-            </section>
+    <!-- DASHBOARD (placeholders — substitua pelo seu conteúdo original) -->
+    <section id="page-dashboard" class="page active">
+      <div class="page-header"><h2>📊 Dashboard</h2></div>
+      <div class="card">
+        <h3>Visão Geral</h3>
+        <p>Bem-vindo ao <strong>CRM WDIH</strong>. Use o menu lateral para navegar.</p>
+      </div>
+    </section>
 
-            <!-- VIAGENS -->
-            <section id="page-viagens" class="page">
-                <div class="page-header">
-                    <h2>✈️ Viagens</h2>
-                </div>
-                <div class="card">
-                    <div class="empty-chart">Módulo de viagens em desenvolvimento.</div>
-                </div>
-            </section>
+    <!-- CLIENTES -->
+    <section id="page-clientes" class="page">
+      <div class="page-header"><h2>👥 Clientes</h2></div>
+      <div class="card"><div class="empty-chart">Em desenvolvimento</div></div>
+    </section>
 
-            <!-- MILHAS -->
-            <section id="page-milhas" class="page">
-                <div class="page-header">
-                    <h2>💠 Gestão de Milhas</h2>
-                </div>
+    <!-- VIAGENS -->
+    <section id="page-viagens" class="page">
+      <div class="page-header"><h2>✈️ Viagens</h2></div>
+      <div class="card"><div class="empty-chart">Em desenvolvimento</div></div>
+    </section>
 
-                <div class="milhas-tabs" id="milhas-tabs">
-                    <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">📊 Visão Geral</button>
-                    <button class="milhas-tab" data-tab="clubes" onclick="MilhasModule.abrirTab('clubes')">🏦 Clubes</button>
-                    <button class="milhas-tab" data-tab="investimentos" onclick="MilhasModule.abrirTab('investimentos')">📥 Investimentos</button>
-                    <button class="milhas-tab" data-tab="vendas" onclick="MilhasModule.abrirTab('vendas')">💰 Vendas</button>
-                    <button class="milhas-tab" data-tab="orcamento" onclick="MilhasModule.abrirTab('orcamento')">🧾 Orçamento</button>
-                    <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">💳 Cartões</button>
-                    <button class="milhas-tab" data-tab="bilhetes" onclick="MilhasModule.abrirTab('bilhetes')">🎫 Bilhetes</button>
-                </div>
+    <!-- 💠 MILHAS -->
+    <section id="page-milhas" class="page">
+      <div class="page-header"><h2>💠 Gestão de Milhas</h2></div>
 
-                <div class="milhas-panel active" id="milhas-panel-visao"></div>
-                <div class="milhas-panel" id="milhas-panel-clubes"></div>
-                <div class="milhas-panel" id="milhas-panel-investimentos"></div>
-                <div class="milhas-panel" id="milhas-panel-vendas"></div>
-                <div class="milhas-panel" id="milhas-panel-orcamento"></div>
-                <div class="milhas-panel" id="milhas-panel-cartoes"></div>
-                <div class="milhas-panel" id="milhas-panel-bilhetes"></div>
-            </section>
-        </main>
-    </div>
+      <div class="milhas-tabs" id="milhas-tabs">
+        <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">📊 Visão Geral</button>
+        <button class="milhas-tab" data-tab="clubes" onclick="MilhasModule.abrirTab('clubes')">🏦 Clubes</button>
+        <button class="milhas-tab" data-tab="investimentos" onclick="MilhasModule.abrirTab('investimentos')">📥 Investimentos</button>
+        <button class="milhas-tab" data-tab="vendas" onclick="MilhasModule.abrirTab('vendas')">💰 Vendas</button>
+        <button class="milhas-tab" data-tab="orcamento" onclick="MilhasModule.abrirTab('orcamento')">🧾 Orçamento</button>
+        <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">💳 Cartões</button>
+        <button class="milhas-tab" data-tab="bilhetes" onclick="MilhasModule.abrirTab('bilhetes')">🎫 Bilhetes</button>
+      </div>
 
-    <!-- Overlays -->
-    <div id="modal-root"></div>
-    <div id="toast-root"></div>
+      <div class="milhas-panel active" id="milhas-panel-visao"></div>
+      <div class="milhas-panel" id="milhas-panel-clubes"></div>
+      <div class="milhas-panel" id="milhas-panel-investimentos"></div>
+      <div class="milhas-panel" id="milhas-panel-vendas"></div>
+      <div class="milhas-panel" id="milhas-panel-orcamento"></div>
+      <div class="milhas-panel" id="milhas-panel-cartoes"></div>
+      <div class="milhas-panel" id="milhas-panel-bilhetes"></div>
+    </section>
 
-    <!-- Scripts -->
-    <script src="js/app.js"></script>
-    <script src="js/milhas.js"></script>
+  </main>
+</div>
+
+<script src="js/milhas.js"></script>
+<script>
+  // Navegação simples e autossuficiente (não depende de app.js)
+  function openPage(page) {
+    document.querySelectorAll('.nav-item').forEach(function (n) {
+      n.classList.toggle('active', n.dataset.pagina === page);
+    });
+    document.querySelectorAll('.page').forEach(function (p) {
+      p.classList.remove('active');
+    });
+    var el = document.getElementById('page-' + page);
+    if (el) el.classList.add('active');
+
+    if (page === 'milhas' && typeof MilhasModule !== 'undefined') {
+      MilhasModule.render();
+    }
+  }
+
+  // Inicializa o módulo de Milhas ao carregar
+  window.addEventListener('DOMContentLoaded', function () {
+    if (typeof MilhasModule !== 'undefined') {
+      MilhasModule.render();
+    }
+  });
+</script>
 </body>
 </html>

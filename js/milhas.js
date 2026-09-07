@@ -1,6 +1,6 @@
 // ============================================================
 // 💠 MÓDULO DE GESTÃO DE MILHAS — CRM WDIH
-// Cobre: Clubes, Investimentos, Vendas, Orçamento, Cartões e Bilhetes
+// Autossuficiente: não depende de app.js nem de outros módulos.
 // Baseado em: Planilha GDM + Milhas-trading-FDM-2023
 // ============================================================
 
@@ -24,6 +24,44 @@ const MilhasModule = {
     },
     _uid() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 7);
+    },
+
+    // ---------- UI autossuficiente (modal + toast) ----------
+    _modal(titulo, corpo, rodape) {
+        let root = document.getElementById('milhas-modal-root');
+        if (!root) {
+            root = document.createElement('div');
+            root.id = 'milhas-modal-root';
+            document.body.appendChild(root);
+        }
+        root.innerHTML = `
+            <div class="modal-backdrop" onclick="if(event.target===this) MilhasModule._closeModal()">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>${titulo}</h3>
+                        <button class="modal-close" onclick="MilhasModule._closeModal()">×</button>
+                    </div>
+                    <div class="modal-body">${corpo}</div>
+                    <div class="modal-footer">${rodape || ''}</div>
+                </div>
+            </div>`;
+    },
+    _closeModal() {
+        const root = document.getElementById('milhas-modal-root');
+        if (root) root.innerHTML = '';
+    },
+    _toast(mensagem, tipo = 'info') {
+        let root = document.getElementById('milhas-toast-root');
+        if (!root) {
+            root = document.createElement('div');
+            root.id = 'milhas-toast-root';
+            document.body.appendChild(root);
+        }
+        const el = document.createElement('div');
+        el.className = 'toast ' + tipo;
+        el.textContent = mensagem;
+        root.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
     },
 
     // ---------- Acesso a dados ----------
@@ -133,7 +171,7 @@ const MilhasModule = {
         this._save('seeded', true);
     },
 
-    // ---------- Renderização principal (ao entrar na página) ----------
+    // ---------- Renderização principal ----------
     render() {
         this._ensureSeeded();
         this.abrirTab('visao');
@@ -189,7 +227,7 @@ const MilhasModule = {
                 <div class="milhas-kpi kpi-milheiro"><label>🏷️ Milheiro Médio Compra</label><span>${this.moeda(milheiroCompra)}</span><small>por 1.000 pts</small></div>
             </div>
 
-            <div class="dashboard-grid-2">
+            <div class="milhas-grid-2">
                 ${this._cardPrecoMedio()}
                 ${this._cardSaldoProgramas()}
             </div>
@@ -312,7 +350,7 @@ const MilhasModule = {
 
     novoClube() {
         const programas = this.PROGRAMAS.map(p => `<option>${p}</option>`).join('');
-        AppModule.openModal('🏦 Novo Clube', `
+        this._modal('🏦 Novo Clube', `
             <div class="form-grid">
                 <div class="form-group"><label>Programa</label><select id="c-programa" class="form-control">${programas}</select></div>
                 <div class="form-group"><label>Titular</label><input id="c-titular" class="form-control"></div>
@@ -331,7 +369,7 @@ const MilhasModule = {
                 <div class="form-group"><label>Cartão de Cobrança</label><input id="c-cartao" class="form-control"></div>
                 <div class="form-group full"><label>Metas</label><input id="c-metas" class="form-control" placeholder="Ex.: acumular 100k até dez/2026"></div>
             </div>`, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarClube()">Salvar</button>`);
     },
 
@@ -339,7 +377,7 @@ const MilhasModule = {
         const c = this.getClubes().find(x => x.id === id);
         if (!c) return;
         const programas = this.PROGRAMAS.map(p => `<option ${p === c.programa ? 'selected' : ''}>${p}</option>`).join('');
-        AppModule.openModal('✏️ Editar Clube', `
+        this._modal('✏️ Editar Clube', `
             <div class="form-grid">
                 <div class="form-group"><label>Programa</label><select id="c-programa" class="form-control">${programas}</select></div>
                 <div class="form-group"><label>Titular</label><input id="c-titular" class="form-control" value="${c.titular || ''}"></div>
@@ -358,7 +396,7 @@ const MilhasModule = {
                 <div class="form-group"><label>Cartão de Cobrança</label><input id="c-cartao" class="form-control" value="${c.cartaoCobranca || ''}"></div>
                 <div class="form-group full"><label>Metas</label><input id="c-metas" class="form-control" value="${c.metas || ''}"></div>
             </div>`, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarClube('${id}')">Salvar</button>`);
     },
 
@@ -381,8 +419,8 @@ const MilhasModule = {
             clubes.push({ id: this._uid(), ...dados });
         }
         this.saveClubes(clubes);
-        AppModule.closeModal();
-        AppModule.showToast('Clube salvo com sucesso', 'success');
+        this._closeModal();
+        this._toast('Clube salvo com sucesso', 'success');
         this.renderClubes();
     },
 
@@ -435,7 +473,7 @@ const MilhasModule = {
     novoInvestimento() {
         const programas = this.PROGRAMAS.map(p => `<option>${p}</option>`).join('');
         const tipos = this.TIPOS_INVESTIMENTO.map(t => `<option>${t}</option>`).join('');
-        AppModule.openModal('📥 Novo Investimento', `
+        this._modal('📥 Novo Investimento', `
             <div class="form-grid">
                 <div class="form-group"><label>Tipo</label><select id="i-tipo" class="form-control">${tipos}</select></div>
                 <div class="form-group"><label>Titular do CPF</label><input id="i-titular" class="form-control"></div>
@@ -449,7 +487,7 @@ const MilhasModule = {
                 <div class="form-group"><label>Mês 1ª Parcela</label><input id="i-mes1" class="form-control" placeholder="May/2025"></div>
                 <div class="form-group"><label>Mês Última Parcela</label><input id="i-mesu" class="form-control" placeholder="April/2026"></div>
             </div>`, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarInvestimento()">Salvar</button>`);
     },
 
@@ -458,7 +496,7 @@ const MilhasModule = {
         if (!i) return;
         const programas = this.PROGRAMAS.map(p => `<option ${p === i.programa ? 'selected' : ''}>${p}</option>`).join('');
         const tipos = this.TIPOS_INVESTIMENTO.map(t => `<option ${t === i.tipo ? 'selected' : ''}>${t}</option>`).join('');
-        AppModule.openModal('✏️ Editar Investimento', `
+        this._modal('✏️ Editar Investimento', `
             <div class="form-grid">
                 <div class="form-group"><label>Tipo</label><select id="i-tipo" class="form-control">${tipos}</select></div>
                 <div class="form-group"><label>Titular do CPF</label><input id="i-titular" class="form-control" value="${i.titular || ''}"></div>
@@ -472,7 +510,7 @@ const MilhasModule = {
                 <div class="form-group"><label>Mês 1ª Parcela</label><input id="i-mes1" class="form-control" value="${i.mesPrimeira || ''}"></div>
                 <div class="form-group"><label>Mês Última Parcela</label><input id="i-mesu" class="form-control" value="${i.mesUltima || ''}"></div>
             </div>`, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarInvestimento('${id}')">Salvar</button>`);
     },
 
@@ -506,8 +544,8 @@ const MilhasModule = {
             inv.push({ id: this._uid(), ...dados });
         }
         this.saveInvestimentos(inv);
-        AppModule.closeModal();
-        AppModule.showToast('Investimento salvo', 'success');
+        this._closeModal();
+        this._toast('Investimento salvo', 'success');
         this.renderInvestimentos();
     },
 
@@ -561,7 +599,7 @@ const MilhasModule = {
     novaVenda() {
         const programas = this.PROGRAMAS.map(p => `<option>${p}</option>`).join('');
         const origens = this.ORIGENS_VENDA.map(o => `<option>${o}</option>`).join('');
-        AppModule.openModal('💰 Nova Venda', `
+        this._modal('💰 Nova Venda', `
             <div class="form-grid">
                 <div class="form-group"><label>Origem</label><select id="v-origem" class="form-control">${origens}</select></div>
                 <div class="form-group"><label>Titular do CPF</label><input id="v-titular" class="form-control"></div>
@@ -577,7 +615,7 @@ const MilhasModule = {
                 <div class="form-group"><label>Mês 1ª Parcela</label><input id="v-mes1" class="form-control" placeholder="February/2026"></div>
                 <div class="form-group"><label>Mês Última Parcela</label><input id="v-mesu" class="form-control" placeholder="March/2026"></div>
             </div>`, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarVenda()">Salvar</button>`);
     },
 
@@ -586,7 +624,7 @@ const MilhasModule = {
         if (!v) return;
         const programas = this.PROGRAMAS.map(p => `<option ${p === v.programa ? 'selected' : ''}>${p}</option>`).join('');
         const origens = this.ORIGENS_VENDA.map(o => `<option ${o === v.origem ? 'selected' : ''}>${o}</option>`).join('');
-        AppModule.openModal('✏️ Editar Venda', `
+        this._modal('✏️ Editar Venda', `
             <div class="form-grid">
                 <div class="form-group"><label>Origem</label><select id="v-origem" class="form-control">${origens}</select></div>
                 <div class="form-group"><label>Titular do CPF</label><input id="v-titular" class="form-control" value="${v.titular || ''}"></div>
@@ -602,7 +640,7 @@ const MilhasModule = {
                 <div class="form-group"><label>Mês 1ª Parcela</label><input id="v-mes1" class="form-control" value="${v.mesPrimeira || ''}"></div>
                 <div class="form-group"><label>Mês Última Parcela</label><input id="v-mesu" class="form-control" value="${v.mesUltima || ''}"></div>
             </div>`, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarVenda('${id}')">Salvar</button>`);
     },
 
@@ -635,8 +673,8 @@ const MilhasModule = {
             vendas.push({ id: this._uid(), ...dados });
         }
         this.saveVendas(vendas);
-        AppModule.closeModal();
-        AppModule.showToast('Venda salva', 'success');
+        this._closeModal();
+        this._toast('Venda salva', 'success');
         this.renderVendas();
     },
 
@@ -694,7 +732,7 @@ const MilhasModule = {
 
     novaDespesa() {
         const cartoes = this.getCartoes().map(c => `<option>${c.cartao}</option>`).join('');
-        AppModule.openModal('🧾 Nova Despesa', `
+        this._modal('🧾 Nova Despesa', `
             <div class="form-grid">
                 <div class="form-group"><label>Despesa</label><input id="d-nome" class="form-control" placeholder="Aluguel, Luz, Ifood..."></div>
                 <div class="form-group"><label>Vencimento</label><input id="d-vencimento" class="form-control" placeholder="Dia 10"></div>
@@ -702,7 +740,7 @@ const MilhasModule = {
                 <div class="form-group"><label>Potencial Anual de Pontos</label><input id="d-potencial" type="number" class="form-control" value="0"></div>
             </div>
             <div class="form-grid">${this.MESES.map((m, i) => `<div class="form-group"><label>${m}</label><input id="d-mes-${i}" type="number" step="0.01" class="form-control" value="0"></div>`).join('')}</div>`, `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarDespesa()">Salvar</button>`);
     },
 
@@ -715,7 +753,7 @@ const MilhasModule = {
             valores: this.MESES.map((_, i) => Number(val(`d-mes-${i}`)) || 0)
         });
         this.saveOrcamento(orc);
-        AppModule.closeModal();
+        this._closeModal();
         this.renderOrcamento();
     },
 
@@ -741,7 +779,7 @@ const MilhasModule = {
         orc.milheiroMeta = Number(document.getElementById('o-milheiro-meta').value) || 18;
         orc.bonusMeta = Number(document.getElementById('o-bonus-meta').value) || 0;
         this.saveOrcamento(orc);
-        AppModule.showToast('Metas salvas', 'success');
+        this._toast('Metas salvas', 'success');
         this.renderOrcamento();
     },
 
@@ -787,16 +825,16 @@ const MilhasModule = {
     },
 
     novoCartao() {
-        AppModule.openModal('💳 Novo Cartão', this._formCartao(), `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+        this._modal('💳 Novo Cartão', this._formCartao(), `
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarCartao()">Salvar</button>`);
     },
 
     editarCartao(id) {
         const c = this.getCartoes().find(x => x.id === id);
         if (!c) return;
-        AppModule.openModal('✏️ Editar Cartão', this._formCartao(c), `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+        this._modal('✏️ Editar Cartão', this._formCartao(c), `
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarCartao('${id}')">Salvar</button>`);
     },
 
@@ -839,8 +877,8 @@ const MilhasModule = {
             cartoes.push({ id: this._uid(), ...dados });
         }
         this.saveCartoes(cartoes);
-        AppModule.closeModal();
-        AppModule.showToast('Cartão salvo', 'success');
+        this._closeModal();
+        this._toast('Cartão salvo', 'success');
         this.renderCartoes();
     },
 
@@ -895,16 +933,16 @@ const MilhasModule = {
     },
 
     novoBilhete() {
-        AppModule.openModal('🎫 Novo Bilhete', this._formBilhete(), `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+        this._modal('🎫 Novo Bilhete', this._formBilhete(), `
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarBilhete()">Salvar</button>`);
     },
 
     editarBilhete(id) {
         const b = this.getBilhetes().find(x => x.id === id);
         if (!b) return;
-        AppModule.openModal('✏️ Editar Bilhete', this._formBilhete(b), `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+        this._modal('✏️ Editar Bilhete', this._formBilhete(b), `
+            <button class="btn btn-secondary" onclick="MilhasModule._closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="MilhasModule.salvarBilhete('${id}')">Salvar</button>`);
     },
 
@@ -975,8 +1013,8 @@ const MilhasModule = {
             bilhetes.push({ id: this._uid(), ...dados });
         }
         this.saveBilhetes(bilhetes);
-        AppModule.closeModal();
-        AppModule.showToast('Bilhete salvo', 'success');
+        this._closeModal();
+        this._toast('Bilhete salvo', 'success');
         this.renderBilhetes();
     },
 
