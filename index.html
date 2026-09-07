@@ -8,7 +8,8 @@
 </head>
 <body>
 <div class="app">
-  <!-- SIDEBAR -->
+
+  <!-- ==================== SIDEBAR ==================== -->
   <aside class="sidebar">
     <div class="brand">💠 CRM WDIH</div>
     <nav class="nav">
@@ -24,42 +25,102 @@
     </nav>
   </aside>
 
-  <!-- CONTEÚDO PRINCIPAL -->
+  <!-- ==================== CONTEÚDO ==================== -->
   <main class="main">
 
-    <!-- DASHBOARD -->
+    <!-- ========== DASHBOARD ========== -->
     <section id="page-dashboard" class="page active">
-      <div class="page-header"><h2>📊 Dashboard</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento — cole aqui o conteúdo do Dashboard</div></div>
+      <div class="page-header">
+        <h2>📊 Dashboard</h2>
+        <span id="dashboard-data-hora" style="font-size:12px;color:var(--gray-500);"></span>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card"><label>Negócios Ativos</label><span id="stat-negocios-ativos">0</span></div>
+        <div class="kpi-card"><label>Fechados (Total)</label><span id="stat-fechados-total">0</span></div>
+        <div class="kpi-card"><label>Receita Total</label><span id="stat-receita-total">R$ 0</span></div>
+        <div class="kpi-card"><label>Taxa Conversão</label><span id="stat-taxa-conversao">0%</span></div>
+        <div class="kpi-card"><label>Fechados (Mês)</label><span id="stat-fechados-mes">0</span></div>
+        <div class="kpi-card"><label>Receita (Mês)</label><span id="stat-receita-mes">R$ 0</span></div>
+        <div class="kpi-card"><label>Ticket Médio</label><span id="stat-ticket-medio">R$ 0</span></div>
+        <div class="kpi-card"><label>Clientes Ativos</label><span id="stat-clientes-ativos">0</span></div>
+      </div>
+
+      <!-- Resumo do Pipeline -->
+      <div class="card">
+        <h3>🔄 Pipeline</h3>
+        <div id="dashboard-pipeline"></div>
+        <div id="pipeline-summary" style="margin-top:12px;font-size:12px;color:var(--gray-500);display:flex;gap:16px;flex-wrap:wrap;"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <h3>🏆 Fechados Recentes</h3>
+          <div id="dashboard-fechados-recentes"></div>
+        </div>
+        <div class="card">
+          <h3>✈️ Check-ins de Viagens</h3>
+          <div id="dashboard-checkins"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📋 Atividades Recentes</h3>
+        <div id="dashboard-atividades"></div>
+      </div>
     </section>
 
-    <!-- CLIENTES -->
+    <!-- ========== CLIENTES ========== -->
     <section id="page-clientes" class="page">
-      <div class="page-header"><h2>👥 Clientes</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento — conteúdo de Clientes</div></div>
+      <div class="page-header">
+        <h2>👥 Clientes</h2>
+        <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
+      </div>
+      <div class="card">
+        <div id="clientes-list"></div>
+      </div>
     </section>
 
-    <!-- PIPELINE -->
+    <!-- ========== PIPELINE ========== -->
     <section id="page-pipeline" class="page">
-      <div class="page-header"><h2>🔄 Pipeline</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento — conteúdo de Pipeline</div></div>
+      <div class="page-header">
+        <h2>🔄 Pipeline de Negócios</h2>
+        <button class="btn btn-primary" onclick="PipelineModule.novoNegocio(PipelineModule.getStages()[0])">+ Novo Negócio</button>
+      </div>
+      <div id="pipeline-board" class="pipeline-board"></div>
     </section>
 
-    <!-- VENDAS -->
+    <!-- ========== VENDAS ========== -->
     <section id="page-vendas" class="page">
-      <div class="page-header"><h2>💰 Vendas</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento — conteúdo de Vendas</div></div>
+      <div class="page-header">
+        <h2>💰 Vendas</h2>
+        <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
+      </div>
+      <div class="card">
+        <div id="vendas-resumo" class="mini-stats"></div>
+      </div>
+      <div class="card">
+        <div id="vendas-list"></div>
+      </div>
     </section>
 
-    <!-- VIAGENS -->
+    <!-- ========== VIAGENS ========== -->
     <section id="page-viagens" class="page">
-      <div class="page-header"><h2>✈️ Viagens</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento — conteúdo de Viagens</div></div>
+      <div class="page-header">
+        <h2>✈️ Viagens</h2>
+        <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
+      </div>
+      <div class="card">
+        <div id="viagens-list"></div>
+      </div>
     </section>
 
-    <!-- MILHAS (totalmente completo) -->
+    <!-- ========== 💠 MILHAS ========== -->
     <section id="page-milhas" class="page">
-      <div class="page-header"><h2>💠 Gestão de Milhas</h2></div>
+      <div class="page-header">
+        <h2>💠 Gestão de Milhas</h2>
+      </div>
 
       <div class="milhas-tabs" id="milhas-tabs">
         <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">📊 Visão Geral</button>
@@ -80,19 +141,103 @@
       <div class="milhas-panel" id="milhas-panel-bilhetes"></div>
     </section>
 
-    <!-- FINANCEIRO -->
+    <!-- ========== FINANCEIRO ========== -->
     <section id="page-financeiro" class="page">
-      <div class="page-header"><h2>📈 Financeiro</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento — conteúdo de Financeiro</div></div>
+      <div class="page-header">
+        <h2>📈 Financeiro</h2>
+        <button class="btn btn-primary" id="btn-nova-transacao">+ Nova Transação</button>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi-card"><label>Receitas (Mês)</label><span id="fin-receitas">R$ 0</span></div>
+        <div class="kpi-card"><label>Despesas (Mês)</label><span id="fin-despesas">R$ 0</span></div>
+        <div class="kpi-card"><label>Saldo</label><span id="fin-saldo">R$ 0</span></div>
+        <div class="kpi-card"><label>Ticket Médio</label><span id="fin-ticket">R$ 0</span></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table" id="tabela-transacoes">
+            <thead>
+              <tr>
+                <th>Data</th><th>Descrição</th><th>Categoria</th>
+                <th>Tipo</th><th>Valor</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
-    <!-- CONFIGURAÇÕES -->
+    <!-- ========== CONFIGURAÇÕES ========== -->
     <section id="page-configuracoes" class="page">
       <div class="page-header"><h2>⚙️ Configurações</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento — conteúdo de Configurações</div></div>
+
+      <!-- Agência -->
+      <div class="card">
+        <h3>🏢 Dados da Agência</h3>
+        <div class="form-grid">
+          <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
+          <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
+          <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
+          <div class="form-group"><label>Comissão (%)</label><input type="number" id="cfg-agencia-comissao" class="form-control" step="0.1"></div>
+        </div>
+        <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()" style="margin-top:12px;">💾 Salvar Agência</button>
+      </div>
+
+      <!-- Etapas do Pipeline -->
+      <div class="card">
+        <h3>🔄 Etapas do Pipeline</h3>
+        <div id="cfg-pipeline-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nova etapa...">
+          <button class="btn btn-primary" onclick="ConfigModule.adicionarEtapa()">+ Adicionar</button>
+        </div>
+      </div>
+
+      <!-- Listas de configuração -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <h3>🛎️ Serviços</h3>
+          <div id="cfg-servicos-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Novo serviço...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarServico()">+</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>✈️ Companhias</h3>
+          <div id="cfg-companhias-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nova companhia...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarCompanhia()">+</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>💠 Programas de Milhas</h3>
+          <div id="cfg-programas-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Novo programa...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarPrograma()">+</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>💳 Cartões</h3>
+          <div id="cfg-cartoes-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Novo cartão...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarCartao()">+</button>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- BACKUP -->
+    <!-- ========== BACKUP ========== -->
     <section id="page-backup" class="page">
       <div class="page-header"><h2>💾 Backup & Restauração</h2></div>
 
@@ -112,10 +257,11 @@
                style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;">
       </div>
     </section>
+
   </main>
 </div>
 
-<!-- Modal padrão -->
+<!-- ==================== MODAL ==================== -->
 <div id="modal-overlay" class="modal-overlay" onclick="AppModule.closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -127,10 +273,10 @@
   </div>
 </div>
 
-<!-- Toasts -->
+<!-- ==================== TOAST ==================== -->
 <div id="toast-container"></div>
 
-<!-- Scripts -->
+<!-- ==================== SCRIPTS ==================== -->
 <script src="js/db.js"></script>
 <script src="js/app.js"></script>
 <script src="js/dashboard.js"></script>
