@@ -1,515 +1,203 @@
-/* ============================================================
-   CRM WDIH — Estilos globais + Módulo de Milhas
-   ============================================================ */
-
-/* ---------- Reset / base ---------- */
+/* ==================== Base ==================== */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  background: #f1f5f9;
-  color: #0f172a;
-  font-size: 14px;
-  line-height: 1.5;
+body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; color: #0f172a; font-size: 14px; }
+:root {
+    --royal: #4338ca; --royal-light: #6366f1;
+    --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+    --gray-500: #64748b; --gray-900: #0f172a;
 }
 
-/* ---------- Layout ---------- */
 .app { display: flex; min-height: 100vh; }
 
-.main {
-  flex: 1;
-  padding: 24px;
-  min-width: 0;
-}
-
-/* ---------- Sidebar / Navegação ---------- */
-.sidebar {
-  width: 240px;
-  background: #fff;
-  border-right: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-}
-
-.brand {
-  padding: 20px;
-  font-weight: 700;
-  font-size: 18px;
-  color: #4338ca;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.nav { display: flex; flex-direction: column; padding: 12px; }
-
+/* ==================== Sidebar ==================== */
+.sidebar { width: 240px; background: #fff; border-right: 1px solid #e2e8f0; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
+.brand { padding:20px; font-weight:700; font-size:18px; color:#4338ca; border-bottom:1px solid #e2e8f0; }
+.nav { display:flex; flex-direction:column; padding:12px; gap:2px; }
 .nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border: none;
-  background: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  color: #334155;
-  text-align: left;
+    display:flex; align-items:center; gap:10px; padding:10px 14px; border:none; background:none;
+    border-radius:8px; font-size:14px; cursor:pointer; font-weight:500; color:#334155; text-align:left;
 }
+.nav-item:hover { background:#f8fafc; color:#000; }
+.nav-item.active { background:#eef2ff; color:#4338ca; font-weight:600; }
 
-.nav-item:hover { background: #f8fafc; color: #000; }
-.nav-item.active { background: #f8fafc; color: #000; }
+/* ==================== Main ==================== */
+.main { flex:1; padding:24px; overflow-x:hidden; }
+.page { display:none; }
+.page.active { display:block; }
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.page-header h2 { font-size:20px; font-weight:700; }
 
-/* ---------- Páginas ---------- */
-.page { display: none; }
-.page.active { display: block; }
+/* ==================== Cards ==================== */
+.card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); margin-bottom:20px; }
+h3 { font-size:16px; font-weight:700; margin-bottom:14px; }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+/* ==================== KPIs ==================== */
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.kpi-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); border-top:3px solid var(--royal); display:flex; flex-direction:column; gap:4px; }
+.kpi-card label { font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:.4px; font-weight:600; }
+.kpi-card span { font-size:20px; font-weight:700; }
 
-.page-header h2 { font-size: 20px; font-weight: 700; }
+/* ==================== Tables ==================== */
+.table-wrap { overflow-x:auto; }
+.table { width:100%; border-collapse:collapse; font-size:13px; }
+.table th { background:#f8fafc; padding:10px 12px; font-weight:600; font-size:11px; color:#64748b; border-bottom:1px solid #e2e8f0; text-align:left; text-transform:uppercase; letter-spacing:.4px; }
+.table td { padding:10px 12px; border-bottom:1px solid #f1f5f9; }
+.table tbody tr:hover { background:#f8fafc; }
 
-/* ---------- Cards ---------- */
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-  margin-bottom: 20px;
-}
+/* ==================== Buttons ==================== */
+.btn { padding:8px 16px; border-radius:8px; border:none; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:background .15s; }
+.btn-primary { background:#4338ca; color:#fff; }
+.btn-primary:hover { background:#6366f1; }
+.btn-secondary { background:#fff; color:#334155; border:1px solid #e2e8f0; }
+.btn-secondary:hover { background:#f8fafc; }
+.btn-danger { background:#ef4444; color:#fff; }
+.btn-danger:hover { background:#dc2626; }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-icon { background:none; border:none; cursor:pointer; font-size:15px; padding:4px 6px; border-radius:6px; }
+.btn-icon:hover { background:#f1f5f9; }
 
-.card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+/* ==================== Forms ==================== */
+.form-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+.form-group.full { grid-column:1 / -1; }
+.form-group label { font-size:12px; font-weight:600; color:#334155; }
+.form-control { padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; width:100%; font-family:inherit; }
+.form-control:focus { outline:none; border-color:#4338ca; box-shadow:0 0 0 3px #eef2ff; }
+textarea.form-control { min-height:60px; resize:vertical; }
 
-h3 { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: #0f172a; }
-.card-head h3 { margin-bottom: 0; }
+/* ==================== Badges ==================== */
+.badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:600; line-height:1.4; }
+.badge-ativo, .badge-success { background:#dcfce7; color:#15803d; }
+.badge-pendente, .badge-warning { background:#fef3c7; color:#b45309; }
+.badge-emandamento { background:#dbeafe; color:#1d4ed8; }
+.badge-inativo, .badge-danger { background:#fee2e2; color:#dc2626; }
 
-.empty-chart {
-  padding: 24px;
-  text-align: center;
-  color: #64748b;
-  font-size: 13px;
-}
+/* ==================== Pipeline ==================== */
+.pipeline-board { display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; }
+.pipeline-column { min-width:260px; max-width:280px; background:#f8fafc; border-radius:10px; padding:12px; flex-shrink:0; }
+.pipeline-column-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:13px; font-weight:600; }
+.pipeline-column-body { display:flex; flex-direction:column; gap:8px; min-height:40px; }
+.pipeline-card { background:#fff; border-radius:8px; padding:10px 12px; box-shadow:0 1px 2px rgba(0,0,0,.06); cursor:grab; font-size:13px; display:flex; flex-direction:column; gap:4px; }
+.pipeline-card:hover { box-shadow:0 2px 6px rgba(0,0,0,.1); }
+.pipeline-cliente { font-size:11px; color:var(--gray-500); }
+.pipeline-titulo { font-weight:600; }
+.card-actions { display:flex; gap:4px; justify-content:flex-end; margin-top:4px; }
 
-/* ---------- Tabelas ---------- */
-.table-wrap { overflow-x: auto; }
+/* ==================== Viagens ==================== */
+.viagem-card { background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-bottom:12px; }
+.viagem-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.viagem-cliente { font-weight:600; font-size:14px; display:block; }
+.viagem-destino { font-size:12px; color:var(--gray-500); }
+.viagem-info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.viagem-info { display:flex; flex-direction:column; gap:2px; }
+.viagem-info label { font-size:10px; color:var(--gray-500); text-transform:uppercase; font-weight:600; }
+.viagem-info span { font-size:13px; }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
+/* ==================== Vendas ==================== */
+.mini-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.mini-stat { text-align:center; }
+.mini-stat h4 { font-size:11px; color:var(--gray-500); text-transform:uppercase; margin-bottom:4px; }
+.mini-stat .valor { font-size:18px; font-weight:700; }
+.lucro-pos { color:var(--success) !important; }
+.lucro-neg { color:var(--danger) !important; }
 
-.table th {
-  background: #f8fafc;
-  padding: 10px 12px;
-  font-weight: 600;
-  font-size: 11px;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-  white-space: nowrap;
-}
+/* ==================== Dashboard ==================== */
+.fechado-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9; }
+.fechado-item:last-child { border-bottom:none; }
+.fechado-titulo { font-weight:600; font-size:13px; }
+.fechado-cliente { font-size:11px; color:var(--gray-500); margin-top:2px; }
+.fechado-valor { font-weight:700; font-size:14px; color:var(--success); }
 
-.table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
+.checkin-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+.checkin-item:last-child { border-bottom:none; }
 
-.table tbody tr:hover { background: #f8fafc; }
+.dashboard-empty { text-align:center; padding:30px; color:var(--gray-500); font-size:13px; }
+.dashboard-empty-icon { font-size:28px; margin-bottom:8px; }
 
-.num { text-align: right; font-variant-numeric: tabular-nums; }
+.atividade-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+.atividade-item:last-child { border-bottom:none; }
+.atividade-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--gray-500); }
+.atividade-dot.pipeline { background:var(--royal); }
+.atividade-dot.cliente { background:var(--success); }
+.atividade-dot.financeiro { background:var(--warning); }
+.atividade-dot.viagem { background:#06b6d4; }
+.atividade-dot.venda { background:#10b981; }
+.atividade-dot.milhas { background:#8b5cf6; }
+.atividade-dot.backup { background:var(--gray-500); }
+.atividade-text { flex:1; }
+.atividade-time { font-size:11px; color:var(--gray-500); }
 
-.total-row td {
-  background: #f8fafc;
-  font-weight: 700;
-  border-top: 2px solid #e2e8f0;
-}
+/* ==================== Configurações ==================== */
+.stage-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #f1f5f9; }
+.stage-item .stage-input { flex:1; }
+.drag-handle { cursor:grab; color:var(--gray-500); font-size:16px; }
+.list-item { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
 
-.cell-input {
-  width: 68px;
-  padding: 4px 6px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 12px;
-  text-align: right;
-}
+/* ==================== Modal ==================== */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal { background:#fff; border-radius:14px; width:90%; max-width:560px; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+.modal-header { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #e2e8f0; }
+.modal-header h3 { margin:0; }
+.modal-body { padding:20px; }
+.modal-footer { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid #e2e8f0; }
 
-.cell-input:focus {
-  outline: none;
-  border-color: #4338ca;
-  box-shadow: 0 0 0 3px #eef2ff;
-}
+/* ==================== Toast ==================== */
+.toast-container { position:fixed; top:20px; right:20px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:12px 18px; border-radius:10px; font-size:13px; font-weight:500; color:#fff; opacity:0; transform:translateX(20px); transition:all .3s; }
+.toast.show { opacity:1; transform:translateX(0); }
+.toast-success { background:#10b981; }
+.toast-danger { background:#ef4444; }
+.toast-info { background:#3b82f6; }
 
-/* ---------- Botões ---------- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all .15s;
-}
-
-.btn-primary { background: #4338ca; color: #fff; }
-.btn-primary:hover { background: #6366f1; }
-
-.btn-secondary {
-  background: #fff;
-  color: #334155;
-  border: 1px solid #e2e8f0;
-}
-.btn-secondary:hover { background: #f8fafc; }
-
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  transition: background .15s;
-}
-.btn-icon:hover { background: #f1f5f9; }
-
-.btn-danger:hover { background: #fee2e2; }
-
-/* ---------- Formulários ---------- */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-}
-
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group.full { grid-column: 1 / -1; }
-
-.form-group label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #334155;
-}
-
-.form-control {
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 13px;
-  width: 100%;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #4338ca;
-  box-shadow: 0 0 0 3px #eef2ff;
-}
-
-textarea.form-control { resize: vertical; font-family: inherit; }
-
-/* ---------- Badges ---------- */
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.badge-ativo      { background: #dcfce7; color: #15803d; }
-.badge-pendente   { background: #fef3c7; color: #b45309; }
-.badge-emandamento{ background: #dbeafe; color: #1d4ed8; }
-.badge-concluida  { background: #dcfce7; color: #15803d; }
-
-/* ---------- Módulo Milhas: Abas ---------- */
+/* ==================== 💠 MILHAS ==================== */
 .milhas-tabs {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 10px;
+    display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;
 }
-
 .milhas-tab {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  color: #334155;
-  transition: all .15s;
+    padding:8px 16px; border-radius:8px; border:1px solid #e2e8f0; background:#fff;
+    font-size:13px; font-weight:500; cursor:pointer; color:#334155; transition:all .15s;
 }
+.milhas-tab:hover { background:#f8fafc; }
+.milhas-tab.active { background:#4338ca; color:#fff; border-color:#4338ca; }
 
-.milhas-tab:hover { background: #f8fafc; }
-.milhas-tab.active { background: #4338ca; color: #fff; border-color: #4338ca; }
+.milhas-panel { display:none; }
+.milhas-panel.active { display:block; }
 
-.milhas-panel { display: none; }
-.milhas-panel.active { display: block; }
-
-/* ---------- Módulo Milhas: KPIs ---------- */
-.milhas-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
+.milhas-kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:20px; }
 .milhas-kpi {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08);
-  border-top: 3px solid #cbd5e1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+    background:#fff; border-radius:12px; padding:16px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08); border-top:3px solid #cbd5e1;
+    display:flex; flex-direction:column; gap:4px;
 }
+.milhas-kpi label { font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:.4px; font-weight:600; }
+.milhas-kpi span { font-size:20px; font-weight:700; color:#0f172a; }
+.milhas-kpi small { font-size:11px; color:#64748b; }
 
-.milhas-kpi label {
-  font-size: 11px;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-  font-weight: 600;
+.kpi-investido { border-top-color:#4338ca; }
+.kpi-vendido { border-top-color:#10b981; }
+.kpi-lucro { border-top-color:#8b5cf6; }
+.kpi-saldo { border-top-color:#06b6d4; }
+.kpi-expirando { border-top-color:#f59e0b; }
+.kpi-milheiro { border-top-color:#ec4899; }
+
+.mes-chart { display:flex; align-items:flex-end; gap:8px; height:160px; padding-top:10px; }
+.mes-bar { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end; }
+.mes-fill { width:100%; max-width:34px; background:linear-gradient(180deg, #4338ca, #6366f1); border-radius:4px 4px 0 0; min-height:2px; }
+.mes-bar span { font-size:10px; color:#64748b; }
+
+/* ==================== Responsivo ==================== */
+@media(max-width:1024px) {
+    .kpi-grid { grid-template-columns:repeat(2,1fr); }
+    .milhas-kpi-grid { grid-template-columns:repeat(3,1fr); }
+    .mini-stats { grid-template-columns:repeat(2,1fr); }
 }
-
-.milhas-kpi span { font-size: 20px; font-weight: 700; color: #0f172a; }
-.milhas-kpi small { font-size: 11px; color: #64748b; }
-
-.kpi-investido { border-top-color: #4338ca; }
-.kpi-vendido   { border-top-color: #10b981; }
-.kpi-lucro     { border-top-color: #8b5cf6; }
-.kpi-saldo     { border-top-color: #06b6d4; }
-.kpi-expirando { border-top-color: #f59e0b; }
-.kpi-milheiro  { border-top-color: #ec4899; }
-
-/* ---------- Grids de 2 colunas ---------- */
-.milhas-grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-.milhas-grid-2 .card { margin-bottom: 0; }
-
-/* ---------- Gráfico de barras (preço médio / saldo) ---------- */
-.bar-chart-item { margin-bottom: 12px; }
-.bar-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #334155; }
-.bar-container {
-  background: #f1f5f9;
-  border-radius: 6px;
-  height: 10px;
-  overflow: hidden;
-  margin-bottom: 2px;
-}
-.bar-fill { height: 100%; border-radius: 6px; transition: width .3s; }
-.fill-royal   { background: #4338ca; }
-.fill-success { background: #10b981; }
-.bar-value { font-size: 12px; color: #64748b; text-align: right; }
-
-/* ---------- Gráfico mensal ---------- */
-.mes-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  height: 160px;
-  padding-top: 10px;
-}
-
-.mes-bar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  height: 100%;
-  justify-content: flex-end;
-}
-
-.mes-fill {
-  width: 100%;
-  max-width: 34px;
-  background: linear-gradient(180deg, #4338ca, #6366f1);
-  border-radius: 4px 4px 0 0;
-  min-height: 2px;
-}
-
-.mes-bar span { font-size: 10px; color: #64748b; }
-
-/* ---------- Cartões (Cards de cartão/benefício) ---------- */
-.viagem-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-}
-
-.viagem-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-  gap: 8px;
-}
-
-.viagem-cliente { font-weight: 700; font-size: 15px; }
-.viagem-destino { font-size: 12px; color: #64748b; margin-top: 2px; display: block; }
-
-.viagem-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.viagem-info { background: #f8fafc; border-radius: 8px; padding: 8px; }
-.viagem-info label { display: block; font-size: 10px; color: #64748b; margin-bottom: 2px; }
-.viagem-info span { font-size: 13px; font-weight: 600; }
-
-.card-actions { display: flex; gap: 4px; }
-.actions { display: flex; gap: 4px; justify-content: center; white-space: nowrap; }
-
-.alert-desc {
-  font-size: 12px;
-  color: #334155;
-  background: #f8fafc;
-  padding: 8px 10px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-/* ---------- Orçamento ---------- */
-.orcamento-meta {
-  display: flex;
-  gap: 16px;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-}
-.orcamento-meta .form-group { min-width: 160px; }
-
-.orcamento-table th, .orcamento-table td { white-space: nowrap; }
-
-.lucro-pos { color: #15803d; font-weight: 700; }
-
-/* ---------- Modal ---------- */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15,23,42,.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.modal {
-  background: #fff;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 720px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0,0,0,.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e2e8f0;
-}
-.modal-header h3 { font-size: 16px; font-weight: 700; margin: 0; }
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #64748b;
-  line-height: 1;
-}
-.modal-close:hover { color: #0f172a; }
-
-.modal-body { padding: 20px; overflow-y: auto; }
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 20px;
-  border-top: 1px solid #e2e8f0;
-}
-
-/* ---------- Toast ---------- */
-#milhas-toast-root {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.toast {
-  padding: 12px 18px;
-  border-radius: 8px;
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 10px 30px rgba(0,0,0,.15);
-  animation: toast-in .25s ease;
-}
-
-.toast.success { background: #10b981; }
-.toast.error   { background: #ef4444; }
-.toast.info    { background: #4338ca; }
-
-@keyframes toast-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ---------- Responsivo ---------- */
-@media (max-width: 768px) {
-  .sidebar { width: 64px; }
-  .brand { font-size: 0; padding: 16px; }
-  .nav-item span { display: none; }
-  .nav-item { justify-content: center; padding: 12px; }
-
-  .milhas-kpi-grid { grid-template-columns: repeat(3, 1fr); }
-  .milhas-grid-2 { grid-template-columns: 1fr; }
-  .viagem-info-grid { grid-template-columns: repeat(2, 1fr); }
-  .form-grid { grid-template-columns: 1fr; }
+@media(max-width:768px) {
+    .sidebar { width:60px; }
+    .brand { font-size:12px; padding:14px 8px; text-align:center; }
+    .nav-item span { display:none; }
+    .milhas-kpi-grid { grid-template-columns:repeat(2,1fr); }
+    .form-grid { grid-template-columns:1fr; }
+    .viagem-info-grid { grid-template-columns:repeat(2,1fr); }
 }

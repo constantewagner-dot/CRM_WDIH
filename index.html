@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CRM WDIH — Gestão de Milhas</title>
+<title>CRM WDIH — Gestão Completa</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -12,41 +12,114 @@
   <aside class="sidebar">
     <div class="brand">💠 CRM WDIH</div>
     <nav class="nav">
-      <button class="nav-item active" data-pagina="dashboard" onclick="openPage('dashboard')">📊 <span>Dashboard</span></button>
-      <button class="nav-item" data-pagina="clientes" onclick="openPage('clientes')">👥 <span>Clientes</span></button>
-      <button class="nav-item" data-pagina="viagens" onclick="openPage('viagens')">✈️ <span>Viagens</span></button>
-      <button class="nav-item" data-pagina="milhas" onclick="openPage('milhas')">💠 <span>Milhas</span></button>
+      <button class="nav-item active" data-pagina="dashboard" onclick="AppModule.openPage('dashboard')">📊 <span>Dashboard</span></button>
+      <button class="nav-item" data-pagina="clientes" onclick="AppModule.openPage('clientes')">👥 <span>Clientes</span></button>
+      <button class="nav-item" data-pagina="pipeline" onclick="AppModule.openPage('pipeline')">🔄 <span>Pipeline</span></button>
+      <button class="nav-item" data-pagina="vendas" onclick="AppModule.openPage('vendas')">💰 <span>Vendas</span></button>
+      <button class="nav-item" data-pagina="viagens" onclick="AppModule.openPage('viagens')">✈️ <span>Viagens</span></button>
+      <button class="nav-item" data-pagina="milhas" onclick="AppModule.openPage('milhas')">💠 <span>Milhas</span></button>
+      <button class="nav-item" data-pagina="financeiro" onclick="AppModule.openPage('financeiro')">📈 <span>Financeiro</span></button>
+      <button class="nav-item" data-pagina="configuracoes" onclick="AppModule.openPage('configuracoes')">⚙️ <span>Configurações</span></button>
+      <button class="nav-item" data-pagina="backup" onclick="AppModule.openPage('backup')">💾 <span>Backup</span></button>
     </nav>
   </aside>
 
-  <!-- CONTEÚDO -->
+  <!-- CONTEÚDO PRINCIPAL -->
   <main class="main">
 
-    <!-- DASHBOARD (placeholders — substitua pelo seu conteúdo original) -->
+    <!-- ========== DASHBOARD ========== -->
     <section id="page-dashboard" class="page active">
-      <div class="page-header"><h2>📊 Dashboard</h2></div>
+      <div class="page-header">
+        <h2>📊 Dashboard</h2>
+        <span id="dashboard-data-hora" style="font-size:12px;color:var(--gray-500);"></span>
+      </div>
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card"><label>Negócios Ativos</label><span id="stat-negocios-ativos">0</span></div>
+        <div class="kpi-card"><label>Fechados (Total)</label><span id="stat-fechados-total">0</span></div>
+        <div class="kpi-card"><label>Receita Total</label><span id="stat-receita-total">R$ 0</span></div>
+        <div class="kpi-card"><label>Taxa Conversão</label><span id="stat-taxa-conversao">0%</span></div>
+        <div class="kpi-card"><label>Fechados (Mês)</label><span id="stat-fechados-mes">0</span></div>
+        <div class="kpi-card"><label>Receita (Mês)</label><span id="stat-receita-mes">R$ 0</span></div>
+        <div class="kpi-card"><label>Ticket Médio</label><span id="stat-ticket-medio">R$ 0</span></div>
+        <div class="kpi-card"><label>Clientes Ativos</label><span id="stat-clientes-ativos">0</span></div>
+      </div>
+      <!-- Pipeline resumo -->
       <div class="card">
-        <h3>Visão Geral</h3>
-        <p>Bem-vindo ao <strong>CRM WDIH</strong>. Use o menu lateral para navegar.</p>
+        <h3>🔄 Pipeline</h3>
+        <div id="dashboard-pipeline"></div>
+        <div id="pipeline-summary" style="margin-top:12px;font-size:12px;color:var(--gray-500);display:flex;gap:16px;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Fechados recentes -->
+        <div class="card">
+          <h3>🏆 Fechados Recentes</h3>
+          <div id="dashboard-fechados-recentes"></div>
+        </div>
+        <!-- Check-ins -->
+        <div class="card">
+          <h3>✈️ Check-ins de Viagens</h3>
+          <div id="dashboard-checkins"></div>
+        </div>
+      </div>
+      <!-- Atividades -->
+      <div class="card">
+        <h3>📋 Atividades Recentes</h3>
+        <div id="dashboard-atividades"></div>
       </div>
     </section>
 
-    <!-- CLIENTES -->
+    <!-- ========== CLIENTES ========== -->
     <section id="page-clientes" class="page">
-      <div class="page-header"><h2>👥 Clientes</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento</div></div>
+      <div class="page-header">
+        <h2>👥 Clientes</h2>
+        <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
+      </div>
+      <div class="card">
+        <div id="clientes-list"></div>
+      </div>
     </section>
 
-    <!-- VIAGENS -->
+    <!-- ========== PIPELINE ========== -->
+    <section id="page-pipeline" class="page">
+      <div class="page-header">
+        <h2>🔄 Pipeline de Negócios</h2>
+        <button class="btn btn-primary" onclick="PipelineModule.novoNegocio(PipelineModule.getStages()[0])">+ Novo Negócio</button>
+      </div>
+      <div id="pipeline-board" class="pipeline-board"></div>
+    </section>
+
+    <!-- ========== VENDAS ========== -->
+    <section id="page-vendas" class="page">
+      <div class="page-header">
+        <h2>💰 Vendas</h2>
+        <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
+      </div>
+      <div class="card">
+        <div id="vendas-resumo" class="mini-stats"></div>
+      </div>
+      <div class="card">
+        <div id="vendas-list"></div>
+      </div>
+    </section>
+
+    <!-- ========== VIAGENS ========== -->
     <section id="page-viagens" class="page">
-      <div class="page-header"><h2>✈️ Viagens</h2></div>
-      <div class="card"><div class="empty-chart">Em desenvolvimento</div></div>
+      <div class="page-header">
+        <h2>✈️ Viagens</h2>
+        <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
+      </div>
+      <div class="card">
+        <div id="viagens-list"></div>
+      </div>
     </section>
 
-    <!-- 💠 MILHAS -->
+    <!-- ========== 💠 MILHAS ========== -->
     <section id="page-milhas" class="page">
-      <div class="page-header"><h2>💠 Gestão de Milhas</h2></div>
-
+      <div class="page-header">
+        <h2>💠 Gestão de Milhas</h2>
+      </div>
+      <!-- Abas Milhas -->
       <div class="milhas-tabs" id="milhas-tabs">
         <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">📊 Visão Geral</button>
         <button class="milhas-tab" data-tab="clubes" onclick="MilhasModule.abrirTab('clubes')">🏦 Clubes</button>
@@ -56,7 +129,7 @@
         <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">💳 Cartões</button>
         <button class="milhas-tab" data-tab="bilhetes" onclick="MilhasModule.abrirTab('bilhetes')">🎫 Bilhetes</button>
       </div>
-
+      <!-- Painéis -->
       <div class="milhas-panel active" id="milhas-panel-visao"></div>
       <div class="milhas-panel" id="milhas-panel-clubes"></div>
       <div class="milhas-panel" id="milhas-panel-investimentos"></div>
@@ -66,32 +139,151 @@
       <div class="milhas-panel" id="milhas-panel-bilhetes"></div>
     </section>
 
+    <!-- ========== FINANCEIRO ========== -->
+    <section id="page-financeiro" class="page">
+      <div class="page-header">
+        <h2>📈 Financeiro</h2>
+        <button class="btn btn-primary" id="btn-nova-transacao">+ Nova Transação</button>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi-card"><label>Receitas (Mês)</label><span id="fin-receitas">R$ 0</span></div>
+        <div class="kpi-card"><label>Despesas (Mês)</label><span id="fin-despesas">R$ 0</span></div>
+        <div class="kpi-card"><label>Saldo</label><span id="fin-saldo">R$ 0</span></div>
+        <div class="kpi-card"><label>Ticket Médio</label><span id="fin-ticket">R$ 0</span></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table class="table" id="tabela-transacoes">
+          <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ========== CONFIGURAÇÕES ========== -->
+    <section id="page-configuracoes" class="page">
+      <div class="page-header"><h2>⚙️ Configurações</h2></div>
+      <!-- Agência -->
+      <div class="card">
+        <h3>🏢 Dados da Agência</h3>
+        <div class="form-grid">
+          <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
+          <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
+          <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
+          <div class="form-group"><label>Comissão (%)</label><input type="number" id="cfg-agencia-comissao" class="form-control" step="0.1"></div>
+        </div>
+        <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()" style="margin-top:12px;">💾 Salvar Agência</button>
+      </div>
+      <!-- Pipeline -->
+      <div class="card">
+        <h3>🔄 Etapas do Pipeline</h3>
+        <div id="cfg-pipeline-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nova etapa...">
+          <button class="btn btn-primary" onclick="ConfigModule.adicionarEtapa()">+ Adicionar</button>
+        </div>
+      </div>
+      <!-- Listas -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <h3>🛎️ Serviços</h3>
+          <div id="cfg-servicos-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Novo serviço...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarServico()">+</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>✈️ Companhias</h3>
+          <div id="cfg-companhias-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nova companhia...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarCompanhia()">+</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>💠 Programas de Milhas</h3>
+          <div id="cfg-programas-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Novo programa...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarPrograma()">+</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>💳 Cartões</h3>
+          <div id="cfg-cartoes-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Novo cartão...">
+            <button class="btn btn-primary" onclick="ConfigModule.adicionarCartao()">+</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== BACKUP ========== -->
+    <section id="page-backup" class="page">
+      <div class="page-header"><h2>💾 Backup & Restauração</h2></div>
+      <div class="card">
+        <h3>📤 Exportar</h3>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" id="btn-export-json">📄 Exportar JSON</button>
+          <button class="btn btn-secondary" id="btn-export-csv">📊 Exportar CSV (Clientes)</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📥 Importar</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:10px;">Importe um backup JSON previamente exportado. ⚠️ Os dados atuais serão substituídos.</p>
+        <button class="btn btn-secondary" id="btn-import-backup">📂 Selecionar Arquivo</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;">
+      </div>
+      <div class="card">
+        <h3>🗑️ Resetar Dados</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:10px;">Apaga TODOS os dados do sistema. Esta ação não pode ser desfeita.</p>
+        <button class="btn btn-danger" id="btn-reset-data">⚠️ Resetar Tudo</button>
+      </div>
+    </section>
+
   </main>
 </div>
 
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay" onclick="AppModule.closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modal-title">Título</h3>
+      <button class="btn-icon" onclick="AppModule.closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- SCRIPTS -->
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/clientes.js"></script>
+<script src="js/pipeline.js"></script>
+<script src="js/vendas.js"></script>
+<script src="js/viagens.js"></script>
 <script src="js/milhas.js"></script>
+<script src="js/financeiro.js"></script>
+<script src="js/config.js"></script>
+<script src="js/backup.js"></script>
 <script>
-  // Navegação simples e autossuficiente (não depende de app.js)
-  function openPage(page) {
-    document.querySelectorAll('.nav-item').forEach(function (n) {
-      n.classList.toggle('active', n.dataset.pagina === page);
-    });
-    document.querySelectorAll('.page').forEach(function (p) {
-      p.classList.remove('active');
-    });
-    var el = document.getElementById('page-' + page);
-    if (el) el.classList.add('active');
-
-    if (page === 'milhas' && typeof MilhasModule !== 'undefined') {
-      MilhasModule.render();
-    }
-  }
-
-  // Inicializa o módulo de Milhas ao carregar
-  window.addEventListener('DOMContentLoaded', function () {
-    if (typeof MilhasModule !== 'undefined') {
-      MilhasModule.render();
-    }
+  document.addEventListener('DOMContentLoaded', () => {
+    DashboardModule.init();
+    ClientesModule.init();
+    PipelineModule.init();
+    VendasModule.init();
+    ViagensModule.init();
+    MilhasModule.init();
+    if (typeof FinanceiroModule !== 'undefined') FinanceiroModule.init();
+    ConfigModule.init();
+    BackupModule.init();
   });
 </script>
 </body>
