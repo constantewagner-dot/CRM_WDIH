@@ -1,9 +1,11 @@
 /* ============================================================
    backup.js — Exportar / Importar (sem resetar dados)
-   Formato compatível com o backup JSON da versão 2.x
+   Importação com popup de confirmação e resumo do que foi atualizado
    ============================================================ */
 
 const BackupModule = {
+    _pendente: null,
+
     init() {
         const expJSON = document.getElementById('btn-export-json');
         const expCSV = document.getElementById('btn-export-csv');
@@ -14,12 +16,27 @@ const BackupModule = {
         if (file) file.addEventListener('change', (e) => this.importJSON(e));
     },
 
-    // Campos que são arrays (para gerar valores padrão corretos)
     camposArray: [
         'clientes', 'negocios', 'vendas', 'viagens', 'transacoes',
         'servicos', 'pipelineStages', 'companhias', 'programas',
         'cartoes', 'atividades', 'milhas'
     ],
+
+    rotulos: {
+        agencia: 'Dados da Agência',
+        clientes: 'Clientes',
+        negocios: 'Negócios',
+        vendas: 'Vendas',
+        viagens: 'Viagens',
+        transacoes: 'Transações Financeiras',
+        servicos: 'Serviços',
+        pipelineStages: 'Etapas do Pipeline',
+        companhias: 'Companhias Aéreas',
+        programas: 'Programas de Milhas',
+        cartoes: 'Cartões',
+        atividades: 'Atividades',
+        milhas: 'Milhas'
+    },
 
     // Monta objeto no MESMO formato do backup (campos no nível raiz)
     collectData() {
@@ -30,7 +47,6 @@ const BackupModule = {
                 try { data[campo] = JSON.parse(raw); }
                 catch (e) { data[campo] = raw; }
             } else {
-                // Garante que todos os campos existam no arquivo exportado
                 data[campo] = this.camposArray.includes(campo) ? [] : {};
             }
         });
@@ -64,6 +80,24 @@ const BackupModule = {
         AppModule.showToast('Backup CSV exportado!', 'success');
     },
 
+    // Gera o resumo legível dos dados do backup
+    resumoValores(valores) {
+        const linhas = [];
+        Object.keys(this.rotulos).forEach(campo => {
+            const v = valores[campo];
+            if (v === undefined) return;
+            const rotulo = this.rotulos[campo];
+            if (Array.isArray(v)) {
+                linhas.push(`• <strong>${rotulo}</strong>: ${v.length} registro(s)`);
+            } else if (typeof v === 'object' && v !== null) {
+                linhas.push(`• <strong>${rotulo}</strong>: ${Object.keys(v).length} campo(s)`);
+            } else {
+                linhas.push(`• <strong>${rotulo}</strong>: ${v}`);
+            }
+        });
+        return linhas.join('<br>') || '—';
+    },
+
     importJSON(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -82,10 +116,9 @@ const BackupModule = {
                     throw new Error('O arquivo não parece ser um backup válido do WDIH.');
                 }
 
-                // Detecta se o backup usa chaves com prefixo (wdih_...) ou nomes de campo (agencia, clientes...)
+                // Detecta se o backup usa chaves com prefixo (wdih_...) ou nomes de campo
                 const temPrefixo = Object.keys(data).some(k => k.startsWith('wdih_'));
 
-                // Constrói o mapa campo -> valor, aceitando os dois formatos
                 const valores = {};
                 Object.keys(DB.KEYS).forEach(campo => {
                     const chave = DB.KEYS[campo];
@@ -100,30 +133,19 @@ const BackupModule = {
                     throw new Error('Nenhum dado reconhecível encontrado no arquivo.');
                 }
 
-                // Resumo do que será importado
-                const resumo = [
-                    ['Clientes', this.contar(valores, 'clientes')],
-                    ['Negócios', this.contar(valores, 'negocios')],
-                    ['Vendas', this.contar(valores, 'vendas')],
-                    ['Viagens', this.contar(valores, 'viagens')],
-                    ['Transações', this.contar(valores, 'transacoes')],
-                    ['Milhas', this.contar(valores, 'milhas')]
-                ].filter(r => r[1] !== null)
-                 .map(r => `• ${r[0]}: ${r[1]}`)
-                 .join('\n');
+                const resumo = this.resumoValores(valores);
 
-                if (!confirm('Backup detectado:\n\n' + resumo + '\n\n⚠️ Os dados atuais serão SUBSTITUÍDOS.\nDeseja continuar?')) {
-                    return;
-                }
+                // Armazena os dados pendentes e abre popup de confirmação
+                this._pendente = valores;
 
-                // Grava cada campo no localStorage usando as chaves corretas do DB (com prefixo wdih_)
-                Object.keys(valores).forEach(campo => {
-                    localStorage.setItem(DB.KEYS[campo], JSON.stringify(valores[campo]));
-                });
-
-                DB.addAtividade('backup', 'Backup importado');
-                AppModule.showToast('Backup importado com sucesso!', 'success');
-                setTimeout(() => location.reload(), 800);
+                AppModule.openModal(
+                    '📥 Confirmar Importação',
+                    `<p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">O arquivo de backup contém as seguintes informações:</p>
+                     <div style="font-size:13px;line-height:1.8;">${resumo}</div>
+                     <p style="font-size:13px;color:var(--danger);margin-top:14px;">⚠️ Os dados atuais serão substituídos pelos dados do backup.</p>`,
+                    `<button class="btn btn-secondary" onclick="BackupModule.cancelarImportacao()">Cancelar</button>
+                     <button class="btn btn-primary" onclick="BackupModule.confirmarImportacao()">Importar</button>`
+                );
 
             } catch (err) {
                 AppModule.showToast('Erro ao importar: ' + err.message, 'danger');
@@ -133,12 +155,37 @@ const BackupModule = {
         event.target.value = '';
     },
 
-    // Retorna a quantidade de itens de um campo (ou null se o campo não existe)
-    contar(valores, campo) {
-        const v = valores[campo];
-        if (Array.isArray(v)) return v.length;
-        if (v !== undefined) return 0;
-        return null;
+    cancelarImportacao() {
+        this._pendente = null;
+        AppModule.closeModal();
+    },
+
+    confirmarImportacao() {
+        const valores = this._pendente;
+        if (!valores) return;
+
+        // Grava cada campo usando as chaves corretas do DB (prefixo wdih_)
+        Object.keys(valores).forEach(campo => {
+            localStorage.setItem(DB.KEYS[campo], JSON.stringify(valores[campo]));
+        });
+
+        const resumo = this.resumoValores(valores);
+        DB.addAtividade('backup', 'Backup importado');
+        this._pendente = null;
+
+        // Popup com o resumo do que foi atualizado
+        AppModule.openModal(
+            '✅ Backup Importado com Sucesso',
+            `<p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">As seguintes informações foram atualizadas:</p>
+             <div style="font-size:13px;line-height:1.8;">${resumo}</div>`,
+            `<button class="btn btn-primary" onclick="BackupModule.finalizarImportacao()">OK</button>`
+        );
+    },
+
+    finalizarImportacao() {
+        AppModule.closeModal();
+        AppModule.showToast('Backup importado com sucesso!', 'success');
+        setTimeout(() => location.reload(), 800);
     },
 
     download(filename, content, type) {
