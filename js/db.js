@@ -1,11 +1,9 @@
 /* ============================================================
    db.js — Camada de dados do CRM WDIH (localStorage)
-   Contém TODOS os getters/setters usados pela aplicação
    ============================================================ */
 
 const DB = {
 
-    // Mapeia cada campo para a chave real no localStorage
     KEYS: {
         agencia: 'wdih_agencia',
         clientes: 'wdih_clientes',
@@ -22,7 +20,6 @@ const DB = {
         milhas: 'wdih_milhas'
     },
 
-    // Valores padrão quando não há nada salvo
     _defaults: {
         agencia: {},
         clientes: [],
@@ -39,12 +36,11 @@ const DB = {
         milhas: []
     },
 
-    // -------- Funções internas de leitura/escrita --------
     _get(campo) {
         try {
             const raw = localStorage.getItem(this.KEYS[campo]);
             if (raw !== null && raw !== undefined) return JSON.parse(raw);
-        } catch (e) { /* ignora e retorna padrão */ }
+        } catch (e) { }
         const padrao = this._defaults[campo] ?? [];
         return Array.isArray(padrao) ? [...padrao] : JSON.parse(JSON.stringify(padrao));
     },
@@ -55,9 +51,15 @@ const DB = {
 
     // -------- Clientes --------
     getClientes() { return this._get('clientes'); },
+    
+    getClientesOrdenados() {
+        const lista = this._get('clientes');
+        return lista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    },
+    
     setClientes(v) { this._set('clientes', v); },
 
-    // -------- Negócios (Pipeline) --------
+    // -------- Negócios --------
     getNegocios() { return this._get('negocios'); },
     setNegocios(v) { this._set('negocios', v); },
 
@@ -96,7 +98,7 @@ const DB = {
     getMilhas() { return this._get('milhas'); },
     setMilhas(v) { this._set('milhas', v); },
 
-    // -------- Atividades (log) --------
+    // -------- Atividades --------
     getAtividades() { return this._get('atividades'); },
     setAtividades(v) { this._set('atividades', v); },
 
@@ -112,7 +114,6 @@ const DB = {
         this._set('atividades', atv);
     },
 
-    // -------- Inicialização --------
     init() {
         Object.keys(this._defaults).forEach(campo => {
             if (localStorage.getItem(this.KEYS[campo]) === null) {
