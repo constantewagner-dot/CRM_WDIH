@@ -1,5 +1,6 @@
 /* ============================================================
    db.js — Camada de dados do CRM WDIH (localStorage)
+   Versão completa: getters, setters, CRUD e utilitários
    ============================================================ */
 
 const DB = {
@@ -105,7 +106,7 @@ const DB = {
 
     setClientes(v) { this._set('clientes', v); },
 
-    salvarCliente(cliente) {
+    saveCliente(cliente) {
         const lista = this.getClientes();
         const idx = lista.findIndex(c => c.id === cliente.id);
         if (idx >= 0) {
@@ -115,15 +116,16 @@ const DB = {
             lista.push(cliente);
         }
         this.setClientes(lista);
-        this.addAtividade('cliente', `Cliente ${cliente.nome} ${idx >= 0 ? 'atualizado' : 'criado'}`);
+        this.addAtividade('cliente', `Cliente ${cliente.nome} salvo`);
         return cliente;
     },
+    salvarCliente(c) { return this.saveCliente(c); },
 
-    removerCliente(id) {
-        const lista = this.getClientes().filter(c => c.id !== id);
-        this.setClientes(lista);
-        this.addAtividade('cliente', 'Cliente removido');
+    deleteCliente(id) {
+        this.setClientes(this.getClientes().filter(c => c.id !== id));
+        this.addAtividade('cliente', 'Cliente excluído');
     },
+    removerCliente(id) { this.deleteCliente(id); },
 
     /* ============================================================
        NEGÓCIOS (PIPELINE)
@@ -136,7 +138,7 @@ const DB = {
 
     setNegocios(v) { this._set('negocios', v); },
 
-    salvarNegocio(negocio) {
+    saveNegocio(negocio) {
         const lista = this.getNegocios();
         const idx = lista.findIndex(n => n.id === negocio.id);
         if (idx >= 0) {
@@ -147,22 +149,25 @@ const DB = {
             lista.push(negocio);
         }
         this.setNegocios(lista);
-        this.addAtividade('pipeline', `Negócio ${negocio.titulo} ${idx >= 0 ? 'atualizado' : 'criado'}`);
+        this.addAtividade('pipeline', `Negócio ${negocio.titulo} salvo`);
         return negocio;
     },
+    salvarNegocio(n) { return this.saveNegocio(n); },
 
-    removerNegocio(id) {
-        const lista = this.getNegocios().filter(n => n.id !== id);
-        this.setNegocios(lista);
-        this.addAtividade('pipeline', 'Negócio removido');
+    deleteNegocio(id) {
+        this.setNegocios(this.getNegocios().filter(n => n.id !== id));
+        this.addAtividade('pipeline', 'Negócio excluído');
     },
+    removerNegocio(id) { this.deleteNegocio(id); },
 
     moverNegocio(id, novaEtapa) {
         const n = this.getNegocioById(id);
         if (n) {
             n.etapa = novaEtapa;
-            if (novaEtapa === 'Fechamento' || novaEtapa === 'Fechado') n.dataFechamento = new Date().toISOString();
-            this.salvarNegocio(n);
+            if (novaEtapa === 'Fechamento' || novaEtapa === 'Fechado') {
+                n.dataFechamento = new Date().toISOString();
+            }
+            return this.saveNegocio(n);
         }
         return n;
     },
@@ -178,7 +183,7 @@ const DB = {
 
     setVendas(v) { this._set('vendas', v); },
 
-    salvarVenda(venda) {
+    saveVenda(venda) {
         const lista = this.getVendas();
         const idx = lista.findIndex(v => v.id === venda.id);
         if (idx >= 0) {
@@ -189,15 +194,16 @@ const DB = {
             lista.push(venda);
         }
         this.setVendas(lista);
-        this.addAtividade('venda', `Venda ${venda.descricao || venda.id} ${idx >= 0 ? 'atualizada' : 'criada'}`);
+        this.addAtividade('venda', `Venda ${venda.descricao || venda.id} salva`);
         return venda;
     },
+    salvarVenda(v) { return this.saveVenda(v); },
 
-    removerVenda(id) {
-        const lista = this.getVendas().filter(v => v.id !== id);
-        this.setVendas(lista);
-        this.addAtividade('venda', 'Venda removida');
+    deleteVenda(id) {
+        this.setVendas(this.getVendas().filter(v => v.id !== id));
+        this.addAtividade('venda', 'Venda excluída');
     },
+    removerVenda(id) { this.deleteVenda(id); },
 
     /* ============================================================
        VIAGENS
@@ -210,7 +216,7 @@ const DB = {
 
     setViagens(v) { this._set('viagens', v); },
 
-    salvarViagem(viagem) {
+    saveViagem(viagem) {
         const lista = this.getViagens();
         const idx = lista.findIndex(v => v.id === viagem.id);
         if (idx >= 0) {
@@ -220,15 +226,16 @@ const DB = {
             lista.push(viagem);
         }
         this.setViagens(lista);
-        this.addAtividade('viagem', `Viagem ${viagem.destino || viagem.id} ${idx >= 0 ? 'atualizada' : 'criada'}`);
+        this.addAtividade('viagem', `Viagem ${viagem.destino || viagem.id} salva`);
         return viagem;
     },
+    salvarViagem(v) { return this.saveViagem(v); },
 
-    removerViagem(id) {
-        const lista = this.getViagens().filter(v => v.id !== id);
-        this.setViagens(lista);
-        this.addAtividade('viagem', 'Viagem removida');
+    deleteViagem(id) {
+        this.setViagens(this.getViagens().filter(v => v.id !== id));
+        this.addAtividade('viagem', 'Viagem excluída');
     },
+    removerViagem(id) { this.deleteViagem(id); },
 
     /* ============================================================
        TRANSAÇÕES FINANCEIRAS
@@ -241,7 +248,7 @@ const DB = {
 
     setTransacoes(v) { this._set('transacoes', v); },
 
-    salvarTransacao(transacao) {
+    saveTransacao(transacao) {
         const lista = this.getTransacoes();
         const idx = lista.findIndex(t => t.id === transacao.id);
         if (idx >= 0) {
@@ -251,15 +258,16 @@ const DB = {
             lista.push(transacao);
         }
         this.setTransacoes(lista);
-        this.addAtividade('financeiro', `Transação ${transacao.descricao || transacao.id} ${idx >= 0 ? 'atualizada' : 'criada'}`);
+        this.addAtividade('financeiro', `Transação ${transacao.descricao || transacao.id} salva`);
         return transacao;
     },
+    salvarTransacao(t) { return this.saveTransacao(t); },
 
-    removerTransacao(id) {
-        const lista = this.getTransacoes().filter(t => t.id !== id);
-        this.setTransacoes(lista);
-        this.addAtividade('financeiro', 'Transação removida');
+    deleteTransacao(id) {
+        this.setTransacoes(this.getTransacoes().filter(t => t.id !== id));
+        this.addAtividade('financeiro', 'Transação excluída');
     },
+    removerTransacao(id) { this.deleteTransacao(id); },
 
     /* ============================================================
        CONFIGURAÇÕES
@@ -293,7 +301,7 @@ const DB = {
 
     setMilhas(v) { this._set('milhas', v); },
 
-    salvarMilha(milha) {
+    saveMilha(milha) {
         const lista = this.getMilhas();
         const idx = lista.findIndex(m => m.id === milha.id);
         if (idx >= 0) {
@@ -303,15 +311,16 @@ const DB = {
             lista.push(milha);
         }
         this.setMilhas(lista);
-        this.addAtividade('milhas', `Registro de milhas ${idx >= 0 ? 'atualizado' : 'criado'}`);
+        this.addAtividade('milhas', 'Registro de milhas salvo');
         return milha;
     },
+    salvarMilha(m) { return this.saveMilha(m); },
 
-    removerMilha(id) {
-        const lista = this.getMilhas().filter(m => m.id !== id);
-        this.setMilhas(lista);
-        this.addAtividade('milhas', 'Registro de milhas removido');
+    deleteMilha(id) {
+        this.setMilhas(this.getMilhas().filter(m => m.id !== id));
+        this.addAtividade('milhas', 'Registro de milhas excluído');
     },
+    removerMilha(id) { this.deleteMilha(id); },
 
     /* ============================================================
        ATIVIDADES
