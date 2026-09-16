@@ -20,9 +20,6 @@ const VendasModule = {
         this.render();
     },
 
-    /* ============================================================
-       RENDERIZAÇÃO PRINCIPAL
-       ============================================================ */
     render() {
         const container = document.getElementById('vendas-container');
         if (!container) return;
@@ -36,18 +33,13 @@ const VendasModule = {
                     <tbody id="vendas-tbody"></tbody>
                 </table>
             </div>
-            <div id="vendas-modal-container"></div>
         `;
 
         this.renderResumo();
         this.renderFiltros();
         this.renderTabela();
-        this.bindEventos();
     },
 
-    /* ============================================================
-       CARD DE RESUMO COM FILTRO DE PERÍODO
-       ============================================================ */
     renderResumo() {
         const resumo = document.getElementById('vendas-resumo');
         if (!resumo) return;
@@ -110,22 +102,26 @@ const VendasModule = {
             this.renderTabela();
         });
 
-        document.getElementById('data-inicio')?.addEventListener('change', (e) => {
-            this.estado.dataInicio = e.target.value;
-            this.renderResumo();
-            this.renderTabela();
-        });
+        const dataInicio = document.getElementById('data-inicio');
+        const dataFim = document.getElementById('data-fim');
+        
+        if (dataInicio) {
+            dataInicio.addEventListener('change', (e) => {
+                this.estado.dataInicio = e.target.value;
+                this.renderResumo();
+                this.renderTabela();
+            });
+        }
 
-        document.getElementById('data-fim')?.addEventListener('change', (e) => {
-            this.estado.dataFim = e.target.value;
-            this.renderResumo();
-            this.renderTabela();
-        });
+        if (dataFim) {
+            dataFim.addEventListener('change', (e) => {
+                this.estado.dataFim = e.target.value;
+                this.renderResumo();
+                this.renderTabela();
+            });
+        }
     },
 
-    /* ============================================================
-       FILTROS (CLIENTE E SERVIÇO)
-       ============================================================ */
     renderFiltros() {
         const filtros = document.getElementById('vendas-filtros');
         if (!filtros) return;
@@ -184,9 +180,6 @@ const VendasModule = {
         document.getElementById('btn-nova-venda').addEventListener('click', () => this.abrirModal());
     },
 
-    /* ============================================================
-       TABELA COM ORDENAÇÃO
-       ============================================================ */
     renderTabela() {
         const thead = document.getElementById('vendas-thead');
         const tbody = document.getElementById('vendas-tbody');
@@ -259,9 +252,6 @@ const VendasModule = {
         });
     },
 
-    /* ============================================================
-       FILTRAGEM E ORDENAÇÃO
-       ============================================================ */
     getVendasFiltradas() {
         let vendas = DB.getVendas();
 
@@ -344,9 +334,6 @@ const VendasModule = {
         });
     },
 
-    /* ============================================================
-       MODAL DE NOVA/EDIÇÃO DE VENDA
-       ============================================================ */
     abrirModal(id) {
         const venda = id ? DB.getVendaById(id) : {};
         const clientes = DB.getClientesOrdenados();
@@ -360,68 +347,73 @@ const VendasModule = {
             `<option value="${s}" ${venda.servico === s ? 'selected' : ''}>${s}</option>`
         ).join('');
 
-        const modal = document.getElementById('vendas-modal-container');
-        modal.innerHTML = `
-            <div class="modal-overlay">
-                <div class="modal-content">
+        const titulo = id ? 'Editar Venda' : 'Nova Venda';
+        const dataVenda = venda.data ? new Date(venda.data).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+
+        const modalHTML = `
+            <div class="modal-overlay" id="modal-overlay">
+                <div class="modal">
                     <div class="modal-header">
-                        <h3>${id ? 'Editar Venda' : 'Nova Venda'}</h3>
+                        <h3>${titulo}</h3>
                         <button class="modal-close" id="modal-close" type="button">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <form id="form-venda">
-                            <div class="form-group">
-                                <label for="venda-cliente">Cliente *</label>
-                                <select id="venda-cliente" name="clienteId" required>
-                                    <option value="">Selecione...</option>
-                                    ${clienteOptions}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="venda-servico">Serviço *</label>
-                                <select id="venda-servico" name="servico" required>
-                                    <option value="">Selecione...</option>
-                                    ${servicoOptions}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="venda-valor">Valor *</label>
-                                <input type="number" id="venda-valor" name="valor" step="0.01" value="${venda.valor || ''}" required />
-                            </div>
-                            <div class="form-group">
-                                <label for="venda-data">Data</label>
-                                <input type="date" id="venda-data" name="data" value="${venda.data ? new Date(venda.data).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}" />
-                            </div>
-                            <div class="form-group">
-                                <label for="venda-status">Status</label>
-                                <select id="venda-status" name="status">
-                                    <option value="Pendente" ${venda.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
-                                    <option value="Confirmada" ${venda.status === 'Confirmada' ? 'selected' : ''}>Confirmada</option>
-                                    <option value="Cancelada" ${venda.status === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="venda-obs">Observações</label>
-                                <textarea id="venda-obs" name="observacoes" rows="3">${venda.observacoes || ''}</textarea>
-                            </div>
-                        </form>
+                        <div class="form-group">
+                            <label for="venda-cliente">Cliente *</label>
+                            <select id="venda-cliente" name="clienteId" required>
+                                <option value="">Selecione...</option>
+                                ${clienteOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="venda-servico">Serviço *</label>
+                            <select id="venda-servico" name="servico" required>
+                                <option value="">Selecione...</option>
+                                ${servicoOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="venda-valor">Valor *</label>
+                            <input type="number" id="venda-valor" name="valor" step="0.01" value="${venda.valor || ''}" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="venda-data">Data</label>
+                            <input type="date" id="venda-data" name="data" value="${dataVenda}" />
+                        </div>
+                        <div class="form-group">
+                            <label for="venda-status">Status</label>
+                            <select id="venda-status" name="status">
+                                <option value="Pendente" ${venda.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                                <option value="Confirmada" ${venda.status === 'Confirmada' ? 'selected' : ''}>Confirmada</option>
+                                <option value="Cancelada" ${venda.status === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="venda-obs">Observações</label>
+                            <textarea id="venda-obs" name="observacoes" rows="3">${venda.observacoes || ''}</textarea>
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn-cancelar" id="btn-cancelar" type="button">Cancelar</button>
-                        <button class="btn-salvar" id="btn-salvar-venda" type="button">Salvar</button>
+                        <button class="btn btn-secondary" id="btn-cancelar" type="button">Cancelar</button>
+                        <button class="btn btn-primary" id="btn-salvar-venda" type="button">Salvar</button>
                     </div>
                 </div>
             </div>
         `;
 
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
         document.getElementById('modal-close').addEventListener('click', () => this.fecharModal());
         document.getElementById('btn-cancelar').addEventListener('click', () => this.fecharModal());
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-overlay') this.fecharModal();
+        });
         document.getElementById('btn-salvar-venda').addEventListener('click', () => this.salvarVenda(id));
     },
 
     fecharModal() {
-        const modal = document.getElementById('vendas-modal-container');
-        if (modal) modal.innerHTML = '';
+        const modal = document.getElementById('modal-overlay');
+        if (modal) modal.remove();
     },
 
     salvarVenda(id) {
@@ -456,10 +448,6 @@ const VendasModule = {
         if (!confirm('Tem certeza que deseja excluir esta venda?')) return;
         DB.deleteVenda(id);
         this.render();
-    },
-
-    bindEventos() {
-        // Eventos adicionais se necessário
     }
 };
 
