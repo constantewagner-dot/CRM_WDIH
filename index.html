@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CRM WDIH — Gestão Completa</title>
-<link rel="stylesheet" href="css/style.css?v=6">
+<link rel="stylesheet" href="css/style.css?v=7">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
@@ -33,7 +33,10 @@
     <section id="page-dashboard" class="page active">
       <div class="page-header">
         <h2>📊 Dashboard</h2>
-        <span id="dashboard-data-hora" style="font-size:12px;color:var(--gray-500);"></span>
+        <div class="page-header-right">
+          <div id="dashboard-periodo-filtro"></div>
+          <span id="dashboard-data-hora" style="font-size:12px;color:var(--gray-500);"></span>
+        </div>
       </div>
 
       <!-- KPIs -->
@@ -42,8 +45,8 @@
         <div class="kpi-card"><label>Fechados (Total)</label><span id="stat-fechados-total">0</span></div>
         <div class="kpi-card"><label>Receita Total</label><span id="stat-receita-total">R$ 0</span></div>
         <div class="kpi-card"><label>Taxa Conversão</label><span id="stat-taxa-conversao">0%</span></div>
-        <div class="kpi-card"><label>Fechados (Mês)</label><span id="stat-fechados-mes">0</span></div>
-        <div class="kpi-card"><label>Receita (Mês)</label><span id="stat-receita-mes">R$ 0</span></div>
+        <div class="kpi-card"><label>Fechados (Período)</label><span id="stat-fechados-mes">0</span></div>
+        <div class="kpi-card"><label>Receita (Período)</label><span id="stat-receita-mes">R$ 0</span></div>
         <div class="kpi-card"><label>Ticket Médio</label><span id="stat-ticket-medio">R$ 0</span></div>
         <div class="kpi-card"><label>Clientes Ativos</label><span id="stat-clientes-ativos">0</span></div>
       </div>
@@ -280,14 +283,14 @@
 <!-- ==================== SCRIPTS ==================== -->
 <script src="js/db.js?v=5"></script>
 <script src="js/app.js"></script>
-<script src="js/dashboard.js"></script>
-<script src="js/clientes.js"></script>
-<script src="js/pipeline.js"></script>
+<script src="js/dashboard.js?v=2"></script>
+<script src="js/clientes.js?v=2"></script>
+<script src="js/pipeline.js?v=2"></script>
 <script src="js/vendas.js?v=7"></script>
-<script src="js/viagens.js"></script>
+<script src="js/viagens.js?v=2"></script>
 <script src="js/milhas.js"></script>
 <script src="js/financeiro.js"></script>
-<script src="js/config.js"></script>
+<script src="js/config.js?v=2"></script>
 <script src="js/backup.js?v=3"></script>
 
 <script>

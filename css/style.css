@@ -1,5 +1,5 @@
 /* ============================================================
-   CRM WDIH — Folha de estilos principal (v6 — corrigida)
+   CRM WDIH — Folha de estilos principal (v7 — completa)
    ============================================================ */
 
 /* ---------- Variáveis ---------- */
@@ -55,14 +55,10 @@ a:hover { text-decoration: underline; }
 button { font-family: inherit; }
 
 /* ============================================================
-   LAYOUT PRINCIPAL — corresponde ao HTML (.app > .sidebar + .main)
+   LAYOUT PRINCIPAL
    ============================================================ */
-.app {
-    display: flex;
-    min-height: 100vh;
-}
+.app { display: flex; min-height: 100vh; }
 
-/* ---------- Sidebar ---------- */
 .sidebar {
     width: 260px;
     min-width: 260px;
@@ -110,13 +106,11 @@ button { font-family: inherit; }
     font-size: 14px;
 }
 
-.nav-item:hover,
-.nav-item.active {
+.nav-item:hover, .nav-item.active {
     background: rgba(255,255,255,0.1);
     color: var(--white);
 }
 
-/* ---------- Main ---------- */
 .main {
     flex: 1;
     margin-left: 260px;
@@ -125,15 +119,10 @@ button { font-family: inherit; }
 }
 
 /* ============================================================
-   PÁGINAS — sistema de abas
+   PÁGINAS
    ============================================================ */
-.page {
-    display: none;
-}
-
-.page.active {
-    display: block;
-}
+.page { display: none; }
+.page.active { display: block; }
 
 .page-header {
     display: flex;
@@ -148,6 +137,13 @@ button { font-family: inherit; }
     font-size: 22px;
     font-weight: 700;
     color: var(--dark);
+}
+
+.page-header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 /* ============================================================
@@ -205,11 +201,9 @@ button { font-family: inherit; }
 }
 
 /* ============================================================
-   MINI STATS (vendas resumo)
+   MINI STATS
    ============================================================ */
-.mini-stats {
-    margin-bottom: 0;
-}
+.mini-stats { margin-bottom: 0; }
 
 .vendas-resumo-grid {
     display: grid;
@@ -261,11 +255,7 @@ button { font-family: inherit; }
 .btn-primary { background: var(--primary); color: var(--white); }
 .btn-primary:hover { background: var(--primary-dark); }
 
-.btn-secondary {
-    background: var(--gray-100);
-    color: var(--gray-700);
-    border-color: var(--gray-300);
-}
+.btn-secondary { background: var(--gray-100); color: var(--gray-700); border-color: var(--gray-300); }
 .btn-secondary:hover { background: var(--gray-200); }
 
 .btn-success { background: var(--success); color: var(--white); }
@@ -291,9 +281,7 @@ button { font-family: inherit; }
 /* ============================================================
    FORMULÁRIOS
    ============================================================ */
-.form-group {
-    margin-bottom: 16px;
-}
+.form-group { margin-bottom: 16px; }
 
 .form-group label {
     display: block;
@@ -352,18 +340,11 @@ button { font-family: inherit; }
 /* ============================================================
    TABELAS
    ============================================================ */
-.table-wrap {
-    overflow-x: auto;
-}
+.table-wrap { overflow-x: auto; }
 
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
+.table { width: 100%; border-collapse: collapse; }
 
-.table thead {
-    background: var(--gray-50);
-}
+.table thead { background: var(--gray-50); }
 
 .table th {
     padding: 12px 16px;
@@ -377,16 +358,8 @@ button { font-family: inherit; }
     white-space: nowrap;
 }
 
-.table th.sortable {
-    cursor: pointer;
-    user-select: none;
-    transition: var(--transition);
-}
-
-.table th.sortable:hover {
-    background: var(--gray-100);
-    color: var(--primary);
-}
+.table th.sortable { cursor: pointer; user-select: none; transition: var(--transition); }
+.table th.sortable:hover { background: var(--gray-100); color: var(--primary); }
 
 .table td {
     padding: 12px 16px;
@@ -421,7 +394,7 @@ button { font-family: inherit; }
 .badge-default { background: var(--gray-100);     color: var(--gray-700); }
 
 /* ============================================================
-   🔴 MODAL — CORRIGIDO (escondido por padrão!)
+   MODAL
    ============================================================ */
 .modal-overlay {
     position: fixed;
@@ -435,14 +408,11 @@ button { font-family: inherit; }
     justify-content: center;
     z-index: 1000;
     padding: 20px;
-
-    /* 🔴 ESCONDIDO POR PADRÃO */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-/* 🔴 SÓ APARECE QUANDO TIVER .active */
 .modal-overlay.active {
     opacity: 1;
     visibility: visible;
@@ -462,9 +432,7 @@ button { font-family: inherit; }
     transition: transform 0.2s ease;
 }
 
-.modal-overlay.active .modal {
-    transform: scale(1);
-}
+.modal-overlay.active .modal { transform: scale(1); }
 
 .modal-header {
     padding: 16px 20px;
@@ -474,17 +442,9 @@ button { font-family: inherit; }
     justify-content: space-between;
 }
 
-.modal-header h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--dark);
-}
+.modal-header h3 { font-size: 16px; font-weight: 700; color: var(--dark); }
 
-.modal-body {
-    padding: 20px;
-    overflow-y: auto;
-    flex: 1;
-}
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
 
 .modal-footer {
     padding: 14px 20px;
@@ -520,8 +480,6 @@ button { font-family: inherit; }
     transition: opacity 0.3s ease;
 }
 
-.toast.show { opacity: 1; }
-
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to   { transform: translateX(0);    opacity: 1; }
@@ -542,15 +500,18 @@ button { font-family: inherit; }
     padding-bottom: 8px;
 }
 
-.pipeline-coluna {
+.pipeline-column {
     min-width: 280px;
     max-width: 280px;
     background: var(--gray-100);
     border-radius: var(--radius-lg);
     padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.pipeline-coluna-header {
+.pipeline-column-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -559,20 +520,412 @@ button { font-family: inherit; }
     color: var(--dark);
 }
 
-.pipeline-card {
-    background: var(--white);
-    border-radius: var(--radius-md);
-    padding: 14px;
-    margin-bottom: 10px;
-    box-shadow: var(--shadow-sm);
-    cursor: grab;
-    border: 1px solid var(--gray-200);
+.pipeline-column-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 40px;
 }
 
-.pipeline-card:hover { box-shadow: var(--shadow-md); }
-.pipeline-card h4 { font-size: 14px; color: var(--dark); margin-bottom: 6px; }
-.pipeline-card p  { font-size: 12px; color: var(--gray-500); margin-bottom: 4px; }
-.pipeline-card .valor { font-weight: 700; color: var(--primary); }
+.pipeline-card {
+    position: relative;
+    background: var(--white);
+    border-radius: 10px;
+    border: 1px solid var(--gray-200);
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: grab;
+}
+
+.pipeline-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.pipeline-card-cliente {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.pipeline-cliente-avatar {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pipeline-cliente-nome {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.pipeline-card-titulo {
+    font-size: 13px;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.pipeline-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.pipeline-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    background: var(--gray-100);
+    color: var(--gray-500);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pipeline-valor {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 13px;
+}
+
+.pipeline-fechado {
+    font-size: 11px;
+    color: var(--success);
+    font-weight: 600;
+    margin-bottom: 6px;
+    padding: 4px 8px;
+    background: var(--success-light);
+    border-radius: 6px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   VIAGENS
+   ============================================================ */
+.viagem-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s;
+}
+
+.viagem-card:hover { box-shadow: var(--shadow-md); }
+
+.viagem-card.viagem-concluida {
+    border-left: 4px solid var(--success);
+    opacity: 0.85;
+}
+
+.viagem-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.viagem-cliente-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.viagem-cliente-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--info), var(--primary));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.viagem-cliente {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--dark);
+}
+
+.viagem-destino {
+    font-size: 13px;
+    color: var(--gray-500);
+}
+
+.viagem-datas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+}
+
+.viagem-data-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.viagem-data-item.proxima {
+    background: var(--warning-light);
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+.viagem-data-icone { font-size: 20px; }
+
+.viagem-data-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--gray-500);
+    letter-spacing: 0.5px;
+}
+
+.viagem-data-valor {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.viagem-data-seta {
+    color: var(--gray-300);
+    font-size: 18px;
+}
+
+.viagem-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.viagem-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.viagem-info label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    letter-spacing: 0.5px;
+}
+
+.viagem-info span {
+    font-size: 13px;
+    color: var(--gray-700);
+    font-weight: 500;
+}
+
+.viagem-valor-destaque {
+    color: var(--primary);
+    font-weight: 800;
+}
+
+.viagem-notas {
+    font-size: 12px;
+    color: var(--gray-500);
+    background: var(--gray-50);
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.viagem-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   DASHBOARD — Filtro de período
+   ============================================================ */
+.dashboard-periodo-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+}
+
+.dashboard-periodo-filter label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+}
+
+.dashboard-periodo-filter select,
+.dashboard-periodo-filter input[type="date"] {
+    padding: 6px 10px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+}
+
+.dashboard-empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--gray-500);
+    font-size: 13px;
+}
+
+.dashboard-empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.fechado-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.fechado-item:last-child { border-bottom: none; }
+
+.fechado-titulo {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.fechado-cliente {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 2px;
+}
+
+.fechado-valor {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.checkin-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.checkin-item:last-child { border-bottom: none; }
+
+.atividade-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 13px;
+}
+
+.atividade-item:last-child { border-bottom: none; }
+
+.atividade-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gray-300);
+    flex-shrink: 0;
+}
+
+.atividade-dot.pipeline { background: var(--primary); }
+.atividade-dot.cliente  { background: var(--info); }
+.atividade-dot.financeiro { background: var(--success); }
+.atividade-dot.viagem   { background: var(--warning); }
+.atividade-dot.venda    { background: var(--danger); }
+.atividade-dot.milhas   { background: #8b5cf6; }
+.atividade-dot.config   { background: var(--gray-500); }
+
+.atividade-text { flex: 1; color: var(--gray-700); }
+.atividade-time { font-size: 11px; color: var(--gray-500); }
+
+/* ============================================================
+   CLIENTES — Busca
+   ============================================================ */
+.clientes-busca-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.clientes-busca {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    padding: 6px 12px;
+    min-width: 280px;
+    flex: 1;
+    max-width: 400px;
+}
+
+.clientes-busca input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 13px;
+    background: transparent;
+    color: var(--gray-700);
+}
+
+.clientes-contador {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 600;
+}
 
 /* ============================================================
    VENDAS — filtros e toolbar
@@ -664,13 +1017,62 @@ button { font-family: inherit; }
 }
 
 .milhas-tab:hover { color: var(--primary); }
-.milhas-tab.active {
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-}
+.milhas-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
 .milhas-panel { display: none; }
 .milhas-panel.active { display: block; }
+
+/* ============================================================
+   CONFIGURAÇÕES — itens com editar/excluir
+   ============================================================ */
+.config-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+}
+
+.config-item-nome {
+    font-size: 13px;
+    color: var(--gray-700);
+    flex: 1;
+    word-break: break-word;
+}
+
+.config-item-acoes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.stage-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+}
+
+.stage-item.dragging { opacity: 0.5; }
+
+.drag-handle {
+    cursor: grab;
+    color: var(--gray-500);
+    font-size: 16px;
+}
+
+.stage-input {
+    flex: 1;
+}
 
 /* ============================================================
    RESPONSIVIDADE
@@ -684,6 +1086,7 @@ button { font-family: inherit; }
     .main { margin-left: 0; padding: 16px; }
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .pipeline-board { flex-direction: column; overflow-x: visible; }
-    .pipeline-coluna { max-width: 100%; min-width: 100%; }
+    .pipeline-column { max-width: 100%; min-width: 100%; }
     .vendas-filtros-toolbar { flex-direction: column; align-items: stretch; }
+    .page-header { flex-direction: column; align-items: flex-start; }
 }

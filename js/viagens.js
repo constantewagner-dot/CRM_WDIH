@@ -4,6 +4,15 @@ const ViagensModule = {
     isConcluida(v) { return v.concluida === true || v.status === 'Concluída'; },
     isCheckinFeito(v) { return v.checkinFeito === true; },
 
+    isDataProxima(dataStr) {
+        if (!dataStr) return false;
+        const d = new Date(dataStr);
+        if (isNaN(d.getTime())) return false;
+        const hoje = new Date();
+        const diff = Math.ceil((d - hoje) / (1000 * 60 * 60 * 24));
+        return diff >= 0 && diff <= 7;
+    },
+
     render() {
         const el = document.getElementById('viagens-list');
         if (!el) return;
@@ -16,29 +25,58 @@ const ViagensModule = {
     cardHTML(v) {
         const concluida = this.isConcluida(v);
         const checkin = this.isCheckinFeito(v);
+        const cliente = DB.getClienteNome(v.clienteId);
+
         return `
-            <div class="viagem-card">
+            <div class="viagem-card ${concluida ? 'viagem-concluida' : ''}">
                 <div class="viagem-card-header">
-                    <div>
-                        <span class="viagem-cliente">${DB.getClienteNome(v.clienteId)}</span>
-                        <span class="viagem-destino">✈️ ${v.destino || '—'}${v.dataIda ? ' · ' + AppModule.formatDate(v.dataIda) : ''}</span>
+                    <div class="viagem-cliente-block">
+                        <span class="viagem-cliente-avatar">${(cliente.charAt(0) || '?').toUpperCase()}</span>
+                        <div>
+                            <div class="viagem-cliente">${cliente}</div>
+                            <div class="viagem-destino">✈️ ${v.destino || 'Destino a definir'}</div>
+                        </div>
                     </div>
-                    <div class="card-actions">
-                        ${!checkin ? `<button class="btn btn-sm btn-primary" onclick="ViagensModule.marcarCheckin('${v.id}')">Check-in</button>` : ''}
-                        ${!concluida ? `<button class="btn btn-sm btn-secondary" onclick="ViagensModule.concluirViagem('${v.id}')">✅ Concluir</button>` : ''}
-                        <button class="btn-icon" onclick="ViagensModule.editarViagem('${v.id}')">✏️</button>
-                        <button class="btn-icon btn-danger" onclick="ViagensModule.excluirViagem('${v.id}')">🗑️</button>
+                    <div class="viagem-status-badge">
+                        ${concluida ? '<span class="badge badge-success">✅ Concluída</span>'
+                            : checkin ? '<span class="badge badge-info">Check-in ✅</span>'
+                            : '<span class="badge badge-warning">Em andamento</span>'}
                     </div>
                 </div>
+
+                <div class="viagem-datas">
+                    <div class="viagem-data-item ${this.isDataProxima(v.dataIda) ? 'proxima' : ''}">
+                        <span class="viagem-data-icone">🛫</span>
+                        <div>
+                            <div class="viagem-data-label">Ida</div>
+                            <div class="viagem-data-valor">${AppModule.formatDate(v.dataIda) || '—'}</div>
+                        </div>
+                    </div>
+                    <div class="viagem-data-seta">→</div>
+                    <div class="viagem-data-item">
+                        <span class="viagem-data-icone">🛬</span>
+                        <div>
+                            <div class="viagem-data-label">Volta</div>
+                            <div class="viagem-data-valor">${AppModule.formatDate(v.dataVolta) || '—'}</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="viagem-info-grid">
                     <div class="viagem-info"><label>CIA</label><span>${v.companhia || '—'}</span></div>
                     <div class="viagem-info"><label>Voo</label><span>${v.numeroVoo || '—'}</span></div>
                     <div class="viagem-info"><label>Assento</label><span>${v.categoriaAssento || '—'}</span></div>
-                    <div class="viagem-info"><label>Check-in</label><span>${checkin ? '✅ ' + AppModule.formatDate(v.checkinData) : 'Pendente'}</span></div>
-                    <div class="viagem-info"><label>Status</label><span>${concluida ? 'Concluída 🎉' : 'Em andamento'}</span></div>
-                    <div class="viagem-info"><label>Valor</label><span>${AppModule.formatCurrency(v.valor)}</span></div>
+                    <div class="viagem-info"><label>Valor</label><span class="viagem-valor-destaque">${AppModule.formatCurrency(v.valor)}</span></div>
                 </div>
-                ${v.notas ? `<div style="font-size:12px;color:var(--gray-500);">📝 ${v.notas}</div>` : ''}
+
+                ${v.notas ? `<div class="viagem-notas">📝 ${v.notas}</div>` : ''}
+
+                <div class="viagem-card-actions">
+                    ${!checkin ? `<button class="btn btn-sm btn-primary" onclick="ViagensModule.marcarCheckin('${v.id}')">✈️ Check-in</button>` : ''}
+                    ${!concluida ? `<button class="btn btn-sm btn-secondary" onclick="ViagensModule.concluirViagem('${v.id}')">✅ Concluir</button>` : ''}
+                    <button class="btn-icon" onclick="ViagensModule.editarViagem('${v.id}')">✏️</button>
+                    <button class="btn-icon btn-danger" onclick="ViagensModule.excluirViagem('${v.id}')">🗑️</button>
+                </div>
             </div>`;
     },
 

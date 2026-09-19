@@ -32,14 +32,21 @@ const PipelineModule = {
 
     cardHTML(n) {
         const fechado = n.stage === 'Fechado (Ganho)' && n.fechadoEm;
+        const cliente = DB.getClienteNome(n.clienteId);
+
         return `
             <div class="pipeline-card" draggable="true" data-id="${n.id}"
                  ondragstart="PipelineModule.dragStart(event, '${n.id}')">
-                <span class="pipeline-cliente">${DB.getClienteNome(n.clienteId)}</span>
-                <span class="pipeline-titulo">${n.titulo || 'Sem título'}</span>
-                <small>${n.servico || ''}</small>
-                ${Number(n.valor) ? `<small>${AppModule.formatCurrency(n.valor)}</small>` : ''}
-                ${fechado ? `<small style="color:var(--success);font-weight:600;">✅ ${AppModule.formatDate(n.fechadoEm)}</small>` : ''}
+                <div class="pipeline-card-cliente">
+                    <span class="pipeline-cliente-avatar">${(cliente.charAt(0) || '?').toUpperCase()}</span>
+                    <span class="pipeline-cliente-nome">${cliente}</span>
+                </div>
+                <div class="pipeline-card-titulo">${n.titulo || 'Sem título'}</div>
+                <div class="pipeline-card-meta">
+                    ${n.servico ? `<span class="pipeline-tag">${n.servico}</span>` : ''}
+                    ${Number(n.valor) ? `<span class="pipeline-valor">${AppModule.formatCurrency(n.valor)}</span>` : ''}
+                </div>
+                ${fechado ? `<div class="pipeline-fechado">✅ Fechado em ${AppModule.formatDate(n.fechadoEm)}</div>` : ''}
                 <div class="card-actions">
                     <button class="btn-icon" onclick="PipelineModule.editarNegocio('${n.id}')">✏️</button>
                     <button class="btn-icon btn-danger" onclick="PipelineModule.excluirNegocio('${n.id}')">🗑️</button>
@@ -63,7 +70,6 @@ const PipelineModule = {
         n.atualizadoEm = new Date().toISOString();
         DB.saveNegocio(n);
 
-        // 🔥 Automação ao fechar o negócio (usa data atual como padrão)
         if (stage === 'Fechado (Ganho)' && stageAnterior !== 'Fechado (Ganho)') {
             this.processarFechamento(n, new Date().toISOString().split('T')[0]);
         }
@@ -72,9 +78,6 @@ const PipelineModule = {
         AppModule.updateDashboard();
     },
 
-    // ============================================================
-    // 🎯 MODAL (com campo "Data de Fechamento" dinâmico)
-    // ============================================================
     campoDataFechamentoHTML(dataExistente) {
         const data = dataExistente
             ? new Date(dataExistente).toISOString().split('T')[0]
@@ -117,7 +120,6 @@ const PipelineModule = {
             <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="PipelineModule.salvarNegocio()">Salvar</button>`);
 
-        // Mostra o campo data se já começar em "Fechado (Ganho)"
         this.toggleCampoDataFechamento();
     },
 
@@ -199,7 +201,6 @@ const PipelineModule = {
         n.atualizadoEm = new Date().toISOString();
         DB.saveNegocio(n);
 
-        // 🔥 Automação ao mover para fechado via edição (usa data editada pelo usuário)
         if (novoStage === 'Fechado (Ganho)' && stageAnterior !== 'Fechado (Ganho)') {
             this.processarFechamento(n, dataFechamento || new Date().toISOString().split('T')[0]);
         }
@@ -218,11 +219,7 @@ const PipelineModule = {
         AppModule.showToast('Negócio excluído.', 'danger');
     },
 
-    // ============================================================
-    // 🔥 AUTOMAÇÃO DE FECHAMENTO
-    // ============================================================
     processarFechamento(n, dataFechamento) {
-        // Evita duplicidade
         if (n.fechadoEm) return;
 
         const dataISO = new Date(dataFechamento + 'T12:00:00').toISOString();
@@ -232,11 +229,9 @@ const PipelineModule = {
 
         const criado = [];
 
-        // 1) Sempre cria venda
         this.criarVenda(n, dataFechamento);
         criado.push('💵 Venda');
 
-        // 2) Condições por serviço
         const servico = this.normalizar(n.servico);
 
         if (servico === 'grupo wpp' || servico === 'consultoria de milhas') {

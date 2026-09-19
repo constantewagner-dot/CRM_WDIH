@@ -103,19 +103,93 @@ const ConfigModule = {
         AppModule.showToast('Etapa removida.', 'danger');
     },
 
-    renderLista(containerId, items, fnRemover) {
+    /* ============================================================
+       LISTAS GENÉRICAS (Serviços, Companhias, Programas, Cartões)
+       ============================================================ */
+    renderLista(containerId, items, tipo, fnRemover) {
         const list = document.getElementById(containerId);
         if (!list) return;
+
         list.innerHTML = items.map((item, i) => `
-            <div class="list-item"><span>${item}</span>
-                <button class="btn-icon btn-danger" onclick="${fnRemover}(${i})">🗑️</button>
-            </div>`).join('');
+            <div class="config-item">
+                <span class="config-item-nome">${item}</span>
+                <div class="config-item-acoes">
+                    <button class="btn-icon" title="Editar" onclick="ConfigModule.editarItem('${tipo}', ${i})">✏️</button>
+                    <button class="btn-icon btn-danger" title="Excluir" onclick="${fnRemover}(${i})">🗑️</button>
+                </div>
+            </div>`).join('') || '<p style="color:var(--gray-500);font-size:12px;">Nenhum item cadastrado</p>';
     },
 
-    renderServicos() { this.renderLista('cfg-servicos-list', DB.getServicos(), 'ConfigModule.removerServico'); },
-    renderCompanhias() { this.renderLista('cfg-companhias-list', DB.getCompanhias(), 'ConfigModule.removerCompanhia'); },
-    renderProgramas() { this.renderLista('cfg-programas-list', DB.getProgramas(), 'ConfigModule.removerPrograma'); },
-    renderCartoes() { this.renderLista('cfg-cartoes-list', DB.getCartoes(), 'ConfigModule.removerCartao'); },
+    editarItem(tipo, index) {
+        const getters = {
+            servico: DB.getServicos,
+            companhia: DB.getCompanhias,
+            programa: DB.getProgramas,
+            cartao: DB.getCartoes
+        };
+        const labels = { servico: 'Serviço', companhia: 'Companhia', programa: 'Programa', cartao: 'Cartão' };
+
+        const items = getters[tipo].call(DB);
+        const valorAtual = items[index];
+
+        AppModule.openModal(`Editar ${labels[tipo]}`, `
+            <div class="form-group"><label>Nome</label>
+                <input type="text" id="cfg-edit-nome" class="form-control" value="${valorAtual}">
+            </div>
+        `, `
+            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="ConfigModule.atualizarItem('${tipo}', ${index})">Salvar</button>`);
+    },
+
+    atualizarItem(tipo, index) {
+        const getters = {
+            servico: DB.getServicos,
+            companhia: DB.getCompanhias,
+            programa: DB.getProgramas,
+            cartao: DB.getCartoes
+        };
+        const setters = {
+            servico: DB.setServicos,
+            companhia: DB.setCompanhias,
+            programa: DB.setProgramas,
+            cartao: DB.setCartoes
+        };
+        const renders = {
+            servico: () => this.renderServicos(),
+            companhia: () => this.renderCompanhias(),
+            programa: () => this.renderProgramas(),
+            cartao: () => this.renderCartoes()
+        };
+        const labels = { servico: 'Serviço', companhia: 'Companhia', programa: 'Programa', cartao: 'Cartão' };
+
+        const input = document.getElementById('cfg-edit-nome');
+        const novoValor = input ? input.value.trim() : '';
+        if (!novoValor) {
+            AppModule.showToast('Informe o novo nome.', 'danger');
+            return;
+        }
+
+        const items = getters[tipo].call(DB);
+        const valorAntigo = items[index];
+
+        // Se for serviço, atualiza nas vendas existentes
+        if (tipo === 'servico') {
+            const vendas = DB.getVendas();
+            vendas.forEach(v => { if (v.servico === valorAntigo) v.servico = novoValor; });
+            DB.setVendas(vendas);
+        }
+
+        items[index] = novoValor;
+        setters[tipo].call(DB, items);
+        renders[tipo].call(this);
+        AppModule.closeModal();
+        AppModule.showToast(`${labels[tipo]} atualizado!`, 'success');
+    },
+
+    renderServicos() { this.renderLista('cfg-servicos-list', DB.getServicos(), 'servico', 'ConfigModule.removerServico'); },
+    renderCompanhias() { this.renderLista('cfg-companhias-list', DB.getCompanhias(), 'companhia', 'ConfigModule.removerCompanhia'); },
+    renderProgramas() { this.renderLista('cfg-programas-list', DB.getProgramas(), 'programa', 'ConfigModule.removerPrograma'); },
+    renderCartoes() { this.renderLista('cfg-cartoes-list', DB.getCartoes(), 'cartao', 'ConfigModule.removerCartao'); },
 
     adicionarServico() { this.addItem('cfg-novo-servico', DB.getServicos, DB.setServicos, this.renderServicos, 'Serviço'); },
     adicionarCompanhia() { this.addItem('cfg-nova-companhia', DB.getCompanhias, DB.setCompanhias, this.renderCompanhias, 'Companhia'); },
