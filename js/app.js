@@ -105,6 +105,10 @@ const AppModule = {
         setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
+// Alias para compatibilidade com módulos existentes
+toast(message, type = 'success') {
+    this.showToast(message, type);
+},
     updateDateTime() {
         const el = document.getElementById('dashboard-data-hora');
         if (!el) return;
