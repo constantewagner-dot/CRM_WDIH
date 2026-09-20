@@ -1,4 +1,4 @@
-const TarefasModule = {
+var TarefasModule = {
     render() {
         const tarefas = DB.get('tarefas', []);
         const busca = (document.getElementById('tarefas-busca')?.value || '').toLowerCase();

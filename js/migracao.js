@@ -1,4 +1,4 @@
-const MigracaoModule = {
+var MigracaoModule = {
     detectarFormato(json) {
         if (!json || typeof json !== 'object') return 'desconhecido';
         if (json.config && (json.config.pipeline || json.config.agencia)) return 'novo';
@@ -9,7 +9,6 @@ const MigracaoModule = {
     migrar(json) {
         const log = { clientes: 0, negocios: 0, vendas: 0, viagens: 0, transacoes: 0, atividades: 0, avisos: [] };
 
-        // Normaliza: se for formato "novo" (config aninhado), joga para o topo
         const legacy = { ...json };
         if (json.config && typeof json.config === 'object') {
             legacy.agencia = legacy.agencia || json.config.agencia;
@@ -22,7 +21,6 @@ const MigracaoModule = {
             legacy.despesas = legacy.despesas || json.config.despesas;
         }
 
-        // 1. Configuração
         const config = DB.get('config', {});
         if (legacy.agencia) {
             config.agencia = {
@@ -43,7 +41,6 @@ const MigracaoModule = {
         if (!config.receitas || !config.receitas.length) config.receitas = ['Venda', 'Comissão', 'Serviço', 'Outro'];
         if (!config.despesas || !config.despesas.length) config.despesas = ['Fornecedor', 'Marketing', 'Operacional', 'Tributos', 'Outro'];
 
-        // 2..8: Arrays preservados com OS MESMOS campos do backup (sem renomear)
         const clientes = Array.isArray(legacy.clientes) ? legacy.clientes : [];
         const negocios = Array.isArray(legacy.negocios) ? legacy.negocios : [];
         const vendas = Array.isArray(legacy.vendas) ? legacy.vendas : [];
@@ -61,7 +58,6 @@ const MigracaoModule = {
         log.transacoes = transacoes.length;
         log.atividades = atividades.length;
 
-        // 9. Salvar tudo
         DB.set('config', config);
         DB.set('clientes', clientes);
         DB.set('negocios', negocios);

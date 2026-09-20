@@ -1,4 +1,4 @@
-const BackupModule = {
+var BackupModule = {
     notificar(msg, tipo = 'success') {
         if (typeof AppModule !== 'undefined') {
             if (typeof AppModule.toast === 'function') AppModule.toast(msg, tipo);
@@ -66,7 +66,6 @@ const BackupModule = {
                     'success'
                 );
 
-                // Recarrega a página para exibir os dados importados
                 setTimeout(() => location.reload(), 900);
             } catch (err) {
                 console.error('Erro ao importar backup:', err);

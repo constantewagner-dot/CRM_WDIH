@@ -1,4 +1,4 @@
-const RelatoriosModule = {
+var RelatoriosModule = {
     periodoAtual: 'todos',
 
     render() {

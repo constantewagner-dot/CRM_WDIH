@@ -1,4 +1,4 @@
-const CalendarioModule = {
+var CalendarioModule = {
     dataAtual: new Date(),
     diaSelecionado: null,
 
@@ -83,7 +83,7 @@ const CalendarioModule = {
                     eventos[v.dataIda].push({
                         tipo: 'viagem',
                         titulo: '✈️ ' + (v.destino || 'Viagem'),
-                        cliente: DB.getClienteNome(v.cliente_id)
+                        cliente: DB.getClienteNome(v.clienteId)
                     });
                 }
             }
@@ -137,7 +137,7 @@ const CalendarioModule = {
                     <div class="list-item">
                         <div class="list-item-info">
                             <h4>${tipo} → ${AppModule.escapeHtml(v.destino)}</h4>
-                            <small>${AppModule.escapeHtml(DB.getClienteNome(v.cliente_id))} ${v.companhia ? '· ' + AppModule.escapeHtml(v.companhia) : ''}</small>
+                            <small>${AppModule.escapeHtml(DB.getClienteNome(v.clienteId))} ${v.companhia ? '· ' + AppModule.escapeHtml(v.companhia) : ''}</small>
                         </div>
                     </div>
                 `;
@@ -165,7 +165,6 @@ const CalendarioModule = {
     }
 };
 
-// Helper para criar tarefa com data pré-preenchida
 TarefasModule.novaTarefaComData = function(data) {
     this.abrirFormulario();
     setTimeout(() => {

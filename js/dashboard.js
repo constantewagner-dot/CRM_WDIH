@@ -1,4 +1,4 @@
-const DashboardModule = {
+var DashboardModule = {
     render() {
         const negocios = DB.get('negocios', []);
         const vendas = DB.get('vendas', []);

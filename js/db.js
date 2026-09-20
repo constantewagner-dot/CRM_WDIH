@@ -1,4 +1,4 @@
-const DB = {
+var DB = {
     prefix: 'crm_wdih_',
 
     get(key, defaultValue) {

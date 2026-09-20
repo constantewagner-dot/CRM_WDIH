@@ -1,4 +1,4 @@
-const AppModule = {
+var AppModule = {
     pageModules: {
         dashboard: 'DashboardModule',
         clientes: 'ClientesModule',
@@ -52,12 +52,16 @@ const AppModule = {
         };
         document.title = pageTitles[page] ? `CRM WDIH - ${pageTitles[page]}` : 'CRM WDIH';
 
+        // Acesso robusto ao módulo (funciona com var, window ou global)
         const moduleName = this.pageModules[page];
-        if (moduleName && typeof window[moduleName] !== 'undefined' && typeof window[moduleName].render === 'function') {
-            try {
-                window[moduleName].render();
-            } catch (e) {
-                console.error(`Erro ao renderizar ${moduleName}:`, e);
+        if (moduleName) {
+            const mod = window[moduleName] || (typeof eval !== 'undefined' ? (() => { try { return eval(moduleName); } catch(e) { return null; } })() : null);
+            if (mod && typeof mod.render === 'function') {
+                try {
+                    mod.render();
+                } catch (e) {
+                    console.error(`Erro ao renderizar ${moduleName}:`, e);
+                }
             }
         }
 
@@ -97,7 +101,7 @@ const AppModule = {
         if (modal) modal.classList.remove('open');
     },
 
-    showToast(message, type = 'success') {
+    toast(message, type = 'success') {
         const toast = document.getElementById('toast');
         if (!toast) return;
         toast.textContent = message;
@@ -105,10 +109,10 @@ const AppModule = {
         setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
-// Alias para compatibilidade com módulos existentes
-toast(message, type = 'success') {
-    this.showToast(message, type);
-},
+    showToast(message, type = 'success') {
+        this.toast(message, type);
+    },
+
     updateDateTime() {
         const el = document.getElementById('dashboard-data-hora');
         if (!el) return;
