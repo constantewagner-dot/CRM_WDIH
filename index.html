@@ -166,8 +166,57 @@
     </section>
     <!-- Relatórios -->
     <section class="page" id="page-relatorios">
-      <div class="page-header"><h2>Relatórios</h2></div>
-      <div class="card"><p class="dashboard-empty">Relatórios serão implementados na Fase 2.</p></div>
+      <div class="page-header">
+        <h2>Relatórios</h2>
+        <div class="page-header-right">
+          <button class="btn btn-secondary" onclick="RelatoriosModule.exportarCSV()">📥 Exportar CSV</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="rel-filtros">
+          <div class="form-group">
+            <label>Período</label>
+            <select id="rel-periodo" class="form-control" onchange="RelatoriosModule.aplicarPreset(this.value)">
+              <option value="mes-atual">Este mês</option>
+              <option value="mes-anterior">Mês anterior</option>
+              <option value="trimestre">Últimos 3 meses</option>
+              <option value="semestre">Últimos 6 meses</option>
+              <option value="ano">Este ano</option>
+              <option value="todos" selected>Tudo</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </div>
+          <div class="form-group" id="rel-data-ini-wrap" style="display:none;">
+            <label>Data inicial</label>
+            <input type="date" id="rel-data-ini" class="form-control" onchange="RelatoriosModule.render()">
+          </div>
+          <div class="form-group" id="rel-data-fim-wrap" style="display:none;">
+            <label>Data final</label>
+            <input type="date" id="rel-data-fim" class="form-control" onchange="RelatoriosModule.render()">
+          </div>
+        </div>
+      </div>
+      <div class="kpi-grid" id="rel-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Receita por Mês</h3>
+          <div id="rel-receita-mes"></div>
+        </div>
+        <div class="card">
+          <h3>Receita por Serviço</h3>
+          <div id="rel-receita-servico"></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Top Clientes</h3>
+          <div id="rel-top-clientes"></div>
+        </div>
+        <div class="card">
+          <h3>Pipeline / Conversão</h3>
+          <div id="rel-pipeline"></div>
+        </div>
+      </div>
     </section>
     <!-- Milhas -->
     <section class="page" id="page-milhas">
@@ -191,13 +240,47 @@
     </section>
     <!-- Tarefas -->
     <section class="page" id="page-tarefas">
-      <div class="page-header"><h2>Tarefas</h2></div>
-      <div class="card"><p class="dashboard-empty">Módulo de Tarefas será implementado na Fase 2.</p></div>
+      <div class="page-header">
+        <h2>Tarefas</h2>
+        <button class="btn btn-primary" onclick="TarefasModule.novaTarefa()">+ Nova Tarefa</button>
+      </div>
+      <div class="card">
+        <div class="tarefas-filtros">
+          <input type="text" id="tarefas-busca" class="form-control" placeholder="🔍 Buscar tarefa..." oninput="TarefasModule.render()">
+          <select id="tarefas-filtro-status" class="form-control" onchange="TarefasModule.render()">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="em_andamento">Em andamento</option>
+            <option value="concluida">Concluída</option>
+          </select>
+          <select id="tarefas-filtro-prioridade" class="form-control" onchange="TarefasModule.render()">
+            <option value="">Todas prioridades</option>
+            <option value="alta">Alta</option>
+            <option value="media">Média</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" id="tarefas-list"></div>
     </section>
     <!-- Calendário -->
     <section class="page" id="page-calendario">
-      <div class="page-header"><h2>Calendário</h2></div>
-      <div class="card"><p class="dashboard-empty">Calendário será implementado na Fase 2.</p></div>
+      <div class="page-header">
+        <h2>Calendário</h2>
+        <div class="page-header-right">
+          <button class="btn btn-secondary" onclick="CalendarioModule.hoje()">Hoje</button>
+          <button class="btn btn-secondary" onclick="CalendarioModule.navegar(-1)">◀</button>
+          <span id="cal-titulo" style="font-weight:700;min-width:180px;text-align:center;"></span>
+          <button class="btn btn-secondary" onclick="CalendarioModule.navegar(1)">▶</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="card">
+        <h3 id="cal-dia-titulo">Eventos do dia</h3>
+        <div id="cal-dia-lista"></div>
+      </div>
     </section>
     <!-- Configurações -->
     <section class="page" id="page-config">
@@ -329,6 +412,9 @@
 <script src="js/financeiro.js"></script>
 <script src="js/milhas.js"></script>
 <script src="js/config.js"></script>
+<script src="js/relatorios.js"></script>
+<script src="js/tarefas.js"></script>
+<script src="js/calendario.js"></script>
 <script src="js/migracao.js"></script>
 <script src="js/backup.js"></script>
 </body>
