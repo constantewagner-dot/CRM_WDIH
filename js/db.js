@@ -56,9 +56,26 @@ var DB = {
                     'Cruzeiro',
                     'Outro'
                 ],
-                companhias: [],
-                programas: [],
-                cartoes: [],
+                companhias: [
+                    { nome: 'LATAM', cpm: 2.50 },
+                    { nome: 'GOL', cpm: 2.20 },
+                    { nome: 'Azul', cpm: 2.30 },
+                    { nome: 'Avianca', cpm: 2.80 },
+                    { nome: 'TAP', cpm: 3.00 }
+                ],
+                programas: [
+                    'Smiles',
+                    'LATAM Pass',
+                    'TudoAzul',
+                    'Livelo'
+                ],
+                cartoes: [
+                    'Itaú',
+                    'Bradesco',
+                    'Santander',
+                    'Banco do Brasil',
+                    'Caixa'
+                ],
                 receitas: ['Venda', 'Comissão', 'Serviço', 'Outro'],
                 despesas: ['Fornecedor', 'Marketing', 'Operacional', 'Tributos', 'Outro']
             });
@@ -69,14 +86,12 @@ var DB = {
             this.set('viagens', []);
             this.set('transacoes', []);
             this.set('milhas', {
-                clubes: [],
-                investimentos: [],
-                vendas: [],
-                orcamentos: [],
+                programas: [],
                 cartoes: [],
-                bilhetes: []
+                emissoes: []
             });
             this.set('atividades', []);
+            this.set('tarefas', []);
             this.set('inicializado', true);
         }
     }

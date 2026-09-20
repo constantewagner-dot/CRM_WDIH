@@ -832,3 +832,112 @@ body {
     border-color: var(--primary);
     color: var(--primary);
 }
+/* === MILHAS (POR CLIENTE) === */
+.milhas-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.milhas-tab {
+    background: transparent;
+    border: none;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+.milhas-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+.milhas-panel {
+    display: none;
+}
+.milhas-panel.active {
+    display: block;
+}
+
+/* Cards de cliente */
+.cliente-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+.cliente-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: box-shadow 0.2s;
+}
+.cliente-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.cliente-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+.cliente-card-nome {
+    font-weight: 700;
+    font-size: 15px;
+}
+.cliente-card-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.cliente-card-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.cliente-card-stats .stat {
+    text-align: center;
+    padding: 8px 4px;
+    background: var(--bg);
+    border-radius: 6px;
+}
+.cliente-card-stats .stat label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+.cliente-card-stats .stat span {
+    font-weight: 700;
+    font-size: 14px;
+}
+.cliente-card-economia {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--success);
+    text-align: right;
+}
+
+/* Detalhe do cliente */
+.cliente-detalhe-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+}
+.cliente-detalhe-header h3 {
+    margin: 0;
+}
+
+/* Programa */
+.programa-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+}
