@@ -1,353 +1,335 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM WDIH</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRM WDIH</title>
+<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <div class="app">
-        <aside class="sidebar" id="sidebar">
-            <div class="brand">
-                <span class="brand-icon">✈️</span>
-                <span>CRM WDIH</span>
-            </div>
-
-            <nav class="nav" id="main-nav">
-                <button class="nav-item active" data-page="dashboard" onclick="AppModule.openPage('dashboard')">
-                    <span>🏠</span> Dashboard
-                </button>
-
-                <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-cadastros', this)">
-                    <span>📁</span> Cadastros
-                    <span class="nav-arrow">▸</span>
-                </button>
-                <div class="nav-group" id="menu-cadastros">
-                    <button class="nav-item sub-item" data-page="clientes" onclick="AppModule.openPage('clientes')">
-                        <span>👤</span> Clientes
-                    </button>
-                    <button class="nav-item sub-item" data-page="pipeline" onclick="AppModule.openPage('pipeline')">
-                        <span>🎯</span> Cotações / Pipeline
-                    </button>
-                    <button class="nav-item sub-item" data-page="vendas" onclick="AppModule.openPage('vendas')">
-                        <span>💰</span> Vendas
-                    </button>
-                    <button class="nav-item sub-item" data-page="viagens" onclick="AppModule.openPage('viagens')">
-                        <span>✈️</span> Viagens
-                    </button>
-                </div>
-
-                <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-financeiro', this)">
-                    <span>💳</span> Financeiro
-                    <span class="nav-arrow">▸</span>
-                </button>
-                <div class="nav-group" id="menu-financeiro">
-                    <button class="nav-item sub-item" data-page="financeiro" onclick="AppModule.openPage('financeiro')">
-                        <span>📊</span> Transações
-                    </button>
-                    <button class="nav-item sub-item" data-page="relatorios" onclick="AppModule.openPage('relatorios')">
-                        <span>📈</span> Relatórios
-                    </button>
-                </div>
-
-                <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-milhas', this)">
-                    <span>💎</span> Milhas
-                    <span class="nav-arrow">▸</span>
-                </button>
-                <div class="nav-group" id="menu-milhas">
-                    <button class="nav-item sub-item" data-page="milhas" onclick="AppModule.openPage('milhas')">
-                        <span>📋</span> Visão Geral
-                    </button>
-                </div>
-
-                <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-ferramentas', this)">
-                    <span>🛠️</span> Ferramentas
-                    <span class="nav-arrow">▸</span>
-                </button>
-                <div class="nav-group" id="menu-ferramentas">
-                    <button class="nav-item sub-item" data-page="tarefas" onclick="AppModule.openPage('tarefas')">
-                        <span>✅</span> Tarefas
-                    </button>
-                    <button class="nav-item sub-item" data-page="calendario" onclick="AppModule.openPage('calendario')">
-                        <span>📅</span> Calendário
-                    </button>
-                    <button class="nav-item sub-item" data-page="config" onclick="AppModule.openPage('config')">
-                        <span>⚙️</span> Configurações
-                    </button>
-                    <button class="nav-item sub-item" data-page="backup" onclick="AppModule.openPage('backup')">
-                        <span>💾</span> Backup
-                    </button>
-                </div>
-            </nav>
-
-            <div class="sidebar-footer">
-                <span>WDIH</span>
-                <small>v1.0</small>
-            </div>
-        </aside>
-
-        <button class="menu-toggle" id="menu-toggle" onclick="AppModule.toggleSidebar()">☰</button>
-
-        <main class="main" id="main">
-            <!-- Dashboard -->
-            <section class="page active" id="page-dashboard">
-                <div class="page-header">
-                    <h2>Dashboard</h2>
-                    <div class="page-header-right">
-                        <div id="dashboard-data-hora" class="data-hora"></div>
-                    </div>
-                </div>
-                <div id="dashboard-periodo-filtro"></div>
-                <div class="kpi-grid">
-                    <div class="kpi-card"><label>Negócios Ativos</label><span id="stat-negocios-ativos">0</span></div>
-                    <div class="kpi-card"><label>Fechados (Total)</label><span id="stat-fechados-total">0</span></div>
-                    <div class="kpi-card"><label>Receita Total</label><span id="stat-receita-total">R$ 0,00</span></div>
-                    <div class="kpi-card"><label>Taxa de Conversão</label><span id="stat-taxa-conversao">0%</span></div>
-                    <div class="kpi-card"><label>Fechados no Período</label><span id="stat-fechados-mes">0</span></div>
-                    <div class="kpi-card"><label>Receita no Período</label><span id="stat-receita-mes">R$ 0,00</span></div>
-                    <div class="kpi-card"><label>Ticket Médio</label><span id="stat-ticket-medio">R$ 0,00</span></div>
-                    <div class="kpi-card"><label>Clientes Ativos</label><span id="stat-clientes-ativos">0</span></div>
-                </div>
-                <div class="grid-2">
-                    <div class="card"><h3>Pipeline</h3><div id="dashboard-pipeline"></div><div id="pipeline-summary" class="pipeline-summary"></div></div>
-                    <div class="card"><h3>Fechados Recentes</h3><div id="dashboard-fechados-recentes"></div></div>
-                </div>
-                <div class="grid-2">
-                    <div class="card"><h3>Check-ins Pendentes</h3><div id="dashboard-checkins"></div></div>
-                    <div class="card"><h3>Atividades Recentes</h3><div id="dashboard-atividades"></div></div>
-                </div>
-            </section>
-
-            <!-- Clientes -->
-            <section class="page" id="page-clientes">
-                <div class="page-header">
-                    <h2>Clientes</h2>
-                    <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
-                </div>
-                <div class="card" id="clientes-list"></div>
-            </section>
-
-            <!-- Pipeline -->
-            <section class="page" id="page-pipeline">
-                <div class="page-header">
-                    <h2>Cotações / Pipeline</h2>
-                    <button class="btn btn-primary" onclick="PipelineModule.novoNegocio()">+ Nova Cotação</button>
-                </div>
-                <div class="card"><div class="pipeline-board" id="pipeline-board"></div></div>
-            </section>
-
-            <!-- Vendas -->
-            <section class="page" id="page-vendas">
-                <div class="page-header">
-                    <h2>Vendas</h2>
-                    <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
-                </div>
-                <div id="vendas-resumo"></div>
-                <div class="card" id="vendas-list"></div>
-            </section>
-
-            <!-- Viagens -->
-            <section class="page" id="page-viagens">
-                <div class="page-header">
-                    <h2>Viagens</h2>
-                    <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
-                </div>
-                <div class="card" id="viagens-list"></div>
-            </section>
-
-            <!-- Financeiro -->
-            <section class="page" id="page-financeiro">
-                <div class="page-header">
-                    <h2>Transações Financeiras</h2>
-                    <button class="btn btn-primary" id="btn-nova-transacao" onclick="FinanceiroModule.novaTransacao()">+ Nova Transação</button>
-                </div>
-                <div class="kpi-grid kpi-financeiro">
-                    <div class="kpi-card kpi-receita"><label>Receitas</label><span id="fin-receitas">R$ 0,00</span></div>
-                    <div class="kpi-card kpi-despesa"><label>Despesas</label><span id="fin-despesas">R$ 0,00</span></div>
-                    <div class="kpi-card kpi-saldo"><label>Saldo</label><span id="fin-saldo">R$ 0,00</span></div>
-                    <div class="kpi-card kpi-ticket"><label>Ticket Médio</label><span id="fin-ticket">R$ 0,00</span></div>
-                </div>
-                <div class="card">
-                    <div class="table-wrap">
-                        <table class="table" id="tabela-transacoes">
-                            <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Ações</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Relatórios -->
-            <section class="page" id="page-relatorios">
-                <div class="page-header"><h2>Relatórios</h2></div>
-                <div class="card"><p class="dashboard-empty">Relatórios serão implementados na Fase 2.</p></div>
-            </section>
-
-            <!-- Milhas -->
-            <section class="page" id="page-milhas">
-                <div class="page-header"><h2>Milhas</h2></div>
-                <div class="milhas-tabs" id="milhas-tabs">
-                    <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">Visão Geral</button>
-                    <button class="milhas-tab" data-tab="clubes" onclick="MilhasModule.abrirTab('clubes')">Clubes</button>
-                    <button class="milhas-tab" data-tab="investimentos" onclick="MilhasModule.abrirTab('investimentos')">Investimentos</button>
-                    <button class="milhas-tab" data-tab="vendas" onclick="MilhasModule.abrirTab('vendas')">Vendas</button>
-                    <button class="milhas-tab" data-tab="orcamento" onclick="MilhasModule.abrirTab('orcamento')">Orçamentos</button>
-                    <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">Cartões</button>
-                    <button class="milhas-tab" data-tab="bilhetes" onclick="MilhasModule.abrirTab('bilhetes')">Bilhetes</button>
-                </div>
-                <div id="milhas-panel-visao" class="milhas-panel active"></div>
-                <div id="milhas-panel-clubes" class="milhas-panel"></div>
-                <div id="milhas-panel-investimentos" class="milhas-panel"></div>
-                <div id="milhas-panel-vendas" class="milhas-panel"></div>
-                <div id="milhas-panel-orcamento" class="milhas-panel"></div>
-                <div id="milhas-panel-cartoes" class="milhas-panel"></div>
-                <div id="milhas-panel-bilhetes" class="milhas-panel"></div>
-            </section>
-
-            <!-- Tarefas -->
-            <section class="page" id="page-tarefas">
-                <div class="page-header"><h2>Tarefas</h2></div>
-                <div class="card"><p class="dashboard-empty">Módulo de Tarefas será implementado na Fase 2.</p></div>
-            </section>
-
-            <!-- Calendário -->
-            <section class="page" id="page-calendario">
-                <div class="page-header"><h2>Calendário</h2></div>
-                <div class="card"><p class="dashboard-empty">Calendário será implementado na Fase 2.</p></div>
-            </section>
-
-            <!-- Configurações -->
-            <section class="page" id="page-config">
-                <div class="page-header"><h2>Configurações</h2></div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h3>Dados da Agência</h3>
-                        <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
-                        <div class="form-grid">
-                            <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
-                            <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
-                            <div class="form-group"><label>Comissão Padrão (%)</label><input type="number" id="cfg-agencia-comissao" class="form-control" step="0.01"></div>
-                        </div>
-                        <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()">Salvar Agência</button>
-                    </div>
-                    <div class="card">
-                        <h3>Etapas do Pipeline</h3>
-                        <div id="cfg-pipeline-list"></div>
-                        <div class="form-row" style="margin-top:12px;">
-                            <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nova etapa">
-                            <button class="btn btn-secondary" onclick="ConfigModule.adicionarEtapa()">Adicionar</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h3>Serviços</h3>
-                        <div id="cfg-servicos-list"></div>
-                        <div class="form-row" style="margin-top:12px;">
-                            <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Novo serviço">
-                            <button class="btn btn-secondary" onclick="ConfigModule.adicionarServico()">Adicionar</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Companhias Aéreas</h3>
-                        <div id="cfg-companhias-list"></div>
-                        <div class="form-row" style="margin-top:12px;">
-                            <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nova companhia">
-                            <button class="btn btn-secondary" onclick="ConfigModule.adicionarCompanhia()">Adicionar</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h3>Programas de Milhas</h3>
-                        <div id="cfg-programas-list"></div>
-                        <div class="form-row" style="margin-top:12px;">
-                            <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Novo programa">
-                            <button class="btn btn-secondary" onclick="ConfigModule.adicionarPrograma()">Adicionar</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Cartões</h3>
-                        <div id="cfg-cartoes-list"></div>
-                        <div class="form-row" style="margin-top:12px;">
-                            <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Novo cartão">
-                            <button class="btn btn-secondary" onclick="ConfigModule.adicionarCartao()">Adicionar</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h3>Tipos de Receita</h3>
-                        <div id="cfg-receitas-list"></div>
-                        <div class="form-row" style="margin-top:12px;">
-                            <input type="text" id="cfg-nova-receita" class="form-control" placeholder="Novo tipo de receita">
-                            <button class="btn btn-secondary" onclick="ConfigModule.adicionarReceita()">Adicionar</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Tipos de Despesa</h3>
-                        <div id="cfg-despesas-list"></div>
-                        <div class="form-row" style="margin-top:12px;">
-                            <input type="text" id="cfg-nova-despesa" class="form-control" placeholder="Novo tipo de despesa">
-                            <button class="btn btn-secondary" onclick="ConfigModule.adicionarDespesa()">Adicionar</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Backup -->
-            <section class="page" id="page-backup">
-                <div class="page-header"><h2>Backup e Restauração</h2></div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h3>Exportar Dados</h3>
-                        <p>Baixe todos os dados do CRM em arquivo JSON.</p>
-                        <button class="btn btn-primary" onclick="BackupModule.exportar()">📥 Exportar JSON</button>
-                    </div>
-                    <div class="card">
-                        <h3>Importar Dados</h3>
-                        <p>Restaure os dados a partir de um arquivo JSON.</p>
-                        <input type="file" id="backup-file" accept=".json" class="form-control" onchange="BackupModule.importar(this)">
-                    </div>
-                </div>
-                <div class="card" style="margin-top:16px;">
-                    <h3>Limpar Dados</h3>
-                    <p>Atenção: esta ação apagará todos os dados salvos no navegador.</p>
-                    <button class="btn btn-danger" onclick="BackupModule.limpar()">🗑️ Limpar Tudo</button>
-                </div>
-            </section>
-        </main>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-icon">✈️</span>
+      <span>CRM WDIH</span>
     </div>
-
-    <!-- Modal -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Título</h3>
-                <button class="modal-close" onclick="AppModule.closeModal()">×</button>
-            </div>
-            <div class="modal-body" id="modal-body"></div>
-            <div class="modal-footer" id="modal-footer"></div>
+    <nav class="nav" id="main-nav">
+      <button class="nav-item active" data-page="dashboard" onclick="AppModule.openPage('dashboard')">
+        <span>🏠</span> Dashboard
+      </button>
+      <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-cadastros', this)">
+        <span>📁</span> Cadastros
+        <span class="nav-arrow">▸</span>
+      </button>
+      <div class="nav-group" id="menu-cadastros">
+        <button class="nav-item sub-item" data-page="clientes" onclick="AppModule.openPage('clientes')">
+          <span>👤</span> Clientes
+        </button>
+        <button class="nav-item sub-item" data-page="pipeline" onclick="AppModule.openPage('pipeline')">
+          <span>🎯</span> Cotações / Pipeline
+        </button>
+        <button class="nav-item sub-item" data-page="vendas" onclick="AppModule.openPage('vendas')">
+          <span>💰</span> Vendas
+        </button>
+        <button class="nav-item sub-item" data-page="viagens" onclick="AppModule.openPage('viagens')">
+          <span>✈️</span> Viagens
+        </button>
+      </div>
+      <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-financeiro', this)">
+        <span>💳</span> Financeiro
+        <span class="nav-arrow">▸</span>
+      </button>
+      <div class="nav-group" id="menu-financeiro">
+        <button class="nav-item sub-item" data-page="financeiro" onclick="AppModule.openPage('financeiro')">
+          <span>📊</span> Transações
+        </button>
+        <button class="nav-item sub-item" data-page="relatorios" onclick="AppModule.openPage('relatorios')">
+          <span>📈</span> Relatórios
+        </button>
+      </div>
+      <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-milhas', this)">
+        <span>💎</span> Milhas
+        <span class="nav-arrow">▸</span>
+      </button>
+      <div class="nav-group" id="menu-milhas">
+        <button class="nav-item sub-item" data-page="milhas" onclick="AppModule.openPage('milhas')">
+          <span>📋</span> Visão Geral
+        </button>
+      </div>
+      <button class="nav-item nav-group-toggle" onclick="AppModule.toggleGroup('menu-ferramentas', this)">
+        <span>🛠️</span> Ferramentas
+        <span class="nav-arrow">▸</span>
+      </button>
+      <div class="nav-group" id="menu-ferramentas">
+        <button class="nav-item sub-item" data-page="tarefas" onclick="AppModule.openPage('tarefas')">
+          <span>✅</span> Tarefas
+        </button>
+        <button class="nav-item sub-item" data-page="calendario" onclick="AppModule.openPage('calendario')">
+          <span>📅</span> Calendário
+        </button>
+        <button class="nav-item sub-item" data-page="config" onclick="AppModule.openPage('config')">
+          <span>⚙️</span> Configurações
+        </button>
+        <button class="nav-item sub-item" data-page="backup" onclick="AppModule.openPage('backup')">
+          <span>💾</span> Backup
+        </button>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <span>WDIH</span>
+      <small>v1.0</small>
+    </div>
+  </aside>
+  <button class="menu-toggle" id="menu-toggle" onclick="AppModule.toggleSidebar()">☰</button>
+  <main class="main" id="main">
+    <!-- Dashboard -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <div class="page-header-right">
+          <div id="dashboard-data-hora" class="data-hora"></div>
         </div>
+      </div>
+      <div id="dashboard-periodo-filtro"></div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><label>Negócios Ativos</label><span id="stat-negocios-ativos">0</span></div>
+        <div class="kpi-card"><label>Fechados (Total)</label><span id="stat-fechados-total">0</span></div>
+        <div class="kpi-card"><label>Receita Total</label><span id="stat-receita-total">R$ 0,00</span></div>
+        <div class="kpi-card"><label>Taxa de Conversão</label><span id="stat-taxa-conversao">0%</span></div>
+        <div class="kpi-card"><label>Fechados no Período</label><span id="stat-fechados-mes">0</span></div>
+        <div class="kpi-card"><label>Receita no Período</label><span id="stat-receita-mes">R$ 0,00</span></div>
+        <div class="kpi-card"><label>Ticket Médio</label><span id="stat-ticket-medio">R$ 0,00</span></div>
+        <div class="kpi-card"><label>Clientes Ativos</label><span id="stat-clientes-ativos">0</span></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Pipeline</h3><div id="dashboard-pipeline"></div><div id="pipeline-summary" class="pipeline-summary"></div></div>
+        <div class="card"><h3>Fechados Recentes</h3><div id="dashboard-fechados-recentes"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Check-ins Pendentes</h3><div id="dashboard-checkins"></div></div>
+        <div class="card"><h3>Atividades Recentes</h3><div id="dashboard-atividades"></div></div>
+      </div>
+    </section>
+    <!-- Clientes -->
+    <section class="page" id="page-clientes">
+      <div class="page-header">
+        <h2>Clientes</h2>
+        <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
+      </div>
+      <div class="card" id="clientes-list"></div>
+    </section>
+    <!-- Pipeline -->
+    <section class="page" id="page-pipeline">
+      <div class="page-header">
+        <h2>Cotações / Pipeline</h2>
+        <button class="btn btn-primary" onclick="PipelineModule.novoNegocio()">+ Nova Cotação</button>
+      </div>
+      <div class="card"><div class="pipeline-board" id="pipeline-board"></div></div>
+    </section>
+    <!-- Vendas -->
+    <section class="page" id="page-vendas">
+      <div class="page-header">
+        <h2>Vendas</h2>
+        <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
+      </div>
+      <div id="vendas-resumo"></div>
+      <div class="card" id="vendas-list"></div>
+    </section>
+    <!-- Viagens -->
+    <section class="page" id="page-viagens">
+      <div class="page-header">
+        <h2>Viagens</h2>
+        <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
+      </div>
+      <div class="card" id="viagens-list"></div>
+    </section>
+    <!-- Financeiro -->
+    <section class="page" id="page-financeiro">
+      <div class="page-header">
+        <h2>Transações Financeiras</h2>
+        <button class="btn btn-primary" id="btn-nova-transacao" onclick="FinanceiroModule.novaTransacao()">+ Nova Transação</button>
+      </div>
+      <div class="kpi-grid kpi-financeiro">
+        <div class="kpi-card kpi-receita"><label>Receitas</label><span id="fin-receitas">R$ 0,00</span></div>
+        <div class="kpi-card kpi-despesa"><label>Despesas</label><span id="fin-despesas">R$ 0,00</span></div>
+        <div class="kpi-card kpi-saldo"><label>Saldo</label><span id="fin-saldo">R$ 0,00</span></div>
+        <div class="kpi-card kpi-ticket"><label>Ticket Médio</label><span id="fin-ticket">R$ 0,00</span></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table" id="tabela-transacoes">
+            <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Ações</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <!-- Relatórios -->
+    <section class="page" id="page-relatorios">
+      <div class="page-header"><h2>Relatórios</h2></div>
+      <div class="card"><p class="dashboard-empty">Relatórios serão implementados na Fase 2.</p></div>
+    </section>
+    <!-- Milhas -->
+    <section class="page" id="page-milhas">
+      <div class="page-header"><h2>Milhas</h2></div>
+      <div class="milhas-tabs" id="milhas-tabs">
+        <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">Visão Geral</button>
+        <button class="milhas-tab" data-tab="clubes" onclick="MilhasModule.abrirTab('clubes')">Clubes</button>
+        <button class="milhas-tab" data-tab="investimentos" onclick="MilhasModule.abrirTab('investimentos')">Investimentos</button>
+        <button class="milhas-tab" data-tab="vendas" onclick="MilhasModule.abrirTab('vendas')">Vendas</button>
+        <button class="milhas-tab" data-tab="orcamento" onclick="MilhasModule.abrirTab('orcamento')">Orçamentos</button>
+        <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">Cartões</button>
+        <button class="milhas-tab" data-tab="bilhetes" onclick="MilhasModule.abrirTab('bilhetes')">Bilhetes</button>
+      </div>
+      <div id="milhas-panel-visao" class="milhas-panel active"></div>
+      <div id="milhas-panel-clubes" class="milhas-panel"></div>
+      <div id="milhas-panel-investimentos" class="milhas-panel"></div>
+      <div id="milhas-panel-vendas" class="milhas-panel"></div>
+      <div id="milhas-panel-orcamento" class="milhas-panel"></div>
+      <div id="milhas-panel-cartoes" class="milhas-panel"></div>
+      <div id="milhas-panel-bilhetes" class="milhas-panel"></div>
+    </section>
+    <!-- Tarefas -->
+    <section class="page" id="page-tarefas">
+      <div class="page-header"><h2>Tarefas</h2></div>
+      <div class="card"><p class="dashboard-empty">Módulo de Tarefas será implementado na Fase 2.</p></div>
+    </section>
+    <!-- Calendário -->
+    <section class="page" id="page-calendario">
+      <div class="page-header"><h2>Calendário</h2></div>
+      <div class="card"><p class="dashboard-empty">Calendário será implementado na Fase 2.</p></div>
+    </section>
+    <!-- Configurações -->
+    <section class="page" id="page-config">
+      <div class="page-header"><h2>Configurações</h2></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Dados da Agência</h3>
+          <div class="form-group"><label>Nome</label><input type="text" id="cfg-agencia-nome" class="form-control"></div>
+          <div class="form-grid">
+            <div class="form-group"><label>CNPJ</label><input type="text" id="cfg-agencia-cnpj" class="form-control"></div>
+            <div class="form-group"><label>Telefone</label><input type="text" id="cfg-agencia-telefone" class="form-control"></div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label>Email</label><input type="email" id="cfg-agencia-email" class="form-control"></div>
+            <div class="form-group"><label>Comissão Padrão (%)</label><input type="number" id="cfg-agencia-comissao" class="form-control" step="0.01"></div>
+          </div>
+          <button class="btn btn-primary" onclick="ConfigModule.salvarAgencia()">Salvar Agência</button>
+        </div>
+        <div class="card">
+          <h3>Etapas do Pipeline</h3>
+          <div id="cfg-pipeline-list"></div>
+          <div class="form-row" style="margin-top:12px;">
+            <input type="text" id="cfg-nova-etapa" class="form-control" placeholder="Nova etapa" />
+            <button class="btn btn-secondary" onclick="ConfigModule.adicionarEtapa()">Adicionar</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Serviços</h3>
+          <div id="cfg-servicos-list"></div>
+          <div class="form-row" style="margin-top:12px;">
+            <input type="text" id="cfg-novo-servico" class="form-control" placeholder="Novo serviço" />
+            <button class="btn btn-secondary" onclick="ConfigModule.adicionarServico()">Adicionar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Companhias Aéreas</h3>
+          <div id="cfg-companhias-list"></div>
+          <div class="form-row" style="margin-top:12px;">
+            <input type="text" id="cfg-nova-companhia" class="form-control" placeholder="Nova companhia" />
+            <button class="btn btn-secondary" onclick="ConfigModule.adicionarCompanhia()">Adicionar</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Programas de Milhas</h3>
+          <div id="cfg-programas-list"></div>
+          <div class="form-row" style="margin-top:12px;">
+            <input type="text" id="cfg-novo-programa" class="form-control" placeholder="Novo programa" />
+            <button class="btn btn-secondary" onclick="ConfigModule.adicionarPrograma()">Adicionar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Cartões</h3>
+          <div id="cfg-cartoes-list"></div>
+          <div class="form-row" style="margin-top:12px;">
+            <input type="text" id="cfg-novo-cartao" class="form-control" placeholder="Novo cartão" />
+            <button class="btn btn-secondary" onclick="ConfigModule.adicionarCartao()">Adicionar</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Tipos de Receita</h3>
+          <div id="cfg-receitas-list"></div>
+          <div class="form-row" style="margin-top:12px;">
+            <input type="text" id="cfg-nova-receita" class="form-control" placeholder="Novo tipo de receita" />
+            <button class="btn btn-secondary" onclick="ConfigModule.adicionarReceita()">Adicionar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Tipos de Despesa</h3>
+          <div id="cfg-despesas-list"></div>
+          <div class="form-row" style="margin-top:12px;">
+            <input type="text" id="cfg-nova-despesa" class="form-control" placeholder="Novo tipo de despesa" />
+            <button class="btn btn-secondary" onclick="ConfigModule.adicionarDespesa()">Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Backup -->
+    <section class="page" id="page-backup">
+      <div class="page-header"><h2>Backup e Restauração</h2></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Exportar Dados</h3>
+          <p style="margin-bottom:16px;">Baixe todos os dados do CRM em arquivo JSON.</p>
+          <button class="btn btn-primary" onclick="BackupModule.exportar()">📥 Exportar JSON</button>
+        </div>
+        <div class="card">
+          <h3>Importar Dados</h3>
+          <p style="margin-bottom:16px;">Restaure os dados a partir de arquivo JSON (suporta formato antigo e novo).</p>
+          <input type="file" id="backup-file" accept=".json" class="form-control" onchange="BackupModule.importar(this)">
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <h3>Limpar Dados</h3>
+        <p>Ação excluirá tudo do navegador. Faça backup antes.</p>
+        <button class="btn btn-danger" onclick="BackupModule.limpar()">🗑️ Limpar Tudo</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">Título</h3>
+      <button class="modal-close" onclick="AppModule.closeModal()">×</button>
     </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-    <script src="js/db.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/clientes.js"></script>
-    <script src="js/pipeline.js"></script>
-    <script src="js/vendas.js"></script>
-    <script src="js/viagens.js"></script>
-    <script src="js/financeiro.js"></script>
-    <script src="js/milhas.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/backup.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/clientes.js"></script>
+<script src="js/pipeline.js"></script>
+<script src="js/vendas.js"></script>
+<script src="js/viagens.js"></script>
+<script src="js/financeiro.js"></script>
+<script src="js/milhas.js"></script>
+<script src="js/config.js"></script>
+<script src="js/migracao.js"></script>
+<script src="js/backup.js"></script>
 </body>
 </html>

@@ -1,149 +1,200 @@
 const AppModule = {
-    currentPage: 'dashboard',
+    pageModules: {
+        dashboard: 'DashboardModule',
+        clientes: 'ClientesModule',
+        pipeline: 'PipelineModule',
+        vendas: 'VendasModule',
+        viagens: 'ViagensModule',
+        financeiro: 'FinanceiroModule',
+        milhas: 'MilhasModule',
+        config: 'ConfigModule',
+        backup: 'BackupModule'
+    },
 
     init() {
-        this.openPage('dashboard');
-        this.startClock();
-        this.expandGroupForPage('dashboard');
+        this.updateDateTime();
+        setInterval(() => this.updateDateTime(), 60000);
+
+        const hash = window.location.hash.replace('#', '');
+        const startPage = hash || 'dashboard';
+        this.openPage(startPage);
     },
 
     openPage(page) {
-        this.currentPage = page;
+        // Esconde todas as páginas
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
 
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        // Mostra a página solicitada
+        const target = document.getElementById(`page-${page}`);
+        if (target) {
+            target.classList.add('active');
+        }
 
-        const target = document.getElementById('page-' + page);
-        if (target) target.classList.add('active');
+        // Atualiza navegação ativa
+        document.querySelectorAll('.nav-item[data-page]').forEach(el => el.classList.remove('active'));
+        const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+        if (navItem) {
+            navItem.classList.add('active');
+            // Abre o grupo pai, se houver
+            const group = navItem.closest('.nav-group');
+            if (group) group.classList.add('open');
+        }
 
-        const nav = document.querySelector('.nav-item[data-page="' + page + '"]');
-        if (nav) nav.classList.add('active');
+        // Atualiza título da aba
+        const pageTitles = {
+            dashboard: 'Dashboard',
+            clientes: 'Clientes',
+            pipeline: 'Cotações / Pipeline',
+            vendas: 'Vendas',
+            viagens: 'Viagens',
+            financeiro: 'Transações Financeiras',
+            relatorios: 'Relatórios',
+            milhas: 'Milhas',
+            tarefas: 'Tarefas',
+            calendario: 'Calendário',
+            config: 'Configurações',
+            backup: 'Backup e Restauração'
+        };
+        document.title = pageTitles[page] ? `CRM WDIH - ${pageTitles[page]}` : 'CRM WDIH';
 
-        this.expandGroupForPage(page);
-        this.refreshPage(page);
+        // Renderiza módulo correspondente, se existir
+        const moduleName = this.pageModules[page];
+        if (moduleName && typeof window[moduleName] !== 'undefined' && typeof window[moduleName].render === 'function') {
+            try {
+                window[moduleName].render();
+            } catch (e) {
+                console.error(`Erro ao renderizar ${moduleName}:`, e);
+            }
+        }
 
+        // Fecha sidebar em telas pequenas
         if (window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.remove('open');
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.add('collapsed');
         }
     },
 
-    refreshPage(page) {
-        if (page === 'dashboard') DashboardModule.render();
-        if (page === 'clientes') ClientesModule.render();
-        if (page === 'pipeline') PipelineModule.render();
-        if (page === 'vendas') VendasModule.render();
-        if (page === 'viagens') ViagensModule.render();
-        if (page === 'financeiro') FinanceiroModule.render();
-        if (page === 'milhas') MilhasModule.render();
-        if (page === 'config') ConfigModule.render();
-    },
+    toggleGroup(groupId, btn) {
+        const group = document.getElementById(groupId);
+        if (!group) return;
 
-    toggleGroup(id, btn) {
-        const group = document.getElementById(id);
         const isOpen = group.classList.contains('open');
         group.classList.toggle('open', !isOpen);
-        btn.classList.toggle('expanded', !isOpen);
-    },
 
-    expandGroupForPage(page) {
-        const groups = {
-            'clientes': 'menu-cadastros',
-            'pipeline': 'menu-cadastros',
-            'vendas': 'menu-cadastros',
-            'viagens': 'menu-cadastros',
-            'financeiro': 'menu-financeiro',
-            'relatorios': 'menu-financeiro',
-            'milhas': 'menu-milhas',
-            'tarefas': 'menu-ferramentas',
-            'calendario': 'menu-ferramentas',
-            'config': 'menu-ferramentas',
-            'backup': 'menu-ferramentas'
-        };
-
-        const groupId = groups[page];
-        if (groupId) {
-            const group = document.getElementById(groupId);
-            const btn = document.querySelector('button[onclick*="' + groupId + '"]');
-            if (group && btn) {
-                group.classList.add('open');
-                btn.classList.add('expanded');
-            }
+        const arrow = btn.querySelector('.nav-arrow');
+        if (arrow) {
+            arrow.textContent = isOpen ? '▸' : '▾';
         }
     },
 
     toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('collapsed');
+        }
     },
 
     openModal(title, bodyHtml, footerHtml = '') {
-        document.getElementById('modal-title').textContent = title;
-        document.getElementById('modal-body').innerHTML = bodyHtml;
-        document.getElementById('modal-footer').innerHTML = footerHtml;
-        document.getElementById('modal').classList.add('open');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalFooter = document.getElementById('modal-footer');
+
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalBody) modalBody.innerHTML = bodyHtml;
+        if (modalFooter) modalFooter.innerHTML = footerHtml;
+
+        if (modal) modal.classList.add('open');
     },
 
     closeModal() {
-        document.getElementById('modal').classList.remove('open');
+        const modal = document.getElementById('modal');
+        if (modal) modal.classList.remove('open');
+    },
+
+    showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    },
+
+    updateDateTime() {
+        const el = document.getElementById('dashboard-data-hora');
+        if (!el) return;
+
+        const now = new Date();
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        el.textContent = now.toLocaleDateString('pt-BR', options);
     },
 
     generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
     },
 
     formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
-    },
-
-    formatDate(date) {
-        if (!date) return '-';
-        const d = new Date(date + 'T00:00:00');
-        return d.toLocaleDateString('pt-BR');
-    },
-
-    formatDateTime(date) {
-        if (!date) return '-';
-        const d = new Date(date);
-        return d.toLocaleString('pt-BR');
-    },
-
-    toast(message) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    },
-
-    addAtividade(descricao) {
-        const atividades = DB.get('atividades', []);
-        atividades.unshift({
-            id: this.generateId(),
-            descricao,
-            data: new Date().toISOString()
+        const num = parseFloat(value) || 0;
+        return num.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
         });
-        DB.set('atividades', atividades.slice(0, 50));
     },
 
-    startClock() {
-        const update = () => {
-            const el = document.getElementById('dashboard-data-hora');
-            if (el) {
-                el.textContent = new Date().toLocaleString('pt-BR');
-            }
-        };
-        update();
-        setInterval(update, 1000);
+    formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '—';
+        return date.toLocaleDateString('pt-BR');
     },
 
-    escapeHtml(str) {
-        if (!str) return '';
-        return str.toString()
+    formatDateTime(dateStr) {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '—';
+        return date.toLocaleString('pt-BR');
+    },
+
+    escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    addAtividade(descricao, tipo = 'sistema') {
+        const atividades = DB.get('atividades', []);
+        atividades.unshift({
+            id: this.generateId(),
+            tipo,
+            descricao,
+            data: new Date().toISOString()
+        });
+        DB.set('atividades', atividades);
+    },
+
+    confirmAction(message, onConfirm) {
+        if (confirm(message)) {
+            onConfirm();
+        }
     }
 };
 
+// Inicializa após carregar todos os scripts
 document.addEventListener('DOMContentLoaded', () => {
     AppModule.init();
 });

@@ -6,9 +6,9 @@ const DashboardModule = {
         const viagens = DB.get('viagens', []);
         const atividades = DB.get('atividades', []);
 
-        const ativos = negocios.filter(n => n.etapa !== 'Fechado' && n.etapa !== 'Perdido');
-        const fechados = negocios.filter(n => n.etapa === 'Fechado');
-        const receitaTotal = vendas.reduce((sum, v) => sum + (parseFloat(v.valor_total) || 0), 0);
+        const ativos = negocios.filter(n => n.etapa !== 'Fechado (Ganho)' && n.etapa !== 'Perdido');
+        const fechados = negocios.filter(n => n.etapa === 'Fechado (Ganho)');
+        const receitaTotal = vendas.reduce((s, v) => s + (parseFloat(v.valor_total) || 0), 0);
         const taxa = negocios.length ? Math.round((fechados.length / negocios.length) * 100) : 0;
 
         document.getElementById('stat-negocios-ativos').textContent = ativos.length;
@@ -29,80 +29,120 @@ const DashboardModule = {
     renderPipelineSummary(negocios) {
         const config = DB.get('config', {});
         const etapas = config.pipeline || [];
-        const container = document.getElementById('dashboard-pipeline');
-        const summary = document.getElementById('pipeline-summary');
-
+        const container = document.getElementById('pipeline-summary');
+        const dashboardPipeline = document.getElementById('dashboard-pipeline');
         let html = '';
-        etapas.forEach(etapa => {
-            const qtd = negocios.filter(n => n.etapa === etapa).length;
-            const valor = negocios.filter(n => n.etapa === etapa).reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
-            html += `<div class="pipeline-mini-row">
-                <span>${AppModule.escapeHtml(etapa)}</span>
+
+        etapas.forEach(e => {
+            const qtd = negocios.filter(n => n.etapa === e).length;
+            const valor = negocios.filter(n => n.etapa === e).reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
+            html += `<div class="pipeline-mini-row" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+                <span>${this.escapeHtml(e)}</span>
                 <strong>${qtd} · ${AppModule.formatCurrency(valor)}</strong>
             </div>`;
         });
 
-        container.innerHTML = html;
-
-        const total = negocios.reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
-        summary.innerHTML = `<strong>Valor total em pipeline: ${AppModule.formatCurrency(total)}</strong>`;
+        if (dashboardPipeline) dashboardPipeline.innerHTML = html;
+        if (container) {
+            container.innerHTML = `<strong>Valor Total: ${AppModule.formatCurrency(negocios.reduce((s, n) => s + (parseFloat(n.valor) || 0), 0))}</strong>`;
+        }
     },
 
     renderFechadosRecentes(negocios) {
         const container = document.getElementById('dashboard-fechados-recentes');
-        const fechados = negocios.filter(n => n.etapa === 'Fechado').sort((a, b) => new Date(b.data_fechamento) - new Date(a.data_fechamento)).slice(0, 5);
+        const fechados = negocios
+            .filter(n => n.etapa === 'Fechado (Ganho)')
+            .sort((a, b) => new Date(b.data_fechamento || b.atualizadoEm || b.criadoEm) - new Date(a.data_fechamento || a.atualizadoEm || a.criadoEm))
+            .slice(0, 5);
 
         if (!fechados.length) {
-            container.innerHTML = '<p class="dashboard-empty">Nenhum negócio fechado ainda.</p>';
+            if (container) {
+                container.innerHTML = `
+                    <div class="dashboard-empty">
+                        <div style="font-size:32px;margin-bottom:8px;">🏆</div>
+                        <p>Nenhuma venda fechada ainda.</p>
+                        <p style="font-size:11px;">Mova os cards no Pipeline para "Fechado (Ganho)"</p>
+                    </div>`;
+            }
             return;
         }
 
-        container.innerHTML = fechados.map(n => `
-            <div class="list-item">
-                <div class="list-item-info">
-                    <h4>${AppModule.escapeHtml(n.titulo)}</h4>
-                    <small>${AppModule.escapeHtml(n.cliente_nome || '')}</small>
+        if (container) {
+            container.innerHTML = fechados.map(n => `
+                <div class="fechado-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+                    <div class="fechado-info">
+                        <div style="font-weight:600;">${this.escapeHtml(n.titulo)}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">👤 ${this.escapeHtml(n.cliente_nome || '')}</div>
+                    </div>
+                    <div style="font-weight:700;color:var(--success);">${n.valor ? AppModule.formatCurrency(n.valor) : '-'}</div>
                 </div>
-                <span class="badge badge-success">${AppModule.formatCurrency(n.valor)}</span>
-            </div>
-        `).join('');
+            `).join('');
+        }
     },
 
     renderCheckins(viagens) {
         const container = document.getElementById('dashboard-checkins');
-        const pendentes = viagens.filter(v => v.status === 'Pendente' || v.status === 'Confirmada').slice(0, 5);
+        if (!container) return;
 
-        if (!pendentes.length) {
-            container.innerHTML = '<p class="dashboard-empty">Nenhum check-in pendente.</p>';
+        if (!viagens.length) {
+            container.innerHTML = '<p class="dashboard-empty">Nenhuma viagem cadastrada</p>';
             return;
         }
 
-        container.innerHTML = pendentes.map(v => `
-            <div class="list-item">
-                <div class="list-item-info">
-                    <h4>${AppModule.escapeHtml(v.destino || v.titulo)}</h4>
-                    <small>${AppModule.formatDate(v.data_ida)} · ${AppModule.escapeHtml(v.cliente_nome || '')}</small>
-                </div>
-                <span class="badge badge-warning">${AppModule.escapeHtml(v.status)}</span>
-            </div>
-        `).join('');
+        container.innerHTML = viagens.map(v => {
+            const cliente = this.getClienteNome(v.cliente_id);
+            const statusHtml = v.checkin_feito
+                ? `<span class="badge badge-success">✅ Realizado</span> <small style="color:var(--text-muted);">${AppModule.formatDate(v.checkin_data)}</small>`
+                : `<span class="badge badge-warning">⏳ Pendente</span>`;
+
+            return `
+                <div class="checkin-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+                    <div>
+                        <strong>${this.escapeHtml(cliente)} → ${this.escapeHtml(v.destino)}</strong>
+                        <div style="font-size:11px;color:var(--text-muted);">${this.escapeHtml(v.servico || '')}</div>
+                    </div>
+                    <div>${statusHtml}</div>
+                </div>`;
+        }).join('');
     },
 
     renderAtividades(atividades) {
         const container = document.getElementById('dashboard-atividades');
+        if (!container) return;
 
         if (!atividades.length) {
             container.innerHTML = '<p class="dashboard-empty">Nenhuma atividade recente.</p>';
             return;
         }
 
-        container.innerHTML = atividades.slice(0, 5).map(a => `
-            <div class="list-item">
-                <div class="list-item-info">
-                    <h4>${AppModule.escapeHtml(a.descricao)}</h4>
-                    <small>${AppModule.formatDateTime(a.data)}</small>
-                </div>
+        container.innerHTML = atividades.slice(0, 10).map(a => `
+            <div class="atividade-item" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+                <span class="atividade-dot activity-${a.tipo}" style="width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;"></span>
+                <span class="atividade-text" style="flex:1;">${this.escapeHtml(a.descricao)}</span>
+                <span class="atividade-time" style="font-size:11px;color:var(--text-muted);">${AppModule.formatDateTime(a.data)}</span>
             </div>
         `).join('');
+    },
+
+    escapeHtml(text) {
+        if (typeof AppModule !== 'undefined' && AppModule.escapeHtml) {
+            return AppModule.escapeHtml(text);
+        }
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    getClienteNome(clienteId) {
+        if (typeof DB !== 'undefined' && DB.getClienteNome) {
+            return DB.getClienteNome(clienteId);
+        }
+        const clientes = DB.get('clientes', []);
+        const c = clientes.find(x => x.id === clienteId);
+        return c ? c.nome : '—';
     }
 };
