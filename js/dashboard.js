@@ -6,9 +6,9 @@ const DashboardModule = {
         const viagens = DB.get('viagens', []);
         const atividades = DB.get('atividades', []);
 
-        const ativos = negocios.filter(n => n.etapa !== 'Fechado (Ganho)' && n.etapa !== 'Perdido');
-        const fechados = negocios.filter(n => n.etapa === 'Fechado (Ganho)');
-        const receitaTotal = vendas.reduce((s, v) => s + (parseFloat(v.valor_total) || 0), 0);
+        const ativos = negocios.filter(n => n.stage !== 'Fechado (Ganho)' && n.stage !== 'Perdido');
+        const fechados = negocios.filter(n => n.stage === 'Fechado (Ganho)');
+        const receitaTotal = vendas.reduce((s, v) => s + (parseFloat(v.valorVenda) || 0), 0);
         const taxa = negocios.length ? Math.round((fechados.length / negocios.length) * 100) : 0;
 
         document.getElementById('stat-negocios-ativos').textContent = ativos.length;
@@ -34,8 +34,8 @@ const DashboardModule = {
         let html = '';
 
         etapas.forEach(e => {
-            const qtd = negocios.filter(n => n.etapa === e).length;
-            const valor = negocios.filter(n => n.etapa === e).reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
+            const qtd = negocios.filter(n => n.stage === e).length;
+            const valor = negocios.filter(n => n.stage === e).reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
             html += `<div class="pipeline-mini-row" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
                 <span>${this.escapeHtml(e)}</span>
                 <strong>${qtd} · ${AppModule.formatCurrency(valor)}</strong>
@@ -51,8 +51,8 @@ const DashboardModule = {
     renderFechadosRecentes(negocios) {
         const container = document.getElementById('dashboard-fechados-recentes');
         const fechados = negocios
-            .filter(n => n.etapa === 'Fechado (Ganho)')
-            .sort((a, b) => new Date(b.data_fechamento || b.atualizadoEm || b.criadoEm) - new Date(a.data_fechamento || a.atualizadoEm || a.criadoEm))
+            .filter(n => n.stage === 'Fechado (Ganho)')
+            .sort((a, b) => new Date(b.fechadoEm || b.atualizadoEm || b.criadoEm) - new Date(a.fechadoEm || a.atualizadoEm || a.criadoEm))
             .slice(0, 5);
 
         if (!fechados.length) {
@@ -72,7 +72,7 @@ const DashboardModule = {
                 <div class="fechado-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
                     <div class="fechado-info">
                         <div style="font-weight:600;">${this.escapeHtml(n.titulo)}</div>
-                        <div style="font-size:12px;color:var(--text-muted);">👤 ${this.escapeHtml(n.cliente_nome || '')}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">👤 ${this.escapeHtml(this.getClienteNome(n.clienteId))}</div>
                     </div>
                     <div style="font-weight:700;color:var(--success);">${n.valor ? AppModule.formatCurrency(n.valor) : '-'}</div>
                 </div>
@@ -90,9 +90,9 @@ const DashboardModule = {
         }
 
         container.innerHTML = viagens.map(v => {
-            const cliente = this.getClienteNome(v.cliente_id);
-            const statusHtml = v.checkin_feito
-                ? `<span class="badge badge-success">✅ Realizado</span> <small style="color:var(--text-muted);">${AppModule.formatDate(v.checkin_data)}</small>`
+            const cliente = this.getClienteNome(v.clienteId);
+            const statusHtml = v.checkinFeito
+                ? `<span class="badge badge-success">✅ Realizado</span> <small style="color:var(--text-muted);">${AppModule.formatDate(v.checkinData)}</small>`
                 : `<span class="badge badge-warning">⏳ Pendente</span>`;
 
             return `
@@ -125,22 +125,15 @@ const DashboardModule = {
     },
 
     escapeHtml(text) {
-        if (typeof AppModule !== 'undefined' && AppModule.escapeHtml) {
-            return AppModule.escapeHtml(text);
-        }
+        if (typeof AppModule !== 'undefined' && AppModule.escapeHtml) return AppModule.escapeHtml(text);
         if (!text) return '';
         return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     },
 
     getClienteNome(clienteId) {
-        if (typeof DB !== 'undefined' && DB.getClienteNome) {
-            return DB.getClienteNome(clienteId);
-        }
+        if (typeof DB !== 'undefined' && DB.getClienteNome) return DB.getClienteNome(clienteId);
         const clientes = DB.get('clientes', []);
         const c = clientes.find(x => x.id === clienteId);
         return c ? c.nome : '—';

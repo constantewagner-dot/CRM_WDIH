@@ -76,11 +76,11 @@ const CalendarioModule = {
         });
 
         viagens.forEach(v => {
-            if (v.data_ida) {
-                const d = new Date(v.data_ida);
+            if (v.dataIda) {
+                const d = new Date(v.dataIda);
                 if (d.getFullYear() === ano && d.getMonth() === mes) {
-                    if (!eventos[v.data_ida]) eventos[v.data_ida] = [];
-                    eventos[v.data_ida].push({
+                    if (!eventos[v.dataIda]) eventos[v.dataIda] = [];
+                    eventos[v.dataIda].push({
                         tipo: 'viagem',
                         titulo: '✈️ ' + (v.destino || 'Viagem'),
                         cliente: DB.getClienteNome(v.cliente_id)
@@ -112,7 +112,7 @@ const CalendarioModule = {
         titulo.textContent = 'Eventos em ' + d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
         const tarefas = DB.get('tarefas', []).filter(t => t.prazo === this.diaSelecionado);
-        const viagens = DB.get('viagens', []).filter(v => v.data_ida === this.diaSelecionado || v.data_volta === this.diaSelecionado);
+        const viagens = DB.get('viagens', []).filter(v => v.dataIda === this.diaSelecionado || v.dataVolta === this.diaSelecionado);
 
         let html = '';
 
@@ -132,7 +132,7 @@ const CalendarioModule = {
             });
 
             viagens.forEach(v => {
-                const tipo = v.data_ida === this.diaSelecionado ? '🛫 Ida' : '🛬 Volta';
+                const tipo = v.dataIda === this.diaSelecionado ? '🛫 Ida' : '🛬 Volta';
                 html += `
                     <div class="list-item">
                         <div class="list-item-info">

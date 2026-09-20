@@ -1,26 +1,46 @@
 const BackupModule = {
-    exportar() {
-        const dados = {};
-        Object.keys(localStorage)
-            .filter(k => k.startsWith(DB.prefix))
-            .forEach(k => {
-                const chave = k.replace(DB.prefix, '');
-                try {
-                    dados[chave] = JSON.parse(localStorage.getItem(k));
-                } catch (e) {
-                    dados[chave] = localStorage.getItem(k);
-                }
-            });
+    notificar(msg, tipo = 'success') {
+        if (typeof AppModule !== 'undefined') {
+            if (typeof AppModule.toast === 'function') AppModule.toast(msg, tipo);
+            else if (typeof AppModule.showToast === 'function') AppModule.showToast(msg, tipo);
+        }
+    },
 
-        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    exportar() {
+        const config = DB.get('config', {});
+        const data = {
+            agencia: config.agencia || {},
+            clientes: DB.get('clientes', []),
+            negocios: DB.get('negocios', []),
+            vendas: DB.get('vendas', []),
+            viagens: DB.get('viagens', []),
+            transacoes: DB.get('transacoes', []),
+            tarefas: DB.get('tarefas', []),
+            milhas: DB.get('milhas', {}),
+            atividades: DB.get('atividades', []),
+            servicos: config.servicos || [],
+            pipelineStages: config.pipeline || [],
+            companhias: config.companhias || [],
+            programas: config.programas || [],
+            cartoes: config.cartoes || [],
+            receitas: config.receitas || [],
+            despesas: config.despesas || [],
+            exportadoEm: new Date().toISOString()
+        };
+
+        if (typeof AppModule !== 'undefined' && typeof AppModule.addAtividade === 'function') {
+            AppModule.addAtividade('Backup JSON exportado', 'backup');
+        }
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `backup-crm-wdih-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `crm-wdih-backup-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        AppModule.addAtividade('Backup JSON exportado');
-        AppModule.toast('Backup exportado.');
+
+        this.notificar('Backup exportado com sucesso!');
     },
 
     importar(input) {
@@ -28,48 +48,42 @@ const BackupModule = {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = function(e) {
             try {
-                const dados = JSON.parse(e.target.result);
-                const formato = MigracaoModule.detectarFormato(dados);
+                const json = JSON.parse(e.target.result);
+                const formato = MigracaoModule.detectarFormato(json);
 
-                if (formato === 'legacy') {
-                    if (!confirm('Arquivo do formato antigo detectado. Os dados serão convertidos para a nova estrutura do CRM WDIH. Continuar?')) return;
-                    const resumo = MigracaoModule.migrar(dados);
-                    AppModule.addAtividade('Backup importado (formato antigo convertido)');
-                    AppModule.toast(
-                        `Importação concluída: ${resumo.clientes} clientes, ${resumo.negocios} negócios, ${resumo.vendas} vendas e ${resumo.viagens} viagens.`
-                    );
-                } else if (formato === 'novo') {
-                    if (!confirm('Isso substituirá todos os dados atuais. Continuar?')) return;
-                    DB.clear();
-                    Object.keys(dados).forEach(k => {
-                        localStorage.setItem(DB.prefix + k, JSON.stringify(dados[k]));
-                    });
-                    DB.set('inicializado', true);
-                    AppModule.addAtividade('Backup JSON importado');
-                    AppModule.toast('Backup restaurado com sucesso!');
-                } else {
-                    alert('Formato de arquivo não reconhecido.');
+                if (formato === 'desconhecido') {
+                    BackupModule.notificar('Arquivo inválido ou formato não reconhecido.', 'error');
+                    return;
                 }
 
-                AppModule.init();
-                AppModule.openPage(AppModule.currentPage);
+                const log = MigracaoModule.migrar(json);
+                input.value = '';
+
+                BackupModule.notificar(
+                    `Backup importado! ${log.clientes} clientes, ${log.negocios} negócios, ${log.vendas} vendas, ${log.viagens} viagens.`,
+                    'success'
+                );
+
+                // Recarrega a página para exibir os dados importados
+                setTimeout(() => location.reload(), 900);
             } catch (err) {
-                alert('Arquivo inválido.');
-                console.error(err);
+                console.error('Erro ao importar backup:', err);
+                BackupModule.notificar('Erro ao importar backup: ' + err.message, 'error');
             }
         };
         reader.readAsText(file);
-        input.value = '';
     },
 
     limpar() {
-        if (!confirm('Tem certeza que deseja apagar todos os dados?')) return;
-        DB.clear();
+        const prefix = DB.prefix || 'crm_wdih_';
+        if (!confirm('Tem certeza que deseja limpar TODOS os dados? Faça um backup antes. Esta ação não pode ser desfeita.')) return;
+
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith(prefix)) localStorage.removeItem(key);
+        });
         DB.init();
-        AppModule.addAtividade('Dados do CRM limpos');
-        AppModule.toast('Dados limpos.');
-        AppModule.openPage('dashboard');
+        location.reload();
     }
 };
