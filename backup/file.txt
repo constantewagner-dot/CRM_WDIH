@@ -1,0 +1,21 @@
+pesquisa-produtos/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+├── public/
+│   └── favicon.svg
+├── src/
+│   ├── components/
+│   │   ├── ProductCard.jsx
+│   │   ├── SearchForm.jsx
+│   │   └── Filters.jsx
+│   ├── services/
+│   │   └── geckoApi.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── styles.css
+├── .gitignore
+├── index.html
+├── package.json
+├── vite.config.js
+└── README.md
