@@ -1,62 +1,106 @@
-const PipelineModule = {
+var PipelineModule = {
     render() {
         const negocios = DB.get('negocios', []);
         const config = DB.get('config', {});
-        const etapas = config.pipeline || [];
+        let etapas = config.pipeline || config.pipelineStages || [];
+
+        // Fallback: extrai etapas dos próprios negócios se config estiver vazia
+        if (!etapas.length) {
+            const set = new Set(negocios.map(n => n.stage).filter(Boolean));
+            etapas = Array.from(set);
+        }
+
         const board = document.getElementById('pipeline-board');
+        if (!board) return;
+
+        if (!etapas.length) {
+            board.innerHTML = '<p class="dashboard-empty">Nenhuma etapa configurada. Configure em Configurações.</p>';
+            return;
+        }
 
         board.innerHTML = etapas.map(etapa => {
-            const itens = negocios.filter(n => n.etapa === etapa);
+            const cards = negocios.filter(n => n.stage === etapa);
+            const valorTotal = cards.reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
             return `
                 <div class="pipeline-col">
-                    <div class="pipeline-col-header">${AppModule.escapeHtml(etapa)} (${itens.length})</div>
-                    ${itens.map(n => `
-                        <div class="pipeline-card" onclick="PipelineModule.editar('${n.id}')">
-                            <div class="pipeline-card-title">${AppModule.escapeHtml(n.titulo)}</div>
-                            <div class="pipeline-card-meta">${AppModule.escapeHtml(n.cliente_nome || '')}</div>
-                            <div class="pipeline-card-meta">${AppModule.formatCurrency(n.valor)}</div>
-                        </div>
-                    `).join('')}
+                    <div class="pipeline-col-header">
+                        <span class="pipeline-col-title">${AppModule.escapeHtml(etapa)}</span>
+                        <span class="pipeline-col-count">${cards.length}</span>
+                    </div>
+                    <div class="pipeline-col-total">${AppModule.formatCurrency(valorTotal)}</div>
+                    <div class="pipeline-col-body">
+                        ${cards.map(n => this.renderCard(n)).join('')}
+                    </div>
+                    <button class="pipeline-add" data-stage="${AppModule.escapeHtml(etapa)}" onclick="PipelineModule.novoNegocioEtapa(this.getAttribute('data-stage'))">+ Adicionar</button>
                 </div>
             `;
         }).join('');
+    },
+
+    renderCard(n) {
+        const cliente = DB.getClienteNome(n.clienteId);
+        return `
+            <div class="pipeline-card" onclick="PipelineModule.editar('${n.id}')">
+                <div class="pipeline-card-titulo">${AppModule.escapeHtml(n.titulo || '—')}</div>
+                <div class="pipeline-card-cliente">👤 ${AppModule.escapeHtml(cliente)}</div>
+                ${n.servico ? `<div class="pipeline-card-cliente">${AppModule.escapeHtml(n.servico)}</div>` : ''}
+                <div class="pipeline-card-valor">${parseFloat(n.valor) ? AppModule.formatCurrency(n.valor) : '—'}</div>
+            </div>
+        `;
     },
 
     novoNegocio() {
         this.abrirFormulario();
     },
 
-    editar(id) {
-        const negocio = DB.get('negocios', []).find(n => n.id === id);
-        if (negocio) this.abrirFormulario(negocio);
+    novoNegocioEtapa(etapa) {
+        this.abrirFormulario(null, etapa);
     },
 
-    abrirFormulario(negocio = null) {
-        const isEdit = !!negocio;
+    editar(id) {
+        const n = DB.get('negocios', []).find(x => x.id === id);
+        if (n) this.abrirFormulario(n);
+    },
+
+    abrirFormulario(negocio = null, etapaInicial = '') {
         const clientes = DB.get('clientes', []);
         const config = DB.get('config', {});
-        const etapas = config.pipeline || [];
+        const servicos = config.servicos || [];
+        const etapas = config.pipeline || config.pipelineStages || [];
+
+        const isEdit = !!negocio;
+        const etapaAtual = negocio ? negocio.stage : etapaInicial;
 
         const html = `
             <div class="form-group"><label>Título *</label><input type="text" id="neg-titulo" class="form-control" value="${AppModule.escapeHtml(negocio?.titulo || '')}"></div>
+            <div class="form-group"><label>Cliente</label>
+                <select id="neg-cliente" class="form-control">
+                    <option value="">— Sem cliente —</option>
+                    ${clientes.map(c => `<option value="${c.id}" ${negocio?.clienteId === c.id ? 'selected' : ''}>${AppModule.escapeHtml(c.nome)}</option>`).join('')}
+                </select>
+            </div>
             <div class="form-grid">
-                <div class="form-group"><label>Cliente</label>
-                    <select id="neg-cliente" class="form-control">
-                        <option value="">Selecione...</option>
-                        ${clientes.map(c => `<option value="${c.id}" ${negocio?.cliente_id === c.id ? 'selected' : ''}>${AppModule.escapeHtml(c.nome)}</option>`).join('')}
+                <div class="form-group"><label>Serviço</label>
+                    <select id="neg-servico" class="form-control">
+                        <option value="">— Selecionar —</option>
+                        ${servicos.map(s => `<option value="${AppModule.escapeHtml(s)}" ${negocio?.servico === s ? 'selected' : ''}>${AppModule.escapeHtml(s)}</option>`).join('')}
                     </select>
                 </div>
-                <div class="form-group"><label>Valor</label><input type="number" id="neg-valor" class="form-control" step="0.01" value="${AppModule.escapeHtml(negocio?.valor || '')}"></div>
+                <div class="form-group"><label>Valor (R$)</label><input type="number" id="neg-valor" class="form-control" step="0.01" value="${negocio?.valor || 0}"></div>
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Etapa</label>
-                    <select id="neg-etapa" class="form-control">
-                        ${etapas.map(e => `<option value="${AppModule.escapeHtml(e)}" ${negocio?.etapa === e ? 'selected' : ''}>${AppModule.escapeHtml(e)}</option>`).join('')}
+                    <select id="neg-stage" class="form-control">
+                        ${etapas.map(e => `<option value="${AppModule.escapeHtml(e)}" ${etapaAtual === e ? 'selected' : ''}>${AppModule.escapeHtml(e)}</option>`).join('')}
                     </select>
                 </div>
-                <div class="form-group"><label>Data de Fechamento</label><input type="date" id="neg-data-fechamento" class="form-control" value="${AppModule.escapeHtml(negocio?.data_fechamento || '')}"></div>
+                <div class="form-group"><label>Probabilidade (%)</label><input type="number" id="neg-prob" class="form-control" min="0" max="100" value="${negocio?.probabilidade || 0}"></div>
             </div>
-            <div class="form-group"><label>Descrição</label><textarea id="neg-descricao" class="form-control" rows="3">${AppModule.escapeHtml(negocio?.descricao || '')}</textarea></div>
+            <div class="form-group"><label>Descrição</label><textarea id="neg-desc" class="form-control" rows="3">${AppModule.escapeHtml(negocio?.descricao || '')}</textarea></div>
+            <div class="form-grid">
+                <div class="form-group"><label>Origem do Lead</label><input type="text" id="neg-origem" class="form-control" value="${AppModule.escapeHtml(negocio?.origemLead || '')}"></div>
+                <div class="form-group"><label>Campanha</label><input type="text" id="neg-campanha" class="form-control" value="${AppModule.escapeHtml(negocio?.campanha || '')}"></div>
+            </div>
         `;
 
         const footer = `
@@ -70,49 +114,52 @@ const PipelineModule = {
     salvar(id) {
         const titulo = document.getElementById('neg-titulo').value.trim();
         if (!titulo) {
-            AppModule.toast('Preencha o título da cotação.');
+            AppModule.toast('Informe o título da cotação.');
             return;
         }
 
-        const clientes = DB.get('clientes', []);
-        const clienteId = document.getElementById('neg-cliente').value;
-        const cliente = clientes.find(c => c.id === clienteId);
-
         const negocios = DB.get('negocios', []);
         const index = negocios.findIndex(n => n.id === id);
+        const clienteId = document.getElementById('neg-cliente').value;
 
         const dados = {
             id: id || AppModule.generateId(),
             titulo,
-            cliente_id: clienteId,
-            cliente_nome: cliente ? cliente.nome : '',
+            clienteId,
+            servico: document.getElementById('neg-servico').value,
             valor: parseFloat(document.getElementById('neg-valor').value) || 0,
-            etapa: document.getElementById('neg-etapa').value,
-            data_fechamento: document.getElementById('neg-data-fechamento').value,
-            descricao: document.getElementById('neg-descricao').value.trim(),
-            data_criacao: new Date().toISOString()
+            stage: document.getElementById('neg-stage').value,
+            probabilidade: parseFloat(document.getElementById('neg-prob').value) || 0,
+            descricao: document.getElementById('neg-desc').value.trim(),
+            origemLead: document.getElementById('neg-origem').value.trim(),
+            campanha: document.getElementById('neg-campanha').value.trim(),
+            criadoEm: negocio_existente(negocios, index)?.criadoEm || new Date().toISOString(),
+            atualizadoEm: new Date().toISOString()
         };
 
         if (index >= 0) {
             negocios[index] = { ...negocios[index], ...dados };
-            AppModule.addAtividade(`Cotação ${titulo} atualizada.`);
         } else {
             negocios.push(dados);
-            AppModule.addAtividade(`Cotação ${titulo} criada.`);
         }
 
         DB.set('negocios', negocios);
+        AppModule.addAtividade(`Negócio "${titulo}" salvo`, 'pipeline');
         AppModule.closeModal();
-        AppModule.toast('Cotação salva com sucesso!');
+        AppModule.toast('Cotação salva!');
         this.render();
     },
 
     excluir(id) {
-        if (!confirm('Deseja excluir esta cotação?')) return;
+        if (!confirm('Excluir esta cotação?')) return;
         const negocios = DB.get('negocios', []).filter(n => n.id !== id);
         DB.set('negocios', negocios);
-        AppModule.addAtividade('Cotação excluída.');
         AppModule.toast('Cotação excluída.');
         this.render();
     }
 };
+
+// Helper para preservar criadoEm ao editar
+function negocio_existente(lista, index) {
+    return index >= 0 ? lista[index] : null;
+}

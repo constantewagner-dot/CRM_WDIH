@@ -1,49 +1,61 @@
-const VendasModule = {
+var VendasModule = {
     render() {
         const vendas = DB.get('vendas', []);
-        const container = document.getElementById('vendas-list');
         const resumo = document.getElementById('vendas-resumo');
+        const list = document.getElementById('vendas-list');
 
-        const total = vendas.reduce((s, v) => s + (parseFloat(v.valor_total) || 0), 0);
-        const comissao = vendas.reduce((s, v) => s + (parseFloat(v.comissao) || 0), 0);
+        const total = vendas.reduce((s, v) => s + (parseFloat(v.valorVenda) || 0), 0);
+        const ticket = vendas.length ? total / vendas.length : 0;
 
-        resumo.innerHTML = `
-            <div class="kpi-grid">
-                <div class="kpi-card"><label>Total em Vendas</label><span>${AppModule.formatCurrency(total)}</span></div>
-                <div class="kpi-card"><label>Total em Comissões</label><span>${AppModule.formatCurrency(comissao)}</span></div>
-                <div class="kpi-card"><label>Quantidade</label><span>${vendas.length}</span></div>
-            </div>
-        `;
-
-        if (!vendas.length) {
-            container.innerHTML = '<p class="dashboard-empty">Nenhuma venda registrada.</p>';
-            return;
+        if (resumo) {
+            resumo.innerHTML = `
+                <div class="kpi-grid">
+                    <div class="kpi-card"><label>Vendas</label><span>${vendas.length}</span></div>
+                    <div class="kpi-card"><label>Valor Total Vendido</label><span>${AppModule.formatCurrency(total)}</span></div>
+                    <div class="kpi-card"><label>Ticket Médio</label><span>${AppModule.formatCurrency(ticket)}</span></div>
+                </div>
+            `;
         }
 
-        container.innerHTML = `
-            <div class="table-wrap">
-                <table class="table">
-                    <thead>
-                        <tr><th>Data</th><th>Cliente</th><th>Serviço</th><th>Valor Total</th><th>Comissão</th><th>Ações</th></tr>
-                    </thead>
-                    <tbody>
-                        ${vendas.map(v => `
-                            <tr>
-                                <td>${AppModule.formatDate(v.data)}</td>
-                                <td>${AppModule.escapeHtml(v.cliente_nome)}</td>
-                                <td>${AppModule.escapeHtml(v.servico)}</td>
-                                <td>${AppModule.formatCurrency(v.valor_total)}</td>
-                                <td>${AppModule.formatCurrency(v.comissao)}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary" onclick="VendasModule.editar('${v.id}')">Editar</button>
-                                    <button class="btn btn-sm btn-danger" onclick="VendasModule.excluir('${v.id}')">Excluir</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
+        if (list) {
+            if (!vendas.length) {
+                list.innerHTML = '<p class="dashboard-empty">Nenhuma venda registrada.</p>';
+                return;
+            }
+
+            list.innerHTML = `
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead><tr><th>Data</th><th>Título</th><th>Cliente</th><th>Serviço</th><th>Tipo</th><th>Valor</th><th>Ações</th></tr></thead>
+                        <tbody>
+                            ${vendas.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm)).map(v => `
+                                <tr>
+                                    <td>${AppModule.formatDate(v.criadoEm)}</td>
+                                    <td>${AppModule.escapeHtml(v.titulo || '—')}</td>
+                                    <td>${AppModule.escapeHtml(DB.getClienteNome(v.clienteId))}</td>
+                                    <td>${AppModule.escapeHtml(v.servico || '—')}</td>
+                                    <td>${AppModule.escapeHtml(this.tipoLabel(v.tipoVenda))}</td>
+                                    <td style="font-weight:700;color:var(--success);">${AppModule.formatCurrency(v.valorVenda)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary" onclick="VendasModule.editar('${v.id}')">Editar</button>
+                                        <button class="btn btn-sm btn-danger" onclick="VendasModule.excluir('${v.id}')">Excluir</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+    },
+
+    tipoLabel(tipo) {
+        const map = {
+            'dinheiro': 'Dinheiro',
+            'milhas_terceiros': 'Milhas de Terceiros',
+            'milhas_proprias': 'Milhas Próprias'
+        };
+        return map[tipo] || tipo || '—';
     },
 
     novaVenda() {
@@ -51,35 +63,50 @@ const VendasModule = {
     },
 
     editar(id) {
-        const venda = DB.get('vendas', []).find(v => v.id === id);
-        if (venda) this.abrirFormulario(venda);
+        const v = DB.get('vendas', []).find(x => x.id === id);
+        if (v) this.abrirFormulario(v);
     },
 
     abrirFormulario(venda = null) {
-        const isEdit = !!venda;
         const clientes = DB.get('clientes', []);
         const config = DB.get('config', {});
         const servicos = config.servicos || [];
+        const isEdit = !!venda;
 
         const html = `
+            <div class="form-group"><label>Título *</label><input type="text" id="ven-titulo" class="form-control" value="${AppModule.escapeHtml(venda?.titulo || '')}"></div>
+            <div class="form-group"><label>Cliente</label>
+                <select id="ven-cliente" class="form-control">
+                    <option value="">— Sem cliente —</option>
+                    ${clientes.map(c => `<option value="${c.id}" ${venda?.clienteId === c.id ? 'selected' : ''}>${AppModule.escapeHtml(c.nome)}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group"><label>Serviço</label>
+                <select id="ven-servico" class="form-control">
+                    <option value="">— Selecionar —</option>
+                    ${servicos.map(s => `<option value="${AppModule.escapeHtml(s)}" ${venda?.servico === s ? 'selected' : ''}>${AppModule.escapeHtml(s)}</option>`).join('')}
+                </select>
+            </div>
             <div class="form-grid">
-                <div class="form-group"><label>Cliente *</label>
-                    <select id="venda-cliente" class="form-control">
-                        <option value="">Selecione...</option>
-                        ${clientes.map(c => `<option value="${c.id}" ${venda?.cliente_id === c.id ? 'selected' : ''}>${AppModule.escapeHtml(c.nome)}</option>`).join('')}
+                <div class="form-group"><label>Valor Original (R$)</label><input type="number" id="ven-original" class="form-control" step="0.01" value="${venda?.valorOriginal || 0}"></div>
+                <div class="form-group"><label>Valor Venda (R$)</label><input type="number" id="ven-venda" class="form-control" step="0.01" value="${venda?.valorVenda || 0}"></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Tipo de Venda</label>
+                    <select id="ven-tipo" class="form-control">
+                        <option value="dinheiro" ${!venda?.tipoVenda || venda?.tipoVenda === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
+                        <option value="milhas_terceiros" ${venda?.tipoVenda === 'milhas_terceiros' ? 'selected' : ''}>Milhas de Terceiros</option>
+                        <option value="milhas_proprias" ${venda?.tipoVenda === 'milhas_proprias' ? 'selected' : ''}>Milhas Próprias</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Serviço</label>
-                    <select id="venda-servico" class="form-control">
-                        ${servicos.map(s => `<option value="${AppModule.escapeHtml(s)}" ${venda?.servico === s ? 'selected' : ''}>${AppModule.escapeHtml(s)}</option>`).join('')}
+                <div class="form-group"><label>Necessita Check-in</label>
+                    <select id="ven-checkin" class="form-control">
+                        <option value="nao" ${!venda?.necessidadeCheckin || venda?.necessidadeCheckin === 'nao' ? 'selected' : ''}>Não</option>
+                        <option value="sim" ${venda?.necessidadeCheckin === 'sim' ? 'selected' : ''}>Sim</option>
                     </select>
                 </div>
             </div>
-            <div class="form-grid">
-                <div class="form-group"><label>Valor Total *</label><input type="number" id="venda-valor" class="form-control" step="0.01" value="${AppModule.escapeHtml(venda?.valor_total || '')}"></div>
-                <div class="form-group"><label>Comissão</label><input type="number" id="venda-comissao" class="form-control" step="0.01" value="${AppModule.escapeHtml(venda?.comissao || '')}"></div>
-            </div>
-            <div class="form-group"><label>Descrição</label><textarea id="venda-descricao" class="form-control" rows="3">${AppModule.escapeHtml(venda?.descricao || '')}</textarea></div>
+            <div class="form-group"><label>Nome do Terceiro (se milhas)</label><input type="text" id="ven-terceiro" class="form-control" value="${AppModule.escapeHtml(venda?.nomeTerceiro || '')}"></div>
         `;
 
         const footer = `
@@ -91,49 +118,46 @@ const VendasModule = {
     },
 
     salvar(id) {
-        const clienteId = document.getElementById('venda-cliente').value;
-        const valorTotal = parseFloat(document.getElementById('venda-valor').value) || 0;
-
-        if (!clienteId || !valorTotal) {
-            AppModule.toast('Preencha cliente e valor total.');
+        const titulo = document.getElementById('ven-titulo').value.trim();
+        if (!titulo) {
+            AppModule.toast('Informe o título da venda.');
             return;
         }
 
-        const clientes = DB.get('clientes', []);
-        const cliente = clientes.find(c => c.id === clienteId);
         const vendas = DB.get('vendas', []);
         const index = vendas.findIndex(v => v.id === id);
 
         const dados = {
             id: id || AppModule.generateId(),
-            cliente_id: clienteId,
-            cliente_nome: cliente ? cliente.nome : '',
-            servico: document.getElementById('venda-servico').value,
-            valor_total: valorTotal,
-            comissao: parseFloat(document.getElementById('venda-comissao').value) || 0,
-            descricao: document.getElementById('venda-descricao').value.trim(),
-            data: new Date().toISOString()
+            titulo,
+            clienteId: document.getElementById('ven-cliente').value,
+            servico: document.getElementById('ven-servico').value,
+            valorOriginal: parseFloat(document.getElementById('ven-original').value) || 0,
+            valorVenda: parseFloat(document.getElementById('ven-venda').value) || 0,
+            tipoVenda: document.getElementById('ven-tipo').value,
+            necessidadeCheckin: document.getElementById('ven-checkin').value,
+            nomeTerceiro: document.getElementById('ven-terceiro').value.trim(),
+            criadoEm: index >= 0 ? vendas[index].criadoEm : new Date().toISOString(),
+            atualizadoEm: new Date().toISOString()
         };
 
         if (index >= 0) {
             vendas[index] = { ...vendas[index], ...dados };
-            AppModule.addAtividade(`Venda de ${cliente?.nome} atualizada.`);
         } else {
             vendas.push(dados);
-            AppModule.addAtividade(`Venda de ${cliente?.nome} registrada.`);
         }
 
         DB.set('vendas', vendas);
+        AppModule.addAtividade(`Venda "${titulo}" salva`, 'venda');
         AppModule.closeModal();
-        AppModule.toast('Venda salva com sucesso!');
+        AppModule.toast('Venda salva!');
         this.render();
     },
 
     excluir(id) {
-        if (!confirm('Deseja excluir esta venda?')) return;
+        if (!confirm('Excluir esta venda?')) return;
         const vendas = DB.get('vendas', []).filter(v => v.id !== id);
         DB.set('vendas', vendas);
-        AppModule.addAtividade('Venda excluída.');
         AppModule.toast('Venda excluída.');
         this.render();
     }
