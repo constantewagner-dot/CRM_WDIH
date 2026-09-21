@@ -1,141 +1,256 @@
 var DashboardModule = {
     render() {
+        this.renderKPIs();
+        this.renderPipeline();
+        this.renderFechadosRecentes();
+        this.renderCheckins();
+        this.renderTarefas();
+        this.renderAtividades();
+        this.renderMilhas();
+        this.updateDateTime();
+    },
+
+    updateDateTime() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateStr = now.toLocaleDateString('pt-BR', options);
+        const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        const el1 = document.getElementById('dashboard-data-hora');
+        const el2 = document.getElementById('dashboard-data-hora-header');
+        
+        if (el1) el1.textContent = `${dateStr} • ${timeStr}`;
+        if (el2) el2.textContent = `${dateStr} • ${timeStr}`;
+    },
+
+    renderKPIs() {
         const negocios = DB.get('negocios', []);
         const vendas = DB.get('vendas', []);
         const clientes = DB.get('clientes', []);
-        const viagens = DB.get('viagens', []);
-        const atividades = DB.get('atividades', []);
 
-        const ativos = negocios.filter(n => n.stage !== 'Fechado (Ganho)' && n.stage !== 'Perdido');
-        const fechados = negocios.filter(n => n.stage === 'Fechado (Ganho)');
+        const ativos = negocios.filter(n => n.stage !== 'Fechado (Ganho)' && n.stage !== 'Perdido').length;
+        const fechados = negocios.filter(n => n.stage === 'Fechado (Ganho)').length;
         const receitaTotal = vendas.reduce((s, v) => s + (parseFloat(v.valorVenda) || 0), 0);
-        const taxa = negocios.length ? Math.round((fechados.length / negocios.length) * 100) : 0;
+        const taxaConversao = negocios.length ? ((fechados / negocios.length) * 100).toFixed(1) : 0;
 
-        document.getElementById('stat-negocios-ativos').textContent = ativos.length;
-        document.getElementById('stat-fechados-total').textContent = fechados.length;
+        // Mês atual
+        const mesAtual = new Date().getMonth();
+        const anoAtual = new Date().getFullYear();
+        const fechadosMes = vendas.filter(v => {
+            const d = new Date(v.criadoEm);
+            return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+        }).length;
+        const receitaMes = vendas.filter(v => {
+            const d = new Date(v.criadoEm);
+            return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+        }).reduce((s, v) => s + (parseFloat(v.valorVenda) || 0), 0);
+        const ticketMedio = fechadosMes ? receitaMes / fechadosMes : 0;
+
+        document.getElementById('stat-negocios-ativos').textContent = ativos;
+        document.getElementById('stat-fechados-total').textContent = fechados;
         document.getElementById('stat-receita-total').textContent = AppModule.formatCurrency(receitaTotal);
-        document.getElementById('stat-taxa-conversao').textContent = taxa + '%';
-        document.getElementById('stat-fechados-mes').textContent = fechados.length;
-        document.getElementById('stat-receita-mes').textContent = AppModule.formatCurrency(receitaTotal);
-        document.getElementById('stat-ticket-medio').textContent = AppModule.formatCurrency(vendas.length ? receitaTotal / vendas.length : 0);
+        document.getElementById('stat-taxa-conversao').textContent = `${taxaConversao}%`;
+        document.getElementById('stat-fechados-mes').textContent = fechadosMes;
+        document.getElementById('stat-receita-mes').textContent = AppModule.formatCurrency(receitaMes);
+        document.getElementById('stat-ticket-medio').textContent = AppModule.formatCurrency(ticketMedio);
         document.getElementById('stat-clientes-ativos').textContent = clientes.length;
-
-        this.renderPipelineSummary(negocios);
-        this.renderFechadosRecentes(negocios);
-        this.renderCheckins(viagens);
-        this.renderAtividades(atividades);
     },
 
-    renderPipelineSummary(negocios) {
+    renderPipeline() {
+        const negocios = DB.get('negocios', []);
         const config = DB.get('config', {});
         const etapas = config.pipeline || [];
-        const container = document.getElementById('pipeline-summary');
-        const dashboardPipeline = document.getElementById('dashboard-pipeline');
-        let html = '';
 
-        etapas.forEach(e => {
-            const qtd = negocios.filter(n => n.stage === e).length;
-            const valor = negocios.filter(n => n.stage === e).reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
-            html += `<div class="pipeline-mini-row" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
-                <span>${this.escapeHtml(e)}</span>
-                <strong>${qtd} · ${AppModule.formatCurrency(valor)}</strong>
-            </div>`;
-        });
-
-        if (dashboardPipeline) dashboardPipeline.innerHTML = html;
-        if (container) {
-            container.innerHTML = `<strong>Valor Total: ${AppModule.formatCurrency(negocios.reduce((s, n) => s + (parseFloat(n.valor) || 0), 0))}</strong>`;
-        }
-    },
-
-    renderFechadosRecentes(negocios) {
-        const container = document.getElementById('dashboard-fechados-recentes');
-        const fechados = negocios
-            .filter(n => n.stage === 'Fechado (Ganho)')
-            .sort((a, b) => new Date(b.fechadoEm || b.atualizadoEm || b.criadoEm) - new Date(a.fechadoEm || a.atualizadoEm || a.criadoEm))
-            .slice(0, 5);
-
-        if (!fechados.length) {
-            if (container) {
-                container.innerHTML = `
-                    <div class="dashboard-empty">
-                        <div style="font-size:32px;margin-bottom:8px;">🏆</div>
-                        <p>Nenhuma venda fechada ainda.</p>
-                        <p style="font-size:11px;">Mova os cards no Pipeline para "Fechado (Ganho)"</p>
-                    </div>`;
-            }
-            return;
-        }
-
-        if (container) {
-            container.innerHTML = fechados.map(n => `
-                <div class="fechado-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-                    <div class="fechado-info">
-                        <div style="font-weight:600;">${this.escapeHtml(n.titulo)}</div>
-                        <div style="font-size:12px;color:var(--text-muted);">👤 ${this.escapeHtml(this.getClienteNome(n.clienteId))}</div>
-                    </div>
-                    <div style="font-weight:700;color:var(--success);">${n.valor ? AppModule.formatCurrency(n.valor) : '-'}</div>
-                </div>
-            `).join('');
-        }
-    },
-
-    renderCheckins(viagens) {
-        const container = document.getElementById('dashboard-checkins');
+        const container = document.getElementById('dashboard-pipeline');
+        const summary = document.getElementById('pipeline-summary');
         if (!container) return;
 
-        if (!viagens.length) {
-            container.innerHTML = '<p class="dashboard-empty">Nenhuma viagem cadastrada</p>';
+        if (!etapas.length) {
+            container.innerHTML = '<p class="dashboard-empty">Nenhuma etapa configurada.</p>';
+            if (summary) summary.innerHTML = '';
             return;
         }
 
-        container.innerHTML = viagens.map(v => {
-            const cliente = this.getClienteNome(v.clienteId);
-            const statusHtml = v.checkinFeito
-                ? `<span class="badge badge-success">✅ Realizado</span> <small style="color:var(--text-muted);">${AppModule.formatDate(v.checkinData)}</small>`
-                : `<span class="badge badge-warning">⏳ Pendente</span>`;
-
+        let totalPipeline = 0;
+        const rows = etapas.map(etapa => {
+            const cards = negocios.filter(n => n.stage === etapa);
+            const valor = cards.reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
+            totalPipeline += valor;
             return `
-                <div class="checkin-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-                    <div>
-                        <strong>${this.escapeHtml(cliente)} → ${this.escapeHtml(v.destino)}</strong>
-                        <div style="font-size:11px;color:var(--text-muted);">${this.escapeHtml(v.servico || '')}</div>
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <h4>${AppModule.escapeHtml(etapa)}</h4>
+                        <small>${cards.length} negócio(s)</small>
                     </div>
-                    <div>${statusHtml}</div>
-                </div>`;
+                    <div style="font-weight:700;color:var(--primary);">${AppModule.formatCurrency(valor)}</div>
+                </div>
+            `;
         }).join('');
+
+        container.innerHTML = rows || '<p class="dashboard-empty">Nenhum negócio no pipeline.</p>';
+        if (summary) summary.innerHTML = `<strong>Total: ${AppModule.formatCurrency(totalPipeline)}</strong>`;
     },
 
-    renderAtividades(atividades) {
-        const container = document.getElementById('dashboard-atividades');
+    renderFechadosRecentes() {
+        const negocios = DB.get('negocios', []).filter(n => n.stage === 'Fechado (Ganho)');
+        const container = document.getElementById('dashboard-fechados-recentes');
         if (!container) return;
 
-        if (!atividades.length) {
-            container.innerHTML = '<p class="dashboard-empty">Nenhuma atividade recente.</p>';
+        if (!negocios.length) {
+            container.innerHTML = '<p class="dashboard-empty">Nenhum negócio fechado ainda.</p>';
             return;
         }
 
-        container.innerHTML = atividades.slice(0, 10).map(a => `
-            <div class="atividade-item" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-                <span class="atividade-dot activity-${a.tipo}" style="width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;"></span>
-                <span class="atividade-text" style="flex:1;">${this.escapeHtml(a.descricao)}</span>
-                <span class="atividade-time" style="font-size:11px;color:var(--text-muted);">${AppModule.formatDateTime(a.data)}</span>
+        const recentes = negocios.sort((a, b) => new Date(b.atualizadoEm) - new Date(a.atualizadoEm)).slice(0, 5);
+        container.innerHTML = recentes.map(n => `
+            <div class="list-item">
+                <div class="list-item-info">
+                    <h4>${AppModule.escapeHtml(n.titulo)}</h4>
+                    <small>${AppModule.escapeHtml(DB.getClienteNome(n.clienteId))} • ${AppModule.formatDate(n.atualizadoEm)}</small>
+                </div>
+                <div style="font-weight:700;color:var(--success);">${AppModule.formatCurrency(n.valor)}</div>
             </div>
         `).join('');
     },
 
-    escapeHtml(text) {
-        if (typeof AppModule !== 'undefined' && AppModule.escapeHtml) return AppModule.escapeHtml(text);
-        if (!text) return '';
-        return String(text)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    renderCheckins() {
+        const viagens = DB.get('viagens', []).filter(v => !v.checkinFeito);
+        const container = document.getElementById('dashboard-checkins');
+        if (!container) return;
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const proximas = viagens
+            .filter(v => {
+                const dataIda = new Date(v.dataIda);
+                dataIda.setHours(0, 0, 0, 0);
+                const diff = (dataIda - hoje) / (1000 * 60 * 60 * 24);
+                return diff >= 0 && diff <= 7; // próximos 7 dias
+            })
+            .sort((a, b) => new Date(a.dataIda) - new Date(b.dataIda));
+
+        if (!proximas.length) {
+            container.innerHTML = '<p class="dashboard-empty">Nenhum check-in pendente nos próximos 7 dias.</p>';
+            return;
+        }
+
+        container.innerHTML = proximas.map(v => {
+            const dias = Math.ceil((new Date(v.dataIda) - hoje) / (1000 * 60 * 60 * 24));
+            const badge = dias === 0 ? 'Hoje' : dias === 1 ? 'Amanhã' : `Em ${dias} dias`;
+            return `
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <h4>${AppModule.escapeHtml(v.destino)}</h4>
+                        <small>${AppModule.escapeHtml(DB.getClienteNome(v.clienteId))} • ${AppModule.formatDate(v.dataIda)}</small>
+                    </div>
+                    <div>
+                        <span class="badge badge-warning">${badge}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
     },
 
-    getClienteNome(clienteId) {
-        if (typeof DB !== 'undefined' && DB.getClienteNome) return DB.getClienteNome(clienteId);
-        const clientes = DB.get('clientes', []);
-        const c = clientes.find(x => x.id === clienteId);
-        return c ? c.nome : '—';
+    renderTarefas() {
+        const tarefas = DB.get('tarefas', []);
+        const container = document.getElementById('dashboard-tarefas');
+        if (!container) return;
+
+        const pendentes = tarefas.filter(t => t.status !== 'concluida');
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const atrasadas = pendentes.filter(t => {
+            if (!t.prazo) return false;
+            const prazo = new Date(t.prazo);
+            prazo.setHours(0, 0, 0, 0);
+            return prazo < hoje;
+        });
+
+        const proximas = pendentes.filter(t => {
+            if (!t.prazo) return false;
+            const prazo = new Date(t.prazo);
+            prazo.setHours(0, 0, 0, 0);
+            const diff = (prazo - hoje) / (1000 * 60 * 60 * 24);
+            return diff >= 0 && diff <= 7;
+        });
+
+        if (!pendentes.length) {
+            container.innerHTML = '<p class="dashboard-empty">Nenhuma tarefa pendente.</p>';
+            return;
+        }
+
+        let html = '';
+
+        if (atrasadas.length) {
+            html += `<div style="margin-bottom:12px;"><strong style="color:var(--danger);">⚠️ ${atrasadas.length} atrasada(s)</strong></div>`;
+            html += atrasadas.slice(0, 3).map(t => `
+                <div class="list-item" style="border-left:3px solid var(--danger);padding-left:10px;">
+                    <div class="list-item-info">
+                        <h4>${AppModule.escapeHtml(t.titulo)}</h4>
+                        <small style="color:var(--danger);">Atrasada desde ${AppModule.formatDate(t.prazo)}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        if (proximas.length) {
+            html += `<div style="margin:12px 0 8px;"><strong>📅 ${proximas.length} nos próximos 7 dias</strong></div>`;
+            html += proximas.slice(0, 3).map(t => `
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <h4>${AppModule.escapeHtml(t.titulo)}</h4>
+                        <small>Prazo: ${AppModule.formatDate(t.prazo)}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        container.innerHTML = html || '<p class="dashboard-empty">Nenhuma tarefa urgente.</p>';
+    },
+
+    renderAtividades() {
+        const atividades = DB.get('atividades', []);
+        const container = document.getElementById('dashboard-atividades');
+        if (!container) return;
+
+        if (!atividades.length) {
+            container.innerHTML = '<p class="dashboard-empty">Nenhuma atividade registrada.</p>';
+            return;
+        }
+
+        const recentes = atividades.slice(-10).reverse();
+        container.innerHTML = recentes.map(a => `
+            <div class="list-item">
+                <div class="list-item-info">
+                    <h4>${AppModule.escapeHtml(a.descricao)}</h4>
+                    <small>${AppModule.formatDate(a.data)}</small>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    renderMilhas() {
+        const milhas = DB.get('milhas', { emissoes: [] });
+        const emissoes = milhas.emissoes || [];
+
+        let totalEconomia = 0;
+        emissoes.forEach(e => {
+            const calc = MilhasModule.calcEmissao(e.valorMercado, e.taxas, e.milhasUtilizadas, e.companhia);
+            totalEconomia += calc.economia;
+        });
+
+        // Adiciona card de milhas no grid de KPIs (se existir)
+        const kpiGrid = document.querySelector('#page-dashboard .kpi-grid');
+        if (kpiGrid && !document.getElementById('stat-economia-milhas')) {
+            const card = document.createElement('div');
+            card.className = 'kpi-card';
+            card.innerHTML = `
+                <label>Economia em Milhas</label>
+                <span id="stat-economia-milhas" style="color:var(--success);">${AppModule.formatCurrency(totalEconomia)}</span>
+            `;
+            kpiGrid.appendChild(card);
+        }
     }
 };

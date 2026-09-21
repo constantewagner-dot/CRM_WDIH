@@ -1,178 +1,160 @@
 var AppModule = {
-    pageModules: {
-        dashboard: 'DashboardModule',
-        clientes: 'ClientesModule',
-        pipeline: 'PipelineModule',
-        vendas: 'VendasModule',
-        viagens: 'ViagensModule',
-        financeiro: 'FinanceiroModule',
-        relatorios: 'RelatoriosModule',
-        milhas: 'MilhasModule',
-        tarefas: 'TarefasModule',
-        calendario: 'CalendarioModule',
-        config: 'ConfigModule',
-        backup: 'BackupModule'
-    },
+    currentPage: 'dashboard',
 
     init() {
-        this.updateDateTime();
-        setInterval(() => this.updateDateTime(), 60000);
-
-        const hash = window.location.hash.replace('#', '');
-        const startPage = hash || 'dashboard';
-        this.openPage(startPage);
+        this.openPage('dashboard');
+        this.startClock();
+        this.updateBadgeTarefas();
     },
 
     openPage(page) {
-        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-        const target = document.getElementById(`page-${page}`);
-        if (target) target.classList.add('active');
+        this.currentPage = page;
 
-        document.querySelectorAll('.nav-item[data-page]').forEach(el => el.classList.remove('active'));
+        // Atualiza páginas ativas
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const pageEl = document.getElementById(`page-${page}`);
+        if (pageEl) pageEl.classList.add('active');
+
+        // Atualiza nav items ativos
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
-        if (navItem) {
-            navItem.classList.add('active');
-            const group = navItem.closest('.nav-group');
-            if (group) group.classList.add('open');
-        }
+        if (navItem) navItem.classList.add('active');
 
-        const pageTitles = {
+        // Atualiza título
+        const titles = {
             dashboard: 'Dashboard',
             clientes: 'Clientes',
-            pipeline: 'Cotações / Pipeline',
+            pipeline: 'Pipeline',
             vendas: 'Vendas',
             viagens: 'Viagens',
-            financeiro: 'Transações Financeiras',
-            relatorios: 'Relatórios',
+            financeiro: 'Financeiro',
             milhas: 'Milhas',
             tarefas: 'Tarefas',
             calendario: 'Calendário',
+            relatorios: 'Relatórios',
             config: 'Configurações',
-            backup: 'Backup e Restauração'
+            backup: 'Backup'
         };
-        document.title = pageTitles[page] ? `CRM WDIH - ${pageTitles[page]}` : 'CRM WDIH';
+        document.getElementById('page-title').textContent = titles[page] || page;
 
-        // Acesso robusto ao módulo (funciona com var, window ou global)
-        const moduleName = this.pageModules[page];
-        if (moduleName) {
-            const mod = window[moduleName] || (typeof eval !== 'undefined' ? (() => { try { return eval(moduleName); } catch(e) { return null; } })() : null);
-            if (mod && typeof mod.render === 'function') {
-                try {
-                    mod.render();
-                } catch (e) {
-                    console.error(`Erro ao renderizar ${moduleName}:`, e);
-                }
-            }
+        // Renderiza módulo
+        switch (page) {
+            case 'dashboard': DashboardModule.render(); break;
+            case 'clientes': ClientesModule.render(); break;
+            case 'pipeline': PipelineModule.render(); break;
+            case 'vendas': VendasModule.render(); break;
+            case 'viagens': ViagensModule.render(); break;
+            case 'financeiro': FinanceiroModule.render(); break;
+            case 'milhas': MilhasModule.render(); break;
+            case 'tarefas': TarefasModule.render(); break;
+            case 'calendario': CalendarioModule.render(); break;
+            case 'relatorios': RelatoriosModule.render(); break;
+            case 'config': ConfigModule.render(); break;
+            case 'backup': BackupModule.render(); break;
         }
-
-        if (window.innerWidth <= 768) {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar) sidebar.classList.add('collapsed');
-        }
-    },
-
-    toggleGroup(groupId, btn) {
-        const group = document.getElementById(groupId);
-        if (!group) return;
-        const isOpen = group.classList.contains('open');
-        group.classList.toggle('open', !isOpen);
-        const arrow = btn.querySelector('.nav-arrow');
-        if (arrow) arrow.textContent = isOpen ? '▸' : '▾';
     },
 
     toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) sidebar.classList.toggle('collapsed');
+        document.getElementById('sidebar').classList.toggle('collapsed');
     },
 
+    toggleGroup(groupId, header) {
+        const group = header.parentElement;
+        group.classList.toggle('open');
+    },
+
+    startClock() {
+        setInterval(() => {
+            if (this.currentPage === 'dashboard') {
+                DashboardModule.updateDateTime();
+            }
+        }, 60000);
+    },
+
+    updateBadgeTarefas() {
+        const tarefas = DB.get('tarefas', []);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const atrasadas = tarefas.filter(t => {
+            if (t.status === 'concluida') return false;
+            if (!t.prazo) return false;
+            const prazo = new Date(t.prazo);
+            prazo.setHours(0, 0, 0, 0);
+            return prazo < hoje;
+        });
+
+        const badge = document.getElementById('badge-tarefas');
+        if (badge) {
+            if (atrasadas.length > 0) {
+                badge.textContent = atrasadas.length;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Atualiza a cada 5 minutos
+        setTimeout(() => this.updateBadgeTarefas(), 300000);
+    },
+
+    // ===== MODAL =====
     openModal(title, bodyHtml, footerHtml = '') {
-        const modal = document.getElementById('modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalBody = document.getElementById('modal-body');
-        const modalFooter = document.getElementById('modal-footer');
-        if (modalTitle) modalTitle.textContent = title;
-        if (modalBody) modalBody.innerHTML = bodyHtml;
-        if (modalFooter) modalFooter.innerHTML = footerHtml;
-        if (modal) modal.classList.add('open');
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-body').innerHTML = bodyHtml;
+        document.getElementById('modal-footer').innerHTML = footerHtml;
+        document.getElementById('modal').classList.add('open');
     },
 
     closeModal() {
-        const modal = document.getElementById('modal');
-        if (modal) modal.classList.remove('open');
+        document.getElementById('modal').classList.remove('open');
     },
 
+    // ===== TOAST =====
     toast(message, type = 'success') {
         const toast = document.getElementById('toast');
-        if (!toast) return;
         toast.textContent = message;
-        toast.className = `toast show ${type}`;
+        toast.className = `toast ${type} show`;
         setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
-    showToast(message, type = 'success') {
-        this.toast(message, type);
-    },
-
-    updateDateTime() {
-        const el = document.getElementById('dashboard-data-hora');
-        if (!el) return;
-        const now = new Date();
-        const options = {
-            weekday: 'long', year: 'numeric', month: 'long',
-            day: 'numeric', hour: '2-digit', minute: '2-digit'
-        };
-        el.textContent = now.toLocaleDateString('pt-BR', options);
-    },
-
-    generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    // ===== UTILITÁRIOS =====
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     },
 
     formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(value || 0);
     },
 
     formatDate(dateStr) {
         if (!dateStr) return '—';
         const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return '—';
+        if (isNaN(date.getTime())) return dateStr;
         return date.toLocaleDateString('pt-BR');
     },
 
-    formatDateTime(dateStr) {
-        if (!dateStr) return '—';
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return '—';
-        return date.toLocaleString('pt-BR');
+    generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
     },
 
-    escapeHtml(text) {
-        if (!text) return '';
-        return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    },
-
-    addAtividade(descricao, tipo = 'sistema') {
+    addAtividade(descricao, tipo = 'geral') {
         const atividades = DB.get('atividades', []);
-        atividades.unshift({
+        atividades.push({
             id: this.generateId(),
-            tipo,
             descricao,
+            tipo,
             data: new Date().toISOString()
         });
         DB.set('atividades', atividades);
-    },
-
-    confirmAction(message, onConfirm) {
-        if (confirm(message)) onConfirm();
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    AppModule.init();
-});
+// Inicializa quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', () => AppModule.init());
