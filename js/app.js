@@ -2,6 +2,7 @@ var AppModule = {
     currentPage: 'dashboard',
 
     init() {
+        DB.init();
         this.openPage('dashboard');
         this.startClock();
         this.updateBadgeTarefas();
@@ -10,17 +11,14 @@ var AppModule = {
     openPage(page) {
         this.currentPage = page;
 
-        // Atualiza páginas ativas
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const pageEl = document.getElementById(`page-${page}`);
         if (pageEl) pageEl.classList.add('active');
 
-        // Atualiza nav items ativos
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
         if (navItem) navItem.classList.add('active');
 
-        // Atualiza título
         const titles = {
             dashboard: 'Dashboard',
             clientes: 'Clientes',
@@ -35,9 +33,9 @@ var AppModule = {
             config: 'Configurações',
             backup: 'Backup'
         };
-        document.getElementById('page-title').textContent = titles[page] || page;
+        const titleEl = document.getElementById('page-title');
+        if (titleEl) titleEl.textContent = titles[page] || page;
 
-        // Renderiza módulo
         switch (page) {
             case 'dashboard': DashboardModule.render(); break;
             case 'clientes': ClientesModule.render(); break;
@@ -94,25 +92,31 @@ var AppModule = {
             }
         }
 
-        // Atualiza a cada 5 minutos
         setTimeout(() => this.updateBadgeTarefas(), 300000);
     },
 
     // ===== MODAL =====
     openModal(title, bodyHtml, footerHtml = '') {
-        document.getElementById('modal-title').textContent = title;
-        document.getElementById('modal-body').innerHTML = bodyHtml;
-        document.getElementById('modal-footer').innerHTML = footerHtml;
-        document.getElementById('modal').classList.add('open');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalFooter = document.getElementById('modal-footer');
+
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalBody) modalBody.innerHTML = bodyHtml;
+        if (modalFooter) modalFooter.innerHTML = footerHtml;
+        if (modal) modal.classList.add('open');
     },
 
     closeModal() {
-        document.getElementById('modal').classList.remove('open');
+        const modal = document.getElementById('modal');
+        if (modal) modal.classList.remove('open');
     },
 
     // ===== TOAST =====
     toast(message, type = 'success') {
         const toast = document.getElementById('toast');
+        if (!toast) return;
         toast.textContent = message;
         toast.className = `toast ${type} show`;
         setTimeout(() => toast.classList.remove('show'), 3000);
@@ -140,6 +144,13 @@ var AppModule = {
         return date.toLocaleDateString('pt-BR');
     },
 
+    formatDateTime(dateStr) {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('pt-BR');
+    },
+
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     },
@@ -153,8 +164,37 @@ var AppModule = {
             data: new Date().toISOString()
         });
         DB.set('atividades', atividades);
+    },
+
+    // ===== COMISSÕES =====
+    calcularComissaoVenda(venda) {
+        const config = DB.get('config', {});
+        const comissaoPadrao = parseFloat(config.agencia?.comissao) || 10;
+        const valor = parseFloat(venda.valorVenda) || 0;
+        const percentual = parseFloat(venda.comissaoPercentual) || comissaoPadrao;
+        return valor * (percentual / 100);
+    },
+
+    calcularComissaoTotal() {
+        const vendas = DB.get('vendas', []);
+        return vendas.reduce((s, v) => s + this.calcularComissaoVenda(v), 0);
+    },
+
+    obterResumoComissoes() {
+        const config = DB.get('config', {});
+        const comissaoPadrao = parseFloat(config.agencia?.comissao) || 10;
+        const vendas = DB.get('vendas', []);
+
+        const porVenda = vendas.map(v => ({
+            ...v,
+            comissao: this.calcularComissaoVenda(v)
+        }));
+
+        const total = porVenda.reduce((s, v) => s + v.comissao, 0);
+        const numVendas = vendas.length;
+
+        return { porVenda, total, numVendas, comissaoPadrao };
     }
 };
 
-// Inicializa quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => AppModule.init());

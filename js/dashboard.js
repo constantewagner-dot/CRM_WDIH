@@ -15,10 +15,10 @@ var DashboardModule = {
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const dateStr = now.toLocaleDateString('pt-BR', options);
         const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        
+
         const el1 = document.getElementById('dashboard-data-hora');
         const el2 = document.getElementById('dashboard-data-hora-header');
-        
+
         if (el1) el1.textContent = `${dateStr} • ${timeStr}`;
         if (el2) el2.textContent = `${dateStr} • ${timeStr}`;
     },
@@ -33,7 +33,6 @@ var DashboardModule = {
         const receitaTotal = vendas.reduce((s, v) => s + (parseFloat(v.valorVenda) || 0), 0);
         const taxaConversao = negocios.length ? ((fechados / negocios.length) * 100).toFixed(1) : 0;
 
-        // Mês atual
         const mesAtual = new Date().getMonth();
         const anoAtual = new Date().getFullYear();
         const fechadosMes = vendas.filter(v => {
@@ -126,7 +125,7 @@ var DashboardModule = {
                 const dataIda = new Date(v.dataIda);
                 dataIda.setHours(0, 0, 0, 0);
                 const diff = (dataIda - hoje) / (1000 * 60 * 60 * 24);
-                return diff >= 0 && diff <= 7; // próximos 7 dias
+                return diff >= 0 && diff <= 7;
             })
             .sort((a, b) => new Date(a.dataIda) - new Date(b.dataIda));
 
@@ -241,16 +240,38 @@ var DashboardModule = {
             totalEconomia += calc.economia;
         });
 
-        // Adiciona card de milhas no grid de KPIs (se existir)
         const kpiGrid = document.querySelector('#page-dashboard .kpi-grid');
-        if (kpiGrid && !document.getElementById('stat-economia-milhas')) {
-            const card = document.createElement('div');
-            card.className = 'kpi-card';
+        if (kpiGrid) {
+            let card = document.getElementById('stat-economia-milhas');
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'kpi-card';
+                card.id = 'stat-economia-milhas';
+                kpiGrid.appendChild(card);
+            }
             card.innerHTML = `
                 <label>Economia em Milhas</label>
-                <span id="stat-economia-milhas" style="color:var(--success);">${AppModule.formatCurrency(totalEconomia)}</span>
+                <span style="color:var(--success);">${AppModule.formatCurrency(totalEconomia)}</span>
             `;
-            kpiGrid.appendChild(card);
+        }
+    },
+
+    renderComissoes() {
+        const resumo = AppModule.obterResumoComissoes();
+
+        const kpiGrid = document.querySelector('#page-dashboard .kpi-grid');
+        if (kpiGrid) {
+            let card = document.getElementById('stat-comissoes');
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'kpi-card';
+                card.id = 'stat-comissoes';
+                kpiGrid.appendChild(card);
+            }
+            card.innerHTML = `
+                <label>Comissões (${resumo.comissaoPadrao}%)</label>
+                <span style="color:var(--primary);">${AppModule.formatCurrency(resumo.total)}</span>
+            `;
         }
     }
 };
