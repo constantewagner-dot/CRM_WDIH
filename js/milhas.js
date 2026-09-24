@@ -105,6 +105,21 @@ var MilhasModule = {
         }, 0);
     },
 
+    getValorMercadoCliente(clienteId) {
+        return this.getEmissoesCliente(clienteId).reduce((s, e) => {
+            return s + (parseFloat(e.valorMercado) || 0);
+        }, 0);
+    },
+
+    // ============ VERIFICAR SE CLIENTE TEM MOVIMENTAÇÃO ============
+    clienteTemMovimentacao(clienteId) {
+        const programas = this.getProgramasCliente(clienteId);
+        const cartoes = this.getCartoesCliente(clienteId);
+        const emissoes = this.getEmissoesCliente(clienteId);
+        const viagens = this.getViagensCliente(clienteId);
+        return programas.length > 0 || cartoes.length > 0 || emissoes.length > 0 || viagens.length > 0;
+    },
+
     // ============ VISÃO GERAL ============
     renderVisao() {
         const panel = document.getElementById('milhas-panel-visao');
@@ -134,7 +149,15 @@ var MilhasModule = {
             return;
         }
 
-        const cards = clientes.map(c => {
+        // Filtrar apenas clientes com movimentação
+        const clientesComMovimentacao = clientes.filter(c => this.clienteTemMovimentacao(c.id));
+
+        if (!clientesComMovimentacao.length) {
+            panel.innerHTML = kpis + '<p class="dashboard-empty">Nenhum cliente com movimentação de milhas.</p>';
+            return;
+        }
+
+        const cards = clientesComMovimentacao.map(c => {
             const totalCliente = this.getTotalMilhasCliente(c.id);
             const nProgramas = this.getProgramasCliente(c.id).length;
             const nCartoes = this.getCartoesCliente(c.id).length;
@@ -148,7 +171,7 @@ var MilhasModule = {
                             <div class="cliente-card-nome">${AppModule.escapeHtml(c.nome)}</div>
                             <div class="cliente-card-sub">${AppModule.escapeHtml(c.email || c.telefone || '—')}</div>
                         </div>
-                        <button class="btn btn-sm btn-secondary" onclick="MilhasModule.detalheCliente('${c.id}')">Ver detalhes</button>
+                        <button class="btn btn-sm btn-primary" onclick="MilhasModule.portalCliente('${c.id}')">🔍 Portal do Cliente</button>
                     </div>
                     <div class="cliente-card-stats">
                         <div class="stat"><label>Milhas</label><span>${this.fmtMilhas(totalCliente)}</span></div>
@@ -164,7 +187,8 @@ var MilhasModule = {
         panel.innerHTML = kpis + `<div class="cliente-card-grid">${cards}</div>`;
     },
 
-    detalheCliente(clienteId) {
+    // ============ PORTAL DO CLIENTE (POPUP DETALHADO) ============
+    portalCliente(clienteId) {
         const c = DB.get('clientes', []).find(x => x.id === clienteId);
         if (!c) return;
 
@@ -172,79 +196,144 @@ var MilhasModule = {
         const cartoes = this.getCartoesCliente(clienteId);
         const emissoes = this.getEmissoesCliente(clienteId);
         const viagens = this.getViagensCliente(clienteId);
-        const economia = this.getEconomiaCliente(clienteId);
 
+        // Calcular totais
+        const totalMilhas = this.getTotalMilhasCliente(clienteId);
+        const totalValorMercado = this.getValorMercadoCliente(clienteId);
+        const totalEconomia = this.getEconomiaCliente(clienteId);
+        const percentualEconomia = totalValorMercado > 0 ? ((totalEconomia / totalValorMercado) * 100) : 0;
+        const totalVoos = emissoes.length;
+
+        // Cabeçalho com dados do cliente
         let html = `
-            <div class="cliente-detalhe-header">
-                <h3>${AppModule.escapeHtml(c.nome)}</h3>
-                <span>${AppModule.escapeHtml(c.email || '')} ${AppModule.escapeHtml(c.telefone || '')}</span>
-                <strong style="color:var(--success);">💰 Economia: ${AppModule.formatCurrency(economia)}</strong>
+            <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 20px; border-radius: 8px; margin-bottom: 20px; color: white;">
+                <h2 style="margin: 0 0 10px 0; font-size: 24px;">${AppModule.escapeHtml(c.nome)}</h2>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px; opacity: 0.95;">
+                    ${c.email ? `<span>📧 ${AppModule.escapeHtml(c.email)}</span>` : ''}
+                    ${c.telefone ? `<span>📱 ${AppModule.escapeHtml(c.telefone)}</span>` : ''}
+                    ${c.documento ? `<span>📄 ${AppModule.escapeHtml(c.documento)}</span>` : ''}
+                </div>
             </div>
         `;
 
-        // Programas
-        html += `<h4 style="margin:16px 0 8px;">🎯 Programas (${programas.length})</h4>`;
+        // Cards de resumo
+        html += `
+            <div class="kpi-grid" style="margin-bottom: 24px;">
+                <div class="kpi-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    <label style="color: rgba(255,255,255,0.9);">✈️ Vôos</label>
+                    <span style="font-size: 28px; font-weight: 700;">${totalVoos}</span>
+                </div>
+                <div class="kpi-card" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white;">
+                    <label style="color: rgba(255,255,255,0.9);">💎 Valor de Mercado</label>
+                    <span style="font-size: 20px; font-weight: 700;">${AppModule.formatCurrency(totalValorMercado)}</span>
+                </div>
+                <div class="kpi-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe); color: white;">
+                    <label style="color: rgba(255,255,255,0.9);">💰 Economia</label>
+                    <span style="font-size: 20px; font-weight: 700;">${AppModule.formatCurrency(totalEconomia)}</span>
+                </div>
+                <div class="kpi-card" style="background: linear-gradient(135deg, #43e97b, #38f9d7); color: white;">
+                    <label style="color: rgba(255,255,255,0.9);">📊 % Economia</label>
+                    <span style="font-size: 28px; font-weight: 700;">${percentualEconomia.toFixed(1)}%</span>
+                </div>
+            </div>
+        `;
+
+        // Seção: Programas de Fidelidade
+        html += `<h3 style="margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--primary); padding-bottom: 8px;">🎯 Programas de Fidelidade (${programas.length})</h3>`;
         if (!programas.length) {
-            html += '<p class="dashboard-empty">Nenhum programa cadastrado.</p>';
+            html += '<p style="color: var(--text-muted); font-style: italic;">Nenhum programa cadastrado.</p>';
         } else {
+            html += '<div style="display: grid; gap: 10px;">';
             html += programas.map(p => {
                 const saldo = this.getSaldoAtual(p);
                 const variacao = this.getVariacao(p);
                 return `
-                    <div class="programa-card" style="margin-bottom:8px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <strong>${AppModule.escapeHtml(p.programa)}</strong>
-                            <span>${this.fmtMilhas(saldo)} <small>${variacao >= 0 ? '+' : ''}${this.fmtMilhas(variacao)}</small></span>
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="font-size: 15px;">${AppModule.escapeHtml(p.programa)}</strong>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 16px; font-weight: 600; color: var(--primary);">${this.fmtMilhas(saldo)} milhas</div>
+                            ${variacao !== 0 ? `<small style="color: ${variacao >= 0 ? 'var(--success)' : 'var(--danger)'};">${variacao >= 0 ? '+' : ''}${this.fmtMilhas(variacao)}</small>` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
+            html += '</div>';
         }
 
-        // Cartões
-        html += `<h4 style="margin:16px 0 8px;">💳 Cartões (${cartoes.length})</h4>`;
+        // Seção: Cartões
+        html += `<h3 style="margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--primary); padding-bottom: 8px;">💳 Cartões (${cartoes.length})</h3>`;
         if (!cartoes.length) {
-            html += '<p class="dashboard-empty">Nenhum cartão cadastrado.</p>';
+            html += '<p style="color: var(--text-muted); font-style: italic;">Nenhum cartão cadastrado.</p>';
         } else {
+            html += '<div style="display: grid; gap: 10px;">';
             html += cartoes.map(cartao => `
-                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
-                    <span><span class="badge badge-info">${AppModule.escapeHtml(cartao.bandeira)}</span> ${AppModule.escapeHtml(cartao.banco)}</span>
-                    <small>${AppModule.escapeHtml(cartao.nome || '')}</small>
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="badge badge-info">${AppModule.escapeHtml(cartao.bandeira)}</span>
+                        <strong style="margin-left: 8px;">${AppModule.escapeHtml(cartao.banco)}</strong>
+                        ${cartao.nome ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">${AppModule.escapeHtml(cartao.nome)}</div>` : ''}
+                    </div>
+                    ${cartao.limite ? `<div style="font-weight: 600;">${AppModule.formatCurrency(cartao.limite)}</div>` : ''}
                 </div>
             `).join('');
+            html += '</div>';
         }
 
-        // Emissões
-        html += `<h4 style="margin:16px 0 8px;">🎫 Emissões (${emissoes.length})</h4>`;
+        // Seção: Emissões
+        html += `<h3 style="margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--primary); padding-bottom: 8px;">🎫 Emissões (${emissoes.length})</h3>`;
         if (!emissoes.length) {
-            html += '<p class="dashboard-empty">Nenhuma emissão registrada.</p>';
+            html += '<p style="color: var(--text-muted); font-style: italic;">Nenhuma emissão registrada.</p>';
         } else {
-            html += emissoes.map(e => {
+            html += '<div class="table-wrap"><table class="table">';
+            html += `
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Rota</th>
+                        <th>Valor Mercado</th>
+                        <th>Valor Emitido</th>
+                        <th>Economia</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            html += emissoes.sort((a, b) => new Date(b.data) - new Date(a.data)).map(e => {
                 const calc = this.calcEmissao(e.valorMercado, e.taxas, e.milhasUtilizadas, e.custoMilha);
                 return `
-                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
-                        <span>${AppModule.formatDate(e.data)} · ${AppModule.escapeHtml(e.origem)}→${AppModule.escapeHtml(e.destino)}</span>
-                        <span style="color:var(--success);font-weight:600;">${AppModule.formatCurrency(calc.economia)}</span>
-                    </div>
+                    <tr>
+                        <td>${AppModule.formatDate(e.data)}</td>
+                        <td><strong>${AppModule.escapeHtml(e.origem)} → ${AppModule.escapeHtml(e.destino)}</strong></td>
+                        <td>${AppModule.formatCurrency(e.valorMercado)}</td>
+                        <td>${AppModule.formatCurrency(calc.valorEmitido)}</td>
+                        <td style="color: ${calc.economia >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 700;">${AppModule.formatCurrency(calc.economia)}</td>
+                    </tr>
                 `;
             }).join('');
+            html += '</tbody></table></div>';
         }
 
-        // Viagens
-        html += `<h4 style="margin:16px 0 8px;">✈️ Viagens (${viagens.length})</h4>`;
+        // Seção: Viagens
+        html += `<h3 style="margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--primary); padding-bottom: 8px;">✈️ Viagens (${viagens.length})</h3>`;
         if (!viagens.length) {
-            html += '<p class="dashboard-empty">Nenhuma viagem registrada.</p>';
+            html += '<p style="color: var(--text-muted); font-style: italic;">Nenhuma viagem registrada.</p>';
         } else {
+            html += '<div style="display: grid; gap: 10px;">';
             html += viagens.map(v => `
-                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
-                    <span>${AppModule.formatDate(v.dataIda)} → ${AppModule.escapeHtml(v.destino)}</span>
-                    <small>${v.checkinFeito ? '✅ Check-in feito' : '⏳ Pendente'}</small>
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>${AppModule.formatDate(v.dataIda)} → ${AppModule.escapeHtml(v.destino)}</strong>
+                        ${v.dataVolta ? `<div style="font-size: 13px; color: var(--text-muted);">Retorno: ${AppModule.formatDate(v.dataVolta)}</div>` : ''}
+                    </div>
+                    <span class="badge ${v.checkinFeito ? 'badge-success' : 'badge-warning'}">${v.checkinFeito ? '✅ Check-in feito' : '⏳ Pendente'}</span>
                 </div>
             `).join('');
+            html += '</div>';
         }
 
         const footer = `<button class="btn btn-primary" onclick="AppModule.closeModal()">Fechar</button>`;
-        AppModule.openModal(`Detalhes de ${c.nome}`, html, footer);
+        AppModule.openModal(`Portal do Cliente`, html, footer);
     },
 
     // ============ PROGRAMAS ============
@@ -374,7 +463,6 @@ var MilhasModule = {
         this.renderProgramas();
     },
 
-    // Atualização mensal de saldo (mantém histórico)
     atualizarSaldo(id) {
         const p = this.getData().programas.find(x => x.id === id);
         if (!p) return;
@@ -406,7 +494,6 @@ var MilhasModule = {
 
         if (!Array.isArray(p.historico)) p.historico = [];
 
-        // Remove entrada anterior do mesmo mês (evita duplicidade)
         p.historico = p.historico.filter(h => h.data !== mes);
 
         p.historico.push({
@@ -440,7 +527,7 @@ var MilhasModule = {
                         <thead><tr><th>Mês</th><th>Saldo</th><th>Variação</th><th>Observação</th></tr></thead>
                         <tbody>
                             ${h.map((entry, i, arr) => {
-                                const anterior = arr[i + 1]; // próximo na ordem reversa = anterior cronológico
+                                const anterior = arr[i + 1];
                                 const variacao = anterior ? (entry.saldo - anterior.saldo) : 0;
                                 return `
                                     <tr>
@@ -701,7 +788,6 @@ var MilhasModule = {
 
         AppModule.openModal(isEdit ? 'Editar Emissão' : 'Nova Emissão', html, footer);
 
-        // Preenche os programas do cliente após abrir o modal
         setTimeout(() => this.atualizarProgramasEmissao(emissao?.programa), 50);
     },
 
