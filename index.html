@@ -4,654 +4,466 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM WDIH</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --secondary: #64748b;
-            --bg: #f1f5f9;
-            --card: #ffffff;
-            --text: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --sidebar: #1e293b;
-            --sidebar-text: #cbd5e1;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.5;
-        }
-
-        .app {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* SIDEBAR */
-        #sidebar {
-            width: 260px;
-            background: var(--sidebar);
-            color: var(--sidebar-text);
-            display: flex;
-            flex-direction: column;
-            transition: width 0.3s;
-        }
-
-        #sidebar.collapsed { width: 70px; }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .sidebar-header h1 {
-            font-size: 18px;
-            color: white;
-        }
-
-        #sidebar.collapsed .sidebar-header h1,
-        #sidebar.collapsed .nav-text { display: none; }
-
-        .nav-list {
-            list-style: none;
-            padding: 12px;
-            flex: 1;
-        }
-
-        .nav-item {
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 4px;
-            transition: background 0.2s;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-
-        /* MAIN */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .topbar {
-            background: var(--card);
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .content {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-        }
-
-        .page { display: none; }
-        .page.active { display: block; }
-
-        .page-header {
-            margin-bottom: 24px;
-        }
-
-        .page-header h1 {
-            font-size: 24px;
-            margin-bottom: 4px;
-        }
-
-        .page-header p {
-            color: var(--text-muted);
-        }
-
-        /* CARDS */
-        .card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 16px;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-        }
-
-        .kpi-card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--primary);
-        }
-
-        .kpi-card label {
-            display: block;
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .kpi-card span {
-            display: block;
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 16px;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 16px;
-        }
-
-        /* FORMULÁRIOS */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 8px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: var(--text-muted);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        /* BOTÕES */
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
-
-        .btn:hover { opacity: 0.9; }
-
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: var(--secondary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-warning { background: var(--warning); color: white; }
-
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-
-        /* TABELAS */
-        .table-wrap { overflow-x: auto; }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table th, .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .table th {
-            background: #f8fafc;
-            font-size: 12px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-
-        .table tr:hover { background: #f8fafc; }
-
-        /* BADGES */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-info { background: #dbeafe; color: #1e40af; }
-        .badge-secondary { background: #e2e8f0; color: #475569; }
-
-        /* MODAL */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal-overlay.open { display: flex; }
-
-        .modal {
-            background: white;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 900px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        }
-
-        .modal-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h2 { font-size: 18px; }
-
-        .modal-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
-        }
-
-        .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        /* TOAST */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 14px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 2000;
-        }
-
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { background: var(--success); }
-        .toast.warning { background: var(--warning); }
-        .toast.danger { background: var(--danger); }
-
-        /* UTILITÁRIOS */
-        .dashboard-empty {
-            text-align: center;
-            color: var(--text-muted);
-            padding: 24px;
-        }
-
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .list-item:last-child { border-bottom: none; }
-
-        .list-item-info h4 {
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .list-item-info small {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .row-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; z-index: 100; height: 100%; }
-            .grid-2, .grid-3 { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="app">
-        <!-- SIDEBAR -->
+    <div class="app-container">
+        <!-- Sidebar -->
         <aside id="sidebar">
             <div class="sidebar-header">
-                <span>✈️</span>
-                <h1>CRM WDIH</h1>
+                <div class="logo">WDIH</div>
+                <button class="menu-toggle" onclick="AppModule.toggleSidebar()">☰</button>
             </div>
-            <ul class="nav-list">
-                <li class="nav-item active" data-page="dashboard" onclick="AppModule.openPage('dashboard')">
-                    <span>📊</span>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-page="dashboard" onclick="AppModule.openPage('dashboard')">
+                    <span class="nav-icon">📊</span>
                     <span class="nav-text">Dashboard</span>
-                </li>
-                <li class="nav-item" data-page="clientes" onclick="AppModule.openPage('clientes')">
-                    <span>👥</span>
-                    <span class="nav-text">Clientes</span>
-                </li>
-                <li class="nav-item" data-page="pipeline" onclick="AppModule.openPage('pipeline')">
-                    <span>🎯</span>
-                    <span class="nav-text">Pipeline</span>
-                </li>
-                <li class="nav-item" data-page="vendas" onclick="AppModule.openPage('vendas')">
-                    <span>💰</span>
-                    <span class="nav-text">Vendas</span>
-                </li>
-                <li class="nav-item" data-page="viagens" onclick="AppModule.openPage('viagens')">
-                    <span>🧳</span>
-                    <span class="nav-text">Viagens</span>
-                </li>
-                <li class="nav-item" data-page="financeiro" onclick="AppModule.openPage('financeiro')">
-                    <span>💳</span>
-                    <span class="nav-text">Financeiro</span>
-                </li>
-                <li class="nav-item" data-page="milhas" onclick="AppModule.openPage('milhas')">
-                    <span>✈️</span>
-                    <span class="nav-text">Milhas</span>
-                </li>
-                <li class="nav-item" data-page="tarefas" onclick="AppModule.openPage('tarefas')">
-                    <span>📝</span>
-                    <span class="nav-text">Tarefas</span>
-                    <span id="badge-tarefas" class="badge badge-danger" style="display:none;"></span>
-                </li>
-                <li class="nav-item" data-page="calendario" onclick="AppModule.openPage('calendario')">
-                    <span>📅</span>
-                    <span class="nav-text">Calendário</span>
-                </li>
-                <li class="nav-item" data-page="relatorios" onclick="AppModule.openPage('relatorios')">
-                    <span>📈</span>
-                    <span class="nav-text">Relatórios</span>
-                </li>
-                <li class="nav-item" data-page="config" onclick="AppModule.openPage('config')">
-                    <span>⚙️</span>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-cadastros', this)">
+                        <span>Cadastros</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-cadastros" class="nav-group-items">
+                        <div class="nav-item" data-page="clientes" onclick="AppModule.openPage('clientes')">
+                            <span class="nav-icon">👥</span>
+                            <span class="nav-text">Clientes</span>
+                        </div>
+                        <div class="nav-item" data-page="viagens" onclick="AppModule.openPage('viagens')">
+                            <span class="nav-icon">✈️</span>
+                            <span class="nav-text">Viagens</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-comercial', this)">
+                        <span>Comercial</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-comercial" class="nav-group-items">
+                        <div class="nav-item" data-page="pipeline" onclick="AppModule.openPage('pipeline')">
+                            <span class="nav-icon">🎯</span>
+                            <span class="nav-text">Pipeline</span>
+                        </div>
+                        <div class="nav-item" data-page="vendas" onclick="AppModule.openPage('vendas')">
+                            <span class="nav-icon">💰</span>
+                            <span class="nav-text">Vendas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-milhas', this)">
+                        <span>Milhas</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-milhas" class="nav-group-items">
+                        <div class="nav-item" data-page="milhas" onclick="AppModule.openPage('milhas')">
+                            <span class="nav-icon">🎫</span>
+                            <span class="nav-text">Milhas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-financeiro', this)">
+                        <span>Financeiro</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-financeiro" class="nav-group-items">
+                        <div class="nav-item" data-page="financeiro" onclick="AppModule.openPage('financeiro')">
+                            <span class="nav-icon">💳</span>
+                            <span class="nav-text">Transações</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-produtividade', this)">
+                        <span>Produtividade</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-produtividade" class="nav-group-items">
+                        <div class="nav-item" data-page="tarefas" onclick="AppModule.openPage('tarefas')">
+                            <span class="nav-icon">✅</span>
+                            <span class="nav-text">Tarefas</span>
+                            <span id="badge-tarefas" class="nav-badge" style="display:none;">0</span>
+                        </div>
+                        <div class="nav-item" data-page="calendario" onclick="AppModule.openPage('calendario')">
+                            <span class="nav-icon">📅</span>
+                            <span class="nav-text">Calendário</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-relatorios', this)">
+                        <span>Relatórios</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-relatorios" class="nav-group-items">
+                        <div class="nav-item" data-page="relatorios" onclick="AppModule.openPage('relatorios')">
+                            <span class="nav-icon">📈</span>
+                            <span class="nav-text">Relatórios</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-item" data-page="config" onclick="AppModule.openPage('config')">
+                    <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Configurações</span>
-                </li>
-                <li class="nav-item" data-page="backup" onclick="AppModule.openPage('backup')">
-                    <span>💾</span>
+                </div>
+                <div class="nav-item" data-page="backup" onclick="AppModule.openPage('backup')">
+                    <span class="nav-icon">💾</span>
                     <span class="nav-text">Backup</span>
-                </li>
-            </ul>
+                </div>
+            </nav>
         </aside>
 
-        <!-- MAIN -->
-        <main class="main">
+        <!-- Main Content -->
+        <main class="main-content">
             <header class="topbar">
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <button class="btn btn-secondary" onclick="AppModule.toggleSidebar()">☰</button>
+                <div class="topbar-left">
                     <h2 id="page-title">Dashboard</h2>
                 </div>
-                <div id="dashboard-data-hora-header"></div>
+                <div class="topbar-right">
+                    <span id="dashboard-data-hora"></span>
+                    <div class="user-menu">
+                        <span>👤 Administrador</span>
+                    </div>
+                </div>
             </header>
 
             <div class="content">
                 <!-- DASHBOARD -->
-                <div id="page-dashboard" class="page active">
+                <section id="page-dashboard" class="page active">
                     <div class="page-header">
                         <h1>Dashboard</h1>
-                        <p id="dashboard-data-hora"></p>
+                        <p id="dashboard-data-hora-header"></p>
                     </div>
                     <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <label>Negócios Ativos</label>
-                            <span id="stat-negocios-ativos">0</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Fechados Total</label>
-                            <span id="stat-fechados-total">0</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Receita Total</label>
-                            <span id="stat-receita-total">R$ 0,00</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Taxa de Conversão</label>
-                            <span id="stat-taxa-conversao">0%</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Fechados no Mês</label>
-                            <span id="stat-fechados-mes">0</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Receita do Mês</label>
-                            <span id="stat-receita-mes">R$ 0,00</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Ticket Médio</label>
-                            <span id="stat-ticket-medio">R$ 0,00</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Clientes Ativos</label>
-                            <span id="stat-clientes-ativos">0</span>
-                        </div>
+                        <div class="kpi-card"><label>Negócios Ativos</label><span id="stat-negocios-ativos">0</span></div>
+                        <div class="kpi-card"><label>Fechados</label><span id="stat-fechados-total">0</span></div>
+                        <div class="kpi-card"><label>Receita Total</label><span id="stat-receita-total">R$ 0,00</span></div>
+                        <div class="kpi-card"><label>Taxa de Conversão</label><span id="stat-taxa-conversao">0%</span></div>
+                        <div class="kpi-card"><label>Fechados no Mês</label><span id="stat-fechados-mes">0</span></div>
+                        <div class="kpi-card"><label>Receita no Mês</label><span id="stat-receita-mes">R$ 0,00</span></div>
+                        <div class="kpi-card"><label>Ticket Médio</label><span id="stat-ticket-medio">R$ 0,00</span></div>
+                        <div class="kpi-card"><label>Clientes Ativos</label><span id="stat-clientes-ativos">0</span></div>
                     </div>
-                    <div class="grid-2" style="margin-top:24px;">
+
+                    <div class="grid-2" style="margin-top:20px;">
                         <div class="card">
-                            <h3>Pipeline</h3>
+                            <h3>Resumo do Pipeline</h3>
                             <div id="dashboard-pipeline"></div>
-                            <div id="pipeline-summary" style="margin-top:12px;text-align:right;"></div>
+                            <div id="pipeline-summary" style="margin-top:10px;text-align:right;"></div>
                         </div>
                         <div class="card">
                             <h3>Fechados Recentes</h3>
                             <div id="dashboard-fechados-recentes"></div>
                         </div>
                     </div>
-                    <div class="grid-2" style="margin-top:16px;">
+
+                    <div class="grid-2" style="margin-top:20px;">
                         <div class="card">
-                            <h3>Check-ins Próximos</h3>
+                            <h3>Check-ins Pendentes</h3>
                             <div id="dashboard-checkins"></div>
                         </div>
                         <div class="card">
-                            <h3>Tarefas</h3>
+                            <h3>Tarefas Pendentes</h3>
                             <div id="dashboard-tarefas"></div>
                         </div>
                     </div>
-                    <div class="grid-2" style="margin-top:16px;">
-                        <div class="card">
-                            <h3>Atividades Recentes</h3>
-                            <div id="dashboard-atividades"></div>
-                        </div>
-                        <div class="card">
-                            <h3>Milhas</h3>
-                            <div id="dashboard-milhas"></div>
-                        </div>
+
+                    <div class="card" style="margin-top:20px;">
+                        <h3>Atividades Recentes</h3>
+                        <div id="dashboard-atividades"></div>
                     </div>
-                </div>
+                </section>
 
                 <!-- CLIENTES -->
-                <div id="page-clientes" class="page">
+                <section id="page-clientes" class="page">
                     <div class="page-header">
                         <h1>Clientes</h1>
-                        <p>Gerenciamento de clientes</p>
+                        <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
                     </div>
-                    <div id="clientes-conteudo"></div>
-                </div>
+                    <div class="form-group">
+                        <input type="text" id="clientes-busca" class="form-control" placeholder="Buscar clientes..." oninput="ClientesModule.render()">
+                    </div>
+                    <div id="clientes-list"></div>
+                </section>
 
                 <!-- PIPELINE -->
-                <div id="page-pipeline" class="page">
+                <section id="page-pipeline" class="page">
                     <div class="page-header">
-                        <h1>Pipeline</h1>
-                        <p>Controle de negócios</p>
+                        <h1>Cotações / Pipeline</h1>
+                        <button class="btn btn-primary" onclick="PipelineModule.novoNegocio()">+ Nova Cotação</button>
                     </div>
-                    <div id="pipeline-conteudo"></div>
-                </div>
+                    <div id="pipeline-board" class="pipeline-board"></div>
+                </section>
 
                 <!-- VENDAS -->
-                <div id="page-vendas" class="page">
+                <section id="page-vendas" class="page">
                     <div class="page-header">
                         <h1>Vendas</h1>
-                        <p>Registro de vendas e comissões</p>
+                        <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
                     </div>
                     <div id="vendas-resumo"></div>
                     <div id="vendas-list" style="margin-top:16px;"></div>
-                </div>
+                </section>
 
                 <!-- VIAGENS -->
-                <div id="page-viagens" class="page">
+                <section id="page-viagens" class="page">
                     <div class="page-header">
                         <h1>Viagens</h1>
-                        <p>Controle de viagens e check-ins</p>
+                        <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
                     </div>
-                    <div id="viagens-conteudo"></div>
-                </div>
+                    <div id="viagens-list"></div>
+                </section>
 
                 <!-- FINANCEIRO -->
-                <div id="page-financeiro" class="page">
+                <section id="page-financeiro" class="page">
                     <div class="page-header">
-                        <h1>Financeiro</h1>
-                        <p>Controle financeiro</p>
+                        <h1>Transações Financeiras</h1>
+                        <button class="btn btn-primary" onclick="FinanceiroModule.novaTransacao()">+ Nova Transação</button>
                     </div>
-                    <div id="financeiro-conteudo"></div>
-                </div>
-
-                <!-- MILHAS -->
-                <div id="page-milhas" class="page">
-                    <div class="page-header">
-                        <h1>Milhas</h1>
-                        <p>Gestão de milhas e programas de fidelidade</p>
-                    </div>
-                    
-                    <div id="milhas-resumo"></div>
-                    
-                    <div class="card" style="margin-top:16px;">
-                        <div id="milhas-clientes"></div>
-                    </div>
-                    
-                    <div class="grid-2" style="margin-top:16px;">
-                        <div id="milhas-form"></div>
-                        <div id="milhas-lista"></div>
-                    </div>
-                    
-                    <div id="milhas-programas" style="margin-top:16px;"></div>
-                    <div id="milhas-cartoes" style="margin-top:16px;"></div>
-                    <div id="milhas-extrato" style="margin-top:16px;"></div>
-                </div>
-
-                <!-- TAREFAS -->
-                <div id="page-tarefas" class="page">
-                    <div class="page-header">
-                        <h1>Tarefas</h1>
-                        <p>Gerenciamento de tarefas</p>
-                    </div>
-                    <div id="tarefas-conteudo"></div>
-                </div>
-
-                <!-- CALENDÁRIO -->
-                <div id="page-calendario" class="page">
-                    <div class="page-header">
-                        <h1>Calendário</h1>
-                        <p>Agenda de compromissos</p>
-                    </div>
-                    <div id="calendario-conteudo"></div>
-                </div>
+                    <div id="financeiro-resumo"></div>
+                    <div id="financeiro-list" style="margin-top:16px;"></div>
+                </section>
 
                 <!-- RELATÓRIOS -->
-                <div id="page-relatorios" class="page">
+                <section id="page-relatorios" class="page">
                     <div class="page-header">
                         <h1>Relatórios</h1>
-                        <p>Relatórios e exportações</p>
+                        <button class="btn btn-primary" onclick="RelatoriosModule.exportarCSV()">Exportar CSV</button>
                     </div>
-                    <div id="relatorios-conteudo"></div>
-                </div>
+                    <div class="form-grid" style="margin-bottom:16px;">
+                        <div class="form-group">
+                            <label>Período</label>
+                            <select id="rel-periodo" class="form-control" onchange="RelatoriosModule.aplicarPreset(this.value)">
+                                <option value="todos">Todo o período</option>
+                                <option value="mes-atual">Mês atual</option>
+                                <option value="mes-anterior">Mês anterior</option>
+                                <option value="trimestre">Últimos 3 meses</option>
+                                <option value="semestre">Últimos 6 meses</option>
+                                <option value="ano">Este ano</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="rel-data-ini-wrap" style="display:none;">
+                            <label>Data Inicial</label>
+                            <input type="date" id="rel-data-ini" class="form-control" onchange="RelatoriosModule.aplicarPreset('custom')">
+                        </div>
+                        <div class="form-group" id="rel-data-fim-wrap" style="display:none;">
+                            <label>Data Final</label>
+                            <input type="date" id="rel-data-fim" class="form-control" onchange="RelatoriosModule.aplicarPreset('custom')">
+                        </div>
+                    </div>
+                    <div id="rel-kpis" class="kpi-grid"></div>
+                    <div class="grid-2" style="margin-top:20px;">
+                        <div class="card">
+                            <h3>Receita por Mês</h3>
+                            <div id="rel-receita-mes"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Receita por Serviço</h3>
+                            <div id="rel-receita-servico"></div>
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top:20px;">
+                        <div class="card">
+                            <h3>Top Clientes</h3>
+                            <div id="rel-top-clientes"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Pipeline</h3>
+                            <div id="rel-pipeline"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MILHAS -->
+                <section id="page-milhas" class="page">
+                    <div class="page-header">
+                        <h1>Milhas & Programas de Fidelidade</h1>
+                        <p>Gestão de milhas, cartões e emissões por cliente</p>
+                    </div>
+
+                    <div class="milhas-tabs">
+                        <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">Visão Geral</button>
+                        <button class="milhas-tab" data-tab="programas" onclick="MilhasModule.abrirTab('programas')">Programas</button>
+                        <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">Cartões</button>
+                        <button class="milhas-tab" data-tab="emissoes" onclick="MilhasModule.abrirTab('emissoes')">Emissões</button>
+                    </div>
+
+                    <div id="milhas-panel-visao" class="milhas-panel active"></div>
+                    <div id="milhas-panel-programas" class="milhas-panel"></div>
+                    <div id="milhas-panel-cartoes" class="milhas-panel"></div>
+                    <div id="milhas-panel-emissoes" class="milhas-panel"></div>
+
+                    <datalist id="dl-programas">
+                        <option value="Smiles"></option>
+                        <option value="LATAM Pass"></option>
+                        <option value="TudoAzul"></option>
+                        <option value="Livelo"></option>
+                        <option value="Dotz"></option>
+                        <option value="Esfera"></option>
+                        <option value="Km de Vantagens"></option>
+                        <option value="Flying Blue"></option>
+                        <option value="TAP Miles&Go"></option>
+                        <option value="Amex Membership Rewards"></option>
+                    </datalist>
+                    <datalist id="dl-bancos">
+                        <option value="Itaú"></option>
+                        <option value="Bradesco"></option>
+                        <option value="Santander"></option>
+                        <option value="Banco do Brasil"></option>
+                        <option value="Caixa"></option>
+                        <option value="Nubank"></option>
+                        <option value="C6 Bank"></option>
+                        <option value="Inter"></option>
+                        <option value="XP"></option>
+                        <option value="BTG"></option>
+                        <option value="Sicredi"></option>
+                        <option value="Porto Seguro"></option>
+                    </datalist>
+                </section>
+
+                <!-- TAREFAS -->
+                <section id="page-tarefas" class="page">
+                    <div class="page-header">
+                        <h1>Tarefas</h1>
+                        <button class="btn btn-primary" onclick="TarefasModule.novaTarefa()">+ Nova Tarefa</button>
+                    </div>
+                    <div class="form-grid" style="margin-bottom:16px;">
+                        <div class="form-group">
+                            <label>Buscar</label>
+                            <input type="text" id="tarefas-busca" class="form-control" placeholder="Título ou descrição..." oninput="TarefasModule.render()">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="tarefas-filtro-status" class="form-control" onchange="TarefasModule.render()">
+                                <option value="">Todos</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="em_andamento">Em andamento</option>
+                                <option value="concluida">Concluída</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Prioridade</label>
+                            <select id="tarefas-filtro-prioridade" class="form-control" onchange="TarefasModule.render()">
+                                <option value="">Todas</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Média</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="tarefas-list"></div>
+                </section>
+
+                <!-- CALENDÁRIO -->
+                <section id="page-calendario" class="page">
+                    <div class="page-header">
+                        <h1>Calendário</h1>
+                        <div>
+                            <button class="btn btn-secondary" onclick="CalendarioModule.hoje()">Hoje</button>
+                            <button class="btn btn-secondary" onclick="CalendarioModule.navegar(-1)">◀</button>
+                            <button class="btn btn-secondary" onclick="CalendarioModule.navegar(1)">▶</button>
+                        </div>
+                    </div>
+                    <div class="calendario-wrap">
+                        <div id="cal-titulo" class="cal-titulo"></div>
+                        <div id="cal-grid" class="cal-grid"></div>
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <h3 id="cal-dia-titulo">Clique em um dia para ver os eventos</h3>
+                        <div id="cal-dia-lista"></div>
+                    </div>
+                </section>
 
                 <!-- CONFIGURAÇÕES -->
-                <div id="page-config" class="page">
+                <section id="page-config" class="page">
                     <div class="page-header">
                         <h1>Configurações</h1>
-                        <p>Configurações do sistema</p>
                     </div>
-                    <div id="config-conteudo"></div>
-                </div>
+                    <div class="config-sections">
+                        <div class="card">
+                            <h3>Dados da Agência</h3>
+                            <div id="config-agencia"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Etapas do Pipeline</h3>
+                            <div id="config-pipeline"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Serviços</h3>
+                            <div id="config-servicos"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Companhias Aéreas e CPM</h3>
+                            <div id="config-companhias"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Programas de Fidelidade</h3>
+                            <div id="config-programas"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Cartões (Bandeiras/Bancos)</h3>
+                            <div id="config-cartoes"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Categorias Financeiras</h3>
+                            <div id="config-categorias"></div>
+                        </div>
+                    </div>
+                </section>
 
                 <!-- BACKUP -->
-                <div id="page-backup" class="page">
+                <section id="page-backup" class="page">
                     <div class="page-header">
-                        <h1>Backup</h1>
-                        <p>Backup e restauração de dados</p>
+                        <h1>Backup e Restauração</h1>
                     </div>
-                    <div id="backup-conteudo"></div>
-                </div>
+                    <div class="card">
+                        <h3>Exportar Dados</h3>
+                        <p>Baixe todos os dados do CRM em um arquivo JSON.</p>
+                        <button class="btn btn-primary" onclick="BackupModule.exportar()">Exportar Backup</button>
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <h3>Importar Dados</h3>
+                        <p>Restaure os dados a partir de um arquivo JSON de backup.</p>
+                        <input type="file" id="backup-input" accept=".json,application/json" onchange="BackupModule.importar(this)">
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <h3>Zona de Perigo</h3>
+                        <p>Apague todos os dados do navegador. Faça um backup antes!</p>
+                        <button class="btn btn-danger" onclick="BackupModule.limpar()">Limpar Todos os Dados</button>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
 
-    <!-- MODAL -->
-    <div id="modal" class="modal-overlay">
-        <div class="modal">
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modal-title">Título</h2>
-                <button class="btn btn-secondary btn-sm" onclick="AppModule.closeModal()">✕</button>
+                <h3 id="modal-title">Título</h3>
+                <button class="modal-close" onclick="AppModule.closeModal()">×</button>
             </div>
             <div id="modal-body" class="modal-body"></div>
             <div id="modal-footer" class="modal-footer"></div>
         </div>
     </div>
 
-    <!-- TOAST -->
+    <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <!-- SCRIPTS -->
+    <!-- Scripts -->
     <script src="js/db.js"></script>
+    <script src="js/migracao.js"></script>
     <script src="js/app.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/clientes.js"></script>
