@@ -115,6 +115,10 @@
                     <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Configurações</span>
                 </div>
+                <div class="nav-item" data-page="backup" onclick="AppModule.openPage('backup')">
+                    <span class="nav-icon">💾</span>
+                    <span class="nav-text">Backup</span>
+                </div>
             </nav>
         </aside>
 
@@ -385,7 +389,7 @@
                     <div class="page-header">
                         <h1>Configurações</h1>
                     </div>
-                    <div class="config-grid">
+                    <div class="config-sections">
                         <div class="card">
                             <h3>Dados da Agência</h3>
                             <div id="config-agencia"></div>
@@ -414,10 +418,28 @@
                             <h3>Categorias Financeiras</h3>
                             <div id="config-categorias"></div>
                         </div>
-                        <div class="card config-backup-card">
-                            <h3>Backup e Restauração</h3>
-                            <div id="config-backup"></div>
-                        </div>
+                    </div>
+                </section>
+
+                <!-- BACKUP -->
+                <section id="page-backup" class="page">
+                    <div class="page-header">
+                        <h1>Backup e Restauração</h1>
+                    </div>
+                    <div class="card">
+                        <h3>Exportar Dados</h3>
+                        <p>Baixe todos os dados do CRM em um arquivo JSON.</p>
+                        <button class="btn btn-primary" onclick="BackupModule.exportar()">Exportar Backup</button>
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <h3>Importar Dados</h3>
+                        <p>Restaure os dados a partir de um arquivo JSON de backup.</p>
+                        <input type="file" id="backup-input" accept=".json,application/json" onchange="BackupModule.importar(this)">
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <h3>Zona de Perigo</h3>
+                        <p>Apague todos os dados do navegador. Faça um backup antes!</p>
+                        <button class="btn btn-danger" onclick="BackupModule.limpar()">Limpar Todos os Dados</button>
                     </div>
                 </section>
             </div>
