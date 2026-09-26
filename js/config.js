@@ -7,6 +7,7 @@ var ConfigModule = {
         this.renderProgramas();
         this.renderCartoes();
         this.renderCategorias();
+        this.renderBackup();
     },
 
     getConfig() {
@@ -17,7 +18,9 @@ var ConfigModule = {
         DB.set('config', config);
     },
 
-    // ===== AGÊNCIA =====
+    /* ============================================================
+       AGÊNCIA
+       ============================================================ */
     renderAgencia() {
         const config = this.getConfig();
         const a = config.agencia || {};
@@ -51,91 +54,158 @@ var ConfigModule = {
         AppModule.toast('Dados da agência salvos!');
     },
 
-    // ===== PIPELINE =====
+    /* ============================================================
+       LISTAS GENÉRICAS (strings) - adicionar / editar / excluir / ordenar
+       ============================================================ */
+    renderStringList(containerId, arrayKey, labelSingular, inputPlaceholder, datalistId) {
+        const config = this.getConfig();
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const lista = config[arrayKey] || [];
+        const listHtml = lista.map((item, idx) => `
+            <div class="tag-item" style="gap:4px;">
+                <span>${AppModule.escapeHtml(item)}</span>
+                <button onclick="ConfigModule.editarStringList('${arrayKey}', '${AppModule.escapeHtml(item)}', '${labelSingular}')" title="Editar">✎</button>
+                <button onclick="ConfigModule.moverStringList('${arrayKey}', '${AppModule.escapeHtml(item)}', -1)" title="Mover para cima">▲</button>
+                <button onclick="ConfigModule.moverStringList('${arrayKey}', '${AppModule.escapeHtml(item)}', 1)" title="Mover para baixo">▼</button>
+                <button onclick="ConfigModule.excluirStringList('${arrayKey}', '${AppModule.escapeHtml(item)}')" title="Excluir">×</button>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="tags-list">${listHtml}</div>
+            <div class="form-inline" style="margin-top:10px;">
+                <input type="text" id="cfg-${arrayKey}-novo" class="form-control" placeholder="${inputPlaceholder}" ${datalistId ? `list="${datalistId}"` : ''}>
+                <button class="btn btn-secondary" onclick="ConfigModule.adicionarStringList('${arrayKey}', '${labelSingular}')">Adicionar</button>
+            </div>
+        `;
+    },
+
+    adicionarStringList(arrayKey, labelSingular) {
+        const input = document.getElementById(`cfg-${arrayKey}-novo`);
+        const valor = input.value.trim();
+        if (!valor) return;
+
+        const config = this.getConfig();
+        if (!config[arrayKey]) config[arrayKey] = [];
+        if (config[arrayKey].includes(valor)) {
+            AppModule.toast(`${labelSingular} já existe.`);
+            return;
+        }
+
+        config[arrayKey].push(valor);
+        this.saveConfig(config);
+        input.value = '';
+        this.render();
+        AppModule.toast(`${labelSingular} adicionado!`);
+    },
+
+    editarStringList(arrayKey, valorAntigo, labelSingular) {
+        const config = this.getConfig();
+        const lista = config[arrayKey] || [];
+        const idx = lista.findIndex(v => v === valorAntigo);
+        if (idx < 0) return;
+
+        const novoValor = prompt(`Editar ${labelSingular.toLowerCase()}:`, valorAntigo);
+        if (novoValor === null) return;
+        const limpo = novoValor.trim();
+        if (!limpo) { AppModule.toast('Nome não pode ficar vazio.'); return; }
+        if (limpo !== valorAntigo && lista.includes(limpo)) {
+            AppModule.toast(`${labelSingular} já existe.`);
+            return;
+        }
+
+        // Se for pipeline, atualiza os negócios que usavam o nome antigo
+        if (arrayKey === 'pipeline') {
+            this.renomearEtapaNegocios(valorAntigo, limpo);
+        }
+
+        lista[idx] = limpo;
+        this.saveConfig(config);
+        this.render();
+        AppModule.toast(`${labelSingular} atualizado!`);
+    },
+
+    excluirStringList(arrayKey, valor) {
+        const config = this.getConfig();
+
+        // Protege etapas de fechamento padrão no pipeline
+        if (arrayKey === 'pipeline' && (valor === 'Fechado (Ganho)' || valor === 'Fechado (Perdido)' || valor === 'Perdido')) {
+            AppModule.toast('Não é possível excluir etapas de fechamento padrão.');
+            return;
+        }
+
+        if (!confirm(`Deseja excluir "${valor}"?`)) return;
+
+        config[arrayKey] = (config[arrayKey] || []).filter(v => v !== valor);
+        this.saveConfig(config);
+        this.render();
+        AppModule.toast('Item excluído!');
+    },
+
+    moverStringList(arrayKey, valor, direcao) {
+        const config = this.getConfig();
+        const lista = config[arrayKey] || [];
+        const idx = lista.findIndex(v => v === valor);
+        if (idx < 0) return;
+
+        const novoIdx = idx + direcao;
+        if (novoIdx < 0 || novoIdx >= lista.length) return;
+
+        // Troca as posições
+        const temp = lista[idx];
+        lista[idx] = lista[novoIdx];
+        lista[novoIdx] = temp;
+
+        this.saveConfig(config);
+        this.render();
+    },
+
+    renomearEtapaNegocios(antigo, novo) {
+        const negocios = DB.get('negocios', []);
+        let alterou = false;
+        negocios.forEach(n => {
+            if (n.stage === antigo) {
+                n.stage = novo;
+                n.atualizadoEm = new Date().toISOString();
+                alterou = true;
+            }
+        });
+        if (alterou) DB.set('negocios', negocios);
+    },
+
+    /* ============================================================
+       PIPELINE
+       ============================================================ */
     renderPipeline() {
-        const config = this.getConfig();
-        const container = document.getElementById('config-pipeline');
-        if (!container) return;
-
-        const etapas = config.pipeline || [];
-        container.innerHTML = `
-            <div class="tags-list">
-                ${etapas.map((e, i) => `
-                    <div class="tag-item">
-                        <span>${AppModule.escapeHtml(e)}</span>
-                        <button onclick="ConfigModule.removerPipeline('${e}')">×</button>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="form-inline" style="margin-top:10px;">
-                <input type="text" id="cfg-pipeline-novo" class="form-control" placeholder="Nova etapa">
-                <button class="btn btn-secondary" onclick="ConfigModule.adicionarPipeline()">Adicionar</button>
-            </div>
-        `;
+        this.renderStringList('config-pipeline', 'pipeline', 'Etapa', 'Nova etapa');
     },
 
-    adicionarPipeline() {
-        const input = document.getElementById('cfg-pipeline-novo');
-        const valor = input.value.trim();
-        if (!valor) return;
-        const config = this.getConfig();
-        if (!config.pipeline) config.pipeline = [];
-        if (!config.pipeline.includes(valor)) config.pipeline.push(valor);
-        this.saveConfig(config);
-        input.value = '';
-        this.renderPipeline();
-    },
-
-    removerPipeline(valor) {
-        const config = this.getConfig();
-        config.pipeline = (config.pipeline || []).filter(e => e !== valor);
-        this.saveConfig(config);
-        this.renderPipeline();
-    },
-
-    // ===== SERVIÇOS =====
+    /* ============================================================
+       SERVIÇOS
+       ============================================================ */
     renderServicos() {
-        const config = this.getConfig();
-        const container = document.getElementById('config-servicos');
-        if (!container) return;
-
-        const servicos = config.servicos || [];
-        container.innerHTML = `
-            <div class="tags-list">
-                ${servicos.map(s => `
-                    <div class="tag-item">
-                        <span>${AppModule.escapeHtml(s)}</span>
-                        <button onclick="ConfigModule.removerServico('${AppModule.escapeHtml(s)}')">×</button>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="form-inline" style="margin-top:10px;">
-                <input type="text" id="cfg-servico-novo" class="form-control" placeholder="Novo serviço">
-                <button class="btn btn-secondary" onclick="ConfigModule.adicionarServico()">Adicionar</button>
-            </div>
-        `;
+        this.renderStringList('config-servicos', 'servicos', 'Serviço', 'Novo serviço');
     },
 
-    adicionarServico() {
-        const input = document.getElementById('cfg-servico-novo');
-        const valor = input.value.trim();
-        if (!valor) return;
-        const config = this.getConfig();
-        if (!config.servicos) config.servicos = [];
-        if (!config.servicos.includes(valor)) config.servicos.push(valor);
-        this.saveConfig(config);
-        input.value = '';
-        this.renderServicos();
+    /* ============================================================
+       PROGRAMAS DE FIDELIDADE
+       ============================================================ */
+    renderProgramas() {
+        this.renderStringList('config-programas', 'programas', 'Programa', 'Novo programa', 'dl-programas');
     },
 
-    removerServico(valor) {
-        const config = this.getConfig();
-        config.servicos = (config.servicos || []).filter(s => s !== valor);
-        this.saveConfig(config);
-        this.renderServicos();
+    /* ============================================================
+       CARTÕES (BANCOS)
+       ============================================================ */
+    renderCartoes() {
+        this.renderStringList('config-cartoes', 'cartoes', 'Cartão', 'Novo banco', 'dl-bancos');
     },
 
-    // ===== COMPANHIAS AÉREAS COM CPM =====
+    /* ============================================================
+       COMPANHIAS AÉREAS COM CPM
+       ============================================================ */
     renderCompanhias() {
         const config = this.getConfig();
         const container = document.getElementById('config-companhias');
@@ -151,7 +221,10 @@ var ConfigModule = {
                             <tr>
                                 <td>${AppModule.escapeHtml(c.nome)}</td>
                                 <td>${parseFloat(c.cpm || 0).toFixed(2).replace('.', ',')}</td>
-                                <td><button class="btn btn-sm btn-danger" onclick="ConfigModule.removerCompanhia('${AppModule.escapeHtml(c.nome)}')">Excluir</button></td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" onclick="ConfigModule.editarCompanhia('${AppModule.escapeHtml(c.nome)}')">Editar</button>
+                                    <button class="btn btn-sm btn-danger" onclick="ConfigModule.removerCompanhia('${AppModule.escapeHtml(c.nome)}')">Excluir</button>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -193,119 +266,221 @@ var ConfigModule = {
         AppModule.toast('Companhia salva!');
     },
 
+    editarCompanhia(nomeAtual) {
+        const config = this.getConfig();
+        const cia = config.companhias.find(c => c.nome === nomeAtual);
+        if (!cia) return;
+
+        const nome = prompt('Nome da companhia:', cia.nome);
+        if (nome === null) return;
+        const limpo = nome.trim();
+        if (!limpo) { AppModule.toast('Nome não pode ficar vazio.'); return; }
+
+        const cpm = parseFloat(prompt('CPM (R$):', cia.cpm));
+        if (isNaN(cpm)) { AppModule.toast('CPM inválido.'); return; }
+
+        cia.nome = limpo;
+        cia.cpm = cpm;
+        this.saveConfig(config);
+        this.render();
+        AppModule.toast('Companhia atualizada!');
+    },
+
     removerCompanhia(nome) {
+        if (!confirm(`Excluir companhia "${nome}"?`)) return;
         const config = this.getConfig();
         config.companhias = (config.companhias || []).filter(c => c.nome !== nome);
         this.saveConfig(config);
-        this.renderCompanhias();
+        this.render();
     },
 
-    // ===== PROGRAMAS DE FIDELIDADE =====
-    renderProgramas() {
-        const config = this.getConfig();
-        const container = document.getElementById('config-programas');
-        if (!container) return;
-
-        const programas = config.programas || [];
-        container.innerHTML = `
-            <div class="tags-list">
-                ${programas.map(p => `
-                    <div class="tag-item">
-                        <span>${AppModule.escapeHtml(p)}</span>
-                        <button onclick="ConfigModule.removerPrograma('${AppModule.escapeHtml(p)}')">×</button>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="form-inline" style="margin-top:10px;">
-                <input type="text" id="cfg-programa-novo" class="form-control" placeholder="Novo programa" list="dl-programas">
-                <button class="btn btn-secondary" onclick="ConfigModule.adicionarPrograma()">Adicionar</button>
-            </div>
-        `;
-    },
-
-    adicionarPrograma() {
-        const input = document.getElementById('cfg-programa-novo');
-        const valor = input.value.trim();
-        if (!valor) return;
-        const config = this.getConfig();
-        if (!config.programas) config.programas = [];
-        if (!config.programas.includes(valor)) config.programas.push(valor);
-        this.saveConfig(config);
-        input.value = '';
-        this.renderProgramas();
-    },
-
-    removerPrograma(valor) {
-        const config = this.getConfig();
-        config.programas = (config.programas || []).filter(p => p !== valor);
-        this.saveConfig(config);
-        this.renderProgramas();
-    },
-
-    // ===== CARTÕES (BANCOS) =====
-    renderCartoes() {
-        const config = this.getConfig();
-        const container = document.getElementById('config-cartoes');
-        if (!container) return;
-
-        const cartoes = config.cartoes || [];
-        container.innerHTML = `
-            <div class="tags-list">
-                ${cartoes.map(c => `
-                    <div class="tag-item">
-                        <span>${AppModule.escapeHtml(c)}</span>
-                        <button onclick="ConfigModule.removerCartao('${AppModule.escapeHtml(c)}')">×</button>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="form-inline" style="margin-top:10px;">
-                <input type="text" id="cfg-cartao-novo" class="form-control" placeholder="Novo banco" list="dl-bancos">
-                <button class="btn btn-secondary" onclick="ConfigModule.adicionarCartao()">Adicionar</button>
-            </div>
-        `;
-    },
-
-    adicionarCartao() {
-        const input = document.getElementById('cfg-cartao-novo');
-        const valor = input.value.trim();
-        if (!valor) return;
-        const config = this.getConfig();
-        if (!config.cartoes) config.cartoes = [];
-        if (!config.cartoes.includes(valor)) config.cartoes.push(valor);
-        this.saveConfig(config);
-        input.value = '';
-        this.renderCartoes();
-    },
-
-    removerCartao(valor) {
-        const config = this.getConfig();
-        config.cartoes = (config.cartoes || []).filter(c => c !== valor);
-        this.saveConfig(config);
-        this.renderCartoes();
-    },
-
-    // ===== CATEGORIAS FINANCEIRAS =====
+    /* ============================================================
+       CATEGORIAS FINANCEIRAS
+       ============================================================ */
     renderCategorias() {
         const config = this.getConfig();
         const container = document.getElementById('config-categorias');
         if (!container) return;
 
         container.innerHTML = `
-            <h4>Receitas</h4>
-            <div class="tags-list">
-                ${(config.receitas || []).map(r => `
-                    <div class="tag-item"><span>${AppModule.escapeHtml(r)}</span></div>
-                `).join('')}
+            <div style="margin-bottom:20px;">
+                <h4>Receitas</h4>
+                ${this.htmlCategoriaLista('receitas', 'Receita')}
             </div>
-            <h4 style="margin-top:16px;">Despesas</h4>
-            <div class="tags-list">
-                ${(config.despesas || []).map(d => `
-                    <div class="tag-item"><span>${AppModule.escapeHtml(d)}</span></div>
-                `).join('')}
+            <div>
+                <h4>Despesas</h4>
+                ${this.htmlCategoriaLista('despesas', 'Despesa')}
             </div>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
-                Para alterar categorias, edite diretamente nas transações financeiras.
-            </p>
         `;
+    },
+
+    htmlCategoriaLista(arrayKey, labelSingular) {
+        const config = this.getConfig();
+        const lista = config[arrayKey] || [];
+
+        const itens = lista.map(item => `
+            <div class="tag-item" style="gap:4px;">
+                <span>${AppModule.escapeHtml(item)}</span>
+                <button onclick="ConfigModule.editarCategoria('${arrayKey}', '${AppModule.escapeHtml(item)}', '${labelSingular}')" title="Editar">✎</button>
+                <button onclick="ConfigModule.moverCategoria('${arrayKey}', '${AppModule.escapeHtml(item)}', -1)" title="Mover para cima">▲</button>
+                <button onclick="ConfigModule.moverCategoria('${arrayKey}', '${AppModule.escapeHtml(item)}', 1)" title="Mover para baixo">▼</button>
+                <button onclick="ConfigModule.excluirCategoria('${arrayKey}', '${AppModule.escapeHtml(item)}')" title="Excluir">×</button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="tags-list">${itens}</div>
+            <div class="form-inline" style="margin-top:10px;">
+                <input type="text" id="cfg-${arrayKey}-novo" class="form-control" placeholder="Nova ${labelSingular.toLowerCase()}">
+                <button class="btn btn-secondary" onclick="ConfigModule.adicionarCategoria('${arrayKey}', '${labelSingular}')">Adicionar</button>
+            </div>
+        `;
+    },
+
+    adicionarCategoria(arrayKey, labelSingular) {
+        const input = document.getElementById(`cfg-${arrayKey}-novo`);
+        const valor = input.value.trim();
+        if (!valor) return;
+
+        const config = this.getConfig();
+        if (!config[arrayKey]) config[arrayKey] = [];
+        if (config[arrayKey].includes(valor)) {
+            AppModule.toast(`${labelSingular} já existe.`);
+            return;
+        }
+
+        config[arrayKey].push(valor);
+        this.saveConfig(config);
+        this.renderCategorias();
+        AppModule.toast(`${labelSingular} adicionada!`);
+    },
+
+    editarCategoria(arrayKey, valorAntigo, labelSingular) {
+        const config = this.getConfig();
+        const lista = config[arrayKey] || [];
+        const idx = lista.findIndex(v => v === valorAntigo);
+        if (idx < 0) return;
+
+        const novoValor = prompt(`Editar ${labelSingular.toLowerCase()}:`, valorAntigo);
+        if (novoValor === null) return;
+        const limpo = novoValor.trim();
+        if (!limpo) { AppModule.toast('Nome não pode ficar vazio.'); return; }
+        if (limpo !== valorAntigo && lista.includes(limpo)) {
+            AppModule.toast(`${labelSingular} já existe.`);
+            return;
+        }
+
+        lista[idx] = limpo;
+        this.saveConfig(config);
+        this.renderCategorias();
+        AppModule.toast(`${labelSingular} atualizada!`);
+    },
+
+    excluirCategoria(arrayKey, valor) {
+        if (!confirm(`Deseja excluir "${valor}"?`)) return;
+        const config = this.getConfig();
+        config[arrayKey] = (config[arrayKey] || []).filter(v => v !== valor);
+        this.saveConfig(config);
+        this.renderCategorias();
+        AppModule.toast('Categoria excluída!');
+    },
+
+    moverCategoria(arrayKey, valor, direcao) {
+        const config = this.getConfig();
+        const lista = config[arrayKey] || [];
+        const idx = lista.findIndex(v => v === valor);
+        if (idx < 0) return;
+
+        const novoIdx = idx + direcao;
+        if (novoIdx < 0 || novoIdx >= lista.length) return;
+
+        const temp = lista[idx];
+        lista[idx] = lista[novoIdx];
+        lista[novoIdx] = temp;
+
+        this.saveConfig(config);
+        this.renderCategorias();
+    },
+
+    /* ============================================================
+       BACKUP E RESTAURAÇÃO
+       ============================================================ */
+    renderBackup() {
+        const container = document.getElementById('config-backup');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="grid-2">
+                <div class="card" style="background:var(--bg-light);">
+                    <h3>Exportar Backup</h3>
+                    <p style="font-size:13px;color:var(--text-muted);">Gere um arquivo JSON com todos os dados do CRM.</p>
+                    <button class="btn btn-primary" onclick="ConfigModule.exportarBackup()">📥 Exportar Backup</button>
+                </div>
+                <div class="card" style="background:var(--bg-light);">
+                    <h3>Importar Backup</h3>
+                    <p style="font-size:13px;color:var(--text-muted);">Restaure os dados a partir de um arquivo JSON previamente exportado.</p>
+                    <input type="file" id="backup-file" class="form-control" accept=".json,application/json" onchange="ConfigModule.importarBackup(this)">
+                </div>
+            </div>
+        `;
+    },
+
+    exportarBackup() {
+        const dados = {};
+        const chaves = [
+            'config', 'agencia', 'clientes', 'negocios', 'vendas', 'viagens',
+            'transacoes', 'milhas', 'tarefas', 'eventos'
+        ];
+
+        chaves.forEach(k => {
+            try {
+                dados[k] = DB.get(k);
+            } catch (e) {
+                dados[k] = null;
+            }
+        });
+
+        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup-crm-wdih-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        AppModule.toast('Backup exportado!');
+    },
+
+    importarBackup(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const dados = JSON.parse(e.target.result);
+                if (!dados || typeof dados !== 'object') throw new Error('Arquivo inválido');
+
+                if (!confirm('ATENÇÃO: isso substituirá todos os dados atuais. Deseja continuar?')) {
+                    input.value = '';
+                    return;
+                }
+
+                Object.keys(dados).forEach(k => {
+                    if (dados[k] !== undefined) DB.set(k, dados[k]);
+                });
+
+                AppModule.toast('Backup importado com sucesso!');
+                input.value = '';
+                this.render();
+
+                document.dispatchEvent(new CustomEvent('backup-importado'));
+            } catch (err) {
+                AppModule.toast('Erro ao importar backup: ' + err.message);
+                input.value = '';
+            }
+        };
+        reader.readAsText(file);
     }
 };
