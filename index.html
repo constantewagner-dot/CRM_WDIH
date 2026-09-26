@@ -8,363 +8,438 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- SIDEBAR -->
+        <!-- Sidebar -->
         <aside id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">WDIH</div>
                 <button class="menu-toggle" onclick="AppModule.toggleSidebar()">☰</button>
             </div>
             <nav class="sidebar-nav">
-                <a class="nav-item active" href="#" data-page="dashboard" onclick="AppModule.navigate('dashboard', event)">
+                <div class="nav-item active" data-page="dashboard" onclick="AppModule.openPage('dashboard')">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Dashboard</span>
-                </a>
-                <a class="nav-item" href="#" data-page="clientes" onclick="AppModule.navigate('clientes', event)">
-                    <span class="nav-icon">👥</span>
-                    <span class="nav-text">Clientes</span>
-                </a>
-                <a class="nav-item" href="#" data-page="pipeline" onclick="AppModule.navigate('pipeline', event)">
-                    <span class="nav-icon">🎯</span>
-                    <span class="nav-text">Pipeline</span>
-                </a>
-                <a class="nav-item" href="#" data-page="vendas" onclick="AppModule.navigate('vendas', event)">
-                    <span class="nav-icon">💰</span>
-                    <span class="nav-text">Vendas</span>
-                </a>
-                <a class="nav-item" href="#" data-page="viagens" onclick="AppModule.navigate('viagens', event)">
-                    <span class="nav-icon">✈️</span>
-                    <span class="nav-text">Viagens</span>
-                </a>
-                <a class="nav-item" href="#" data-page="financeiro" onclick="AppModule.navigate('financeiro', event)">
-                    <span class="nav-icon">💳</span>
-                    <span class="nav-text">Financeiro</span>
-                </a>
-                <a class="nav-item" href="#" data-page="milhas" onclick="AppModule.navigate('milhas', event)">
-                    <span class="nav-icon">🏅</span>
-                    <span class="nav-text">Milhas</span>
-                </a>
-                <a class="nav-item" href="#" data-page="tarefas" onclick="AppModule.navigate('tarefas', event)">
-                    <span class="nav-icon">📝</span>
-                    <span class="nav-text">Tarefas</span>
-                    <span class="nav-badge" id="nav-badge-tarefas">0</span>
-                </a>
-                <a class="nav-item" href="#" data-page="calendario" onclick="AppModule.navigate('calendario', event)">
-                    <span class="nav-icon">📅</span>
-                    <span class="nav-text">Calendário</span>
-                </a>
-                <a class="nav-item" href="#" data-page="relatorios" onclick="AppModule.navigate('relatorios', event)">
-                    <span class="nav-icon">📈</span>
-                    <span class="nav-text">Relatórios</span>
-                </a>
-                <a class="nav-item" href="#" data-page="config" onclick="AppModule.navigate('config', event)">
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-cadastros', this)">
+                        <span>Cadastros</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-cadastros" class="nav-group-items">
+                        <div class="nav-item" data-page="clientes" onclick="AppModule.openPage('clientes')">
+                            <span class="nav-icon">👥</span>
+                            <span class="nav-text">Clientes</span>
+                        </div>
+                        <div class="nav-item" data-page="viagens" onclick="AppModule.openPage('viagens')">
+                            <span class="nav-icon">✈️</span>
+                            <span class="nav-text">Viagens</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-comercial', this)">
+                        <span>Comercial</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-comercial" class="nav-group-items">
+                        <div class="nav-item" data-page="pipeline" onclick="AppModule.openPage('pipeline')">
+                            <span class="nav-icon">🎯</span>
+                            <span class="nav-text">Pipeline</span>
+                        </div>
+                        <div class="nav-item" data-page="vendas" onclick="AppModule.openPage('vendas')">
+                            <span class="nav-icon">💰</span>
+                            <span class="nav-text">Vendas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-milhas', this)">
+                        <span>Milhas</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-milhas" class="nav-group-items">
+                        <div class="nav-item" data-page="milhas" onclick="AppModule.openPage('milhas')">
+                            <span class="nav-icon">🎫</span>
+                            <span class="nav-text">Milhas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-financeiro', this)">
+                        <span>Financeiro</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-financeiro" class="nav-group-items">
+                        <div class="nav-item" data-page="financeiro" onclick="AppModule.openPage('financeiro')">
+                            <span class="nav-icon">💳</span>
+                            <span class="nav-text">Transações</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-produtividade', this)">
+                        <span>Produtividade</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-produtividade" class="nav-group-items">
+                        <div class="nav-item" data-page="tarefas" onclick="AppModule.openPage('tarefas')">
+                            <span class="nav-icon">✅</span>
+                            <span class="nav-text">Tarefas</span>
+                            <span id="badge-tarefas" class="nav-badge" style="display:none;">0</span>
+                        </div>
+                        <div class="nav-item" data-page="calendario" onclick="AppModule.openPage('calendario')">
+                            <span class="nav-icon">📅</span>
+                            <span class="nav-text">Calendário</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-group open">
+                    <div class="nav-group-header" onclick="AppModule.toggleGroup('nav-relatorios', this)">
+                        <span>Relatórios</span>
+                        <span class="nav-arrow">▾</span>
+                    </div>
+                    <div id="nav-relatorios" class="nav-group-items">
+                        <div class="nav-item" data-page="relatorios" onclick="AppModule.openPage('relatorios')">
+                            <span class="nav-icon">📈</span>
+                            <span class="nav-text">Relatórios</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-item" data-page="config" onclick="AppModule.openPage('config')">
                     <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Configurações</span>
-                </a>
+                </div>
             </nav>
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- Main Content -->
         <main class="main-content">
             <header class="topbar">
                 <div class="topbar-left">
                     <h2 id="page-title">Dashboard</h2>
                 </div>
                 <div class="topbar-right">
-                    <span id="current-date"></span>
+                    <span id="dashboard-data-hora"></span>
                     <div class="user-menu">
-                        <span>👤</span>
-                        <span>Admin</span>
+                        <span>👤 Administrador</span>
                     </div>
                 </div>
             </header>
 
             <div class="content">
                 <!-- DASHBOARD -->
-                <div id="page-dashboard" class="page active">
+                <section id="page-dashboard" class="page active">
                     <div class="page-header">
-                        <div>
-                            <h1>Dashboard</h1>
-                            <p>Visão geral do seu negócio</p>
+                        <h1>Dashboard</h1>
+                        <p id="dashboard-data-hora-header"></p>
+                    </div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card"><label>Negócios Ativos</label><span id="stat-negocios-ativos">0</span></div>
+                        <div class="kpi-card"><label>Fechados</label><span id="stat-fechados-total">0</span></div>
+                        <div class="kpi-card"><label>Receita Total</label><span id="stat-receita-total">R$ 0,00</span></div>
+                        <div class="kpi-card"><label>Taxa de Conversão</label><span id="stat-taxa-conversao">0%</span></div>
+                        <div class="kpi-card"><label>Fechados no Mês</label><span id="stat-fechados-mes">0</span></div>
+                        <div class="kpi-card"><label>Receita no Mês</label><span id="stat-receita-mes">R$ 0,00</span></div>
+                        <div class="kpi-card"><label>Ticket Médio</label><span id="stat-ticket-medio">R$ 0,00</span></div>
+                        <div class="kpi-card"><label>Clientes Ativos</label><span id="stat-clientes-ativos">0</span></div>
+                    </div>
+
+                    <div class="grid-2" style="margin-top:20px;">
+                        <div class="card">
+                            <h3>Resumo do Pipeline</h3>
+                            <div id="dashboard-pipeline"></div>
+                            <div id="pipeline-summary" style="margin-top:10px;text-align:right;"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Fechados Recentes</h3>
+                            <div id="dashboard-fechados-recentes"></div>
                         </div>
                     </div>
-                    <div class="kpi-grid" id="dashboard-kpis"></div>
-                    <div class="grid-2 mt-2">
+
+                    <div class="grid-2" style="margin-top:20px;">
                         <div class="card">
-                            <h3>Negócios em Andamento</h3>
-                            <div id="dashboard-negocios"></div>
+                            <h3>Check-ins Pendentes</h3>
+                            <div id="dashboard-checkins"></div>
                         </div>
                         <div class="card">
                             <h3>Tarefas Pendentes</h3>
                             <div id="dashboard-tarefas"></div>
                         </div>
                     </div>
-                </div>
+
+                    <div class="card" style="margin-top:20px;">
+                        <h3>Atividades Recentes</h3>
+                        <div id="dashboard-atividades"></div>
+                    </div>
+                </section>
 
                 <!-- CLIENTES -->
-                <div id="page-clientes" class="page">
+                <section id="page-clientes" class="page">
                     <div class="page-header">
-                        <div>
-                            <h1>Clientes</h1>
-                            <p>Gerencie sua base de clientes</p>
-                        </div>
+                        <h1>Clientes</h1>
                         <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
                     </div>
-                    <div class="card">
-                        <div class="form-inline mb-2">
-                            <input type="text" id="clientes-busca" class="form-control" placeholder="Buscar por nome, e-mail ou telefone..." oninput="ClientesModule.render()">
-                        </div>
-                        <div class="table-wrap">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Nome</th>
-                                        <th>E-mail</th>
-                                        <th>Telefone</th>
-                                        <th>CPF</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="clientes-list" data-ordenacao="crescente"></tbody>
-                            </table>
-                        </div>
+                    <div class="form-group">
+                        <input type="text" id="clientes-busca" class="form-control" placeholder="Buscar clientes..." oninput="ClientesModule.render()">
                     </div>
-                </div>
+                    <div id="clientes-list" data-ordenacao="crescente"></div>
+                </section>
 
                 <!-- PIPELINE -->
-                <div id="page-pipeline" class="page">
+                <section id="page-pipeline" class="page">
                     <div class="page-header">
-                        <div>
-                            <h1>Pipeline de Vendas</h1>
-                            <p>Acompanhe seus negócios por etapa</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="PipelineModule.novoNegocio()">+ Novo Negócio</button>
+                        <h1>Cotações / Pipeline</h1>
+                        <button class="btn btn-primary" onclick="PipelineModule.novoNegocio()">+ Nova Cotação</button>
                     </div>
-                    <div class="pipeline-board" id="pipeline-board"></div>
-                </div>
+                    <div id="pipeline-board" class="pipeline-board"></div>
+                </section>
 
                 <!-- VENDAS -->
-                <div id="page-vendas" class="page">
+                <section id="page-vendas" class="page">
                     <div class="page-header">
-                        <div>
-                            <h1>Vendas</h1>
-                            <p>Registre e acompanhe suas vendas</p>
-                        </div>
+                        <h1>Vendas</h1>
                         <button class="btn btn-primary" onclick="VendasModule.novaVenda()">+ Nova Venda</button>
                     </div>
-                    <div class="card">
-                        <div class="table-wrap">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Cliente</th>
-                                        <th>Serviço</th>
-                                        <th>Valor</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="vendas-list"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                    <div id="vendas-resumo"></div>
+                    <div id="vendas-list" style="margin-top:16px;"></div>
+                </section>
 
                 <!-- VIAGENS -->
-                <div id="page-viagens" class="page">
+                <section id="page-viagens" class="page">
                     <div class="page-header">
-                        <div>
-                            <h1>Viagens</h1>
-                            <p>Controle de itinerários e reservas</p>
-                        </div>
+                        <h1>Viagens</h1>
                         <button class="btn btn-primary" onclick="ViagensModule.novaViagem()">+ Nova Viagem</button>
                     </div>
-                    <div class="card">
-                        <div class="table-wrap">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Cliente</th>
-                                        <th>Destino</th>
-                                        <th>Ida</th>
-                                        <th>Volta</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="viagens-list"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                    <div id="viagens-list"></div>
+                </section>
 
                 <!-- FINANCEIRO -->
-                <div id="page-financeiro" class="page">
+                <section id="page-financeiro" class="page">
                     <div class="page-header">
-                        <div>
-                            <h1>Financeiro</h1>
-                            <p>Receitas, despesas e fluxo de caixa</p>
-                        </div>
+                        <h1>Transações Financeiras</h1>
                         <button class="btn btn-primary" onclick="FinanceiroModule.novaTransacao()">+ Nova Transação</button>
                     </div>
-                    <div class="grid-2 mb-2">
-                        <div class="kpi-card">
-                            <label>Saldo</label>
-                            <span id="fin-saldo">R$ 0,00</span>
-                        </div>
-                        <div class="kpi-card">
-                            <label>Mês Atual</label>
-                            <span id="fin-mes">R$ 0,00</span>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="table-wrap">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Descrição</th>
-                                        <th>Categoria</th>
-                                        <th>Tipo</th>
-                                        <th>Valor</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="financeiro-list"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MILHAS -->
-                <div id="page-milhas" class="page">
-                    <div class="page-header">
-                        <div>
-                            <h1>Milhas</h1>
-                            <p>Gestão de pontos e programas de fidelidade</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="MilhasModule.novaMovimentacao()">+ Lançar Milhas</button>
-                    </div>
-                    <div id="milhas-container"></div>
-                </div>
-
-                <!-- TAREFAS -->
-                <div id="page-tarefas" class="page">
-                    <div class="page-header">
-                        <div>
-                            <h1>Tarefas</h1>
-                            <p>Organize suas atividades</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="TarefasModule.novaTarefa()">+ Nova Tarefa</button>
-                    </div>
-                    <div id="tarefas-list"></div>
-                </div>
-
-                <!-- CALENDÁRIO -->
-                <div id="page-calendario" class="page">
-                    <div class="page-header">
-                        <div>
-                            <h1>Calendário</h1>
-                            <p>Compromissos, viagens e prazos</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="CalendarioModule.novoEvento()">+ Novo Evento</button>
-                    </div>
-                    <div class="calendario-wrap">
-                        <div class="cal-titulo" id="cal-titulo"></div>
-                        <div class="cal-grid" id="cal-grid"></div>
-                    </div>
-                </div>
+                    <div id="financeiro-resumo"></div>
+                    <div id="financeiro-list" style="margin-top:16px;"></div>
+                </section>
 
                 <!-- RELATÓRIOS -->
-                <div id="page-relatorios" class="page">
+                <section id="page-relatorios" class="page">
                     <div class="page-header">
-                        <div>
-                            <h1>Relatórios</h1>
-                            <p>Análises e indicadores</p>
+                        <h1>Relatórios</h1>
+                        <button class="btn btn-primary" onclick="RelatoriosModule.exportarCSV()">Exportar CSV</button>
+                    </div>
+                    <div class="form-grid" style="margin-bottom:16px;">
+                        <div class="form-group">
+                            <label>Período</label>
+                            <select id="rel-periodo" class="form-control" onchange="RelatoriosModule.aplicarPreset(this.value)">
+                                <option value="todos">Todo o período</option>
+                                <option value="mes-atual">Mês atual</option>
+                                <option value="mes-anterior">Mês anterior</option>
+                                <option value="trimestre">Últimos 3 meses</option>
+                                <option value="semestre">Últimos 6 meses</option>
+                                <option value="ano">Este ano</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="rel-data-ini-wrap" style="display:none;">
+                            <label>Data Inicial</label>
+                            <input type="date" id="rel-data-ini" class="form-control" onchange="RelatoriosModule.aplicarPreset('custom')">
+                        </div>
+                        <div class="form-group" id="rel-data-fim-wrap" style="display:none;">
+                            <label>Data Final</label>
+                            <input type="date" id="rel-data-fim" class="form-control" onchange="RelatoriosModule.aplicarPreset('custom')">
                         </div>
                     </div>
-                    <div class="grid-2" id="relatorios-grid"></div>
-                </div>
+                    <div id="rel-kpis" class="kpi-grid"></div>
+                    <div class="grid-2" style="margin-top:20px;">
+                        <div class="card">
+                            <h3>Receita por Mês</h3>
+                            <div id="rel-receita-mes"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Receita por Serviço</h3>
+                            <div id="rel-receita-servico"></div>
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top:20px;">
+                        <div class="card">
+                            <h3>Top Clientes</h3>
+                            <div id="rel-top-clientes"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Pipeline</h3>
+                            <div id="rel-pipeline"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MILHAS -->
+                <section id="page-milhas" class="page">
+                    <div class="page-header">
+                        <h1>Milhas & Programas de Fidelidade</h1>
+                        <p>Gestão de milhas, cartões e emissões por cliente</p>
+                    </div>
+
+                    <div class="milhas-tabs">
+                        <button class="milhas-tab active" data-tab="visao" onclick="MilhasModule.abrirTab('visao')">Visão Geral</button>
+                        <button class="milhas-tab" data-tab="programas" onclick="MilhasModule.abrirTab('programas')">Programas</button>
+                        <button class="milhas-tab" data-tab="cartoes" onclick="MilhasModule.abrirTab('cartoes')">Cartões</button>
+                        <button class="milhas-tab" data-tab="emissoes" onclick="MilhasModule.abrirTab('emissoes')">Emissões</button>
+                    </div>
+
+                    <div id="milhas-panel-visao" class="milhas-panel active"></div>
+                    <div id="milhas-panel-programas" class="milhas-panel"></div>
+                    <div id="milhas-panel-cartoes" class="milhas-panel"></div>
+                    <div id="milhas-panel-emissoes" class="milhas-panel"></div>
+
+                    <datalist id="dl-programas">
+                        <option value="Smiles"></option>
+                        <option value="LATAM Pass"></option>
+                        <option value="TudoAzul"></option>
+                        <option value="Livelo"></option>
+                        <option value="Dotz"></option>
+                        <option value="Esfera"></option>
+                        <option value="Km de Vantagens"></option>
+                        <option value="Flying Blue"></option>
+                        <option value="TAP Miles&Go"></option>
+                        <option value="Amex Membership Rewards"></option>
+                    </datalist>
+                    <datalist id="dl-bancos">
+                        <option value="Itaú"></option>
+                        <option value="Bradesco"></option>
+                        <option value="Santander"></option>
+                        <option value="Banco do Brasil"></option>
+                        <option value="Caixa"></option>
+                        <option value="Nubank"></option>
+                        <option value="C6 Bank"></option>
+                        <option value="Inter"></option>
+                        <option value="XP"></option>
+                        <option value="BTG"></option>
+                        <option value="Sicredi"></option>
+                        <option value="Porto Seguro"></option>
+                    </datalist>
+                </section>
+
+                <!-- TAREFAS -->
+                <section id="page-tarefas" class="page">
+                    <div class="page-header">
+                        <h1>Tarefas</h1>
+                        <button class="btn btn-primary" onclick="TarefasModule.novaTarefa()">+ Nova Tarefa</button>
+                    </div>
+                    <div class="form-grid" style="margin-bottom:16px;">
+                        <div class="form-group">
+                            <label>Buscar</label>
+                            <input type="text" id="tarefas-busca" class="form-control" placeholder="Título ou descrição..." oninput="TarefasModule.render()">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="tarefas-filtro-status" class="form-control" onchange="TarefasModule.render()">
+                                <option value="">Todos</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="em_andamento">Em andamento</option>
+                                <option value="concluida">Concluída</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Prioridade</label>
+                            <select id="tarefas-filtro-prioridade" class="form-control" onchange="TarefasModule.render()">
+                                <option value="">Todas</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Média</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="tarefas-list"></div>
+                </section>
+
+                <!-- CALENDÁRIO -->
+                <section id="page-calendario" class="page">
+                    <div class="page-header">
+                        <h1>Calendário</h1>
+                        <div>
+                            <button class="btn btn-secondary" onclick="CalendarioModule.hoje()">Hoje</button>
+                            <button class="btn btn-secondary" onclick="CalendarioModule.navegar(-1)">◀</button>
+                            <button class="btn btn-secondary" onclick="CalendarioModule.navegar(1)">▶</button>
+                        </div>
+                    </div>
+                    <div class="calendario-wrap">
+                        <div id="cal-titulo" class="cal-titulo"></div>
+                        <div id="cal-grid" class="cal-grid"></div>
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <h3 id="cal-dia-titulo">Clique em um dia para ver os eventos</h3>
+                        <div id="cal-dia-lista"></div>
+                    </div>
+                </section>
 
                 <!-- CONFIGURAÇÕES -->
-                <div id="page-config" class="page">
+                <section id="page-config" class="page">
                     <div class="page-header">
-                        <div>
-                            <h1>Configurações</h1>
-                            <p>Personalize o CRM WDIH</p>
-                        </div>
+                        <h1>Configurações</h1>
                     </div>
-                    <div class="config-sections">
+                    <div class="config-sections config-columns">
                         <div class="card config-card">
-                            <h3>🏢 Dados da Agência</h3>
+                            <h3>Dados da Agência</h3>
                             <div id="config-agencia"></div>
                         </div>
-
                         <div class="card config-card">
-                            <h3>🎯 Etapas do Pipeline</h3>
-                            <div id="config-pipeline"></div>
+                            <h3>Etapas do Pipeline</h3>
+                            <div id="config-pipeline" class="config-list"></div>
                         </div>
-
                         <div class="card config-card">
-                            <h3>🛎️ Serviços</h3>
-                            <div id="config-servicos"></div>
+                            <h3>Serviços</h3>
+                            <div id="config-servicos" class="config-list"></div>
                         </div>
-
                         <div class="card config-card">
-                            <h3>✈️ Companhias Aéreas</h3>
-                            <div id="config-companhias"></div>
+                            <h3>Companhias Aéreas e CPM</h3>
+                            <div id="config-companhias" class="config-list"></div>
                         </div>
-
                         <div class="card config-card">
-                            <h3>🏅 Programas de Fidelidade</h3>
-                            <div id="config-programas"></div>
+                            <h3>Programas de Fidelidade</h3>
+                            <div id="config-programas" class="config-list"></div>
                         </div>
-
                         <div class="card config-card">
-                            <h3>💳 Cartões / Bancos</h3>
-                            <div id="config-cartoes"></div>
+                            <h3>Cartões (Bandeiras/Bancos)</h3>
+                            <div id="config-cartoes" class="config-list"></div>
                         </div>
-
                         <div class="card config-card">
-                            <h3>📂 Categorias Financeiras</h3>
-                            <div id="config-categorias"></div>
+                            <h3>Categorias Financeiras</h3>
+                            <div id="config-categorias" class="config-list"></div>
                         </div>
-
                         <div class="card config-card">
-                            <h3>💾 Backup e Restauração</h3>
+                            <h3>Backup e Restauração</h3>
                             <div id="config-backup"></div>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </main>
     </div>
 
-    <!-- MODAL GENÉRICO -->
+    <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-title">Título</h3>
-                <button class="modal-close" onclick="AppModule.closeModal()">&times;</button>
+                <button class="modal-close" onclick="AppModule.closeModal()">×</button>
             </div>
-            <div class="modal-body" id="modal-body"></div>
-            <div class="modal-footer" id="modal-footer"></div>
+            <div id="modal-body" class="modal-body"></div>
+            <div id="modal-footer" class="modal-footer"></div>
         </div>
     </div>
 
-    <!-- TOAST -->
+    <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <!-- DATALISTS -->
-    <datalist id="dl-programas"></datalist>
-    <datalist id="dl-bancos"></datalist>
-    <datalist id="dl-companhias"></datalist>
-    <datalist id="dl-servicos"></datalist>
-    <datalist id="dl-pipeline"></datalist>
-    <datalist id="dl-categorias-receita"></datalist>
-    <datalist id="dl-categorias-despesa"></datalist>
-
-    <!-- SCRIPTS -->
+    <!-- Scripts -->
     <script src="js/db.js"></script>
     <script src="js/migracao.js"></script>
     <script src="js/app.js"></script>
