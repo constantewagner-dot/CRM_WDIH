@@ -1,213 +1,313 @@
 var PipelineModule = {
-    negocioDrag: null,
+    init() {
+        this.render();
+    },
+
+    getEtapas() {
+        return DB.get('pipelineEtapas', [
+            { id: 'etapa-1', nome: 'Novo', ordem: 1 },
+            { id: 'etapa-2', nome: 'Em negociação', ordem: 2 },
+            { id: 'etapa-3', nome: 'Proposta enviada', ordem: 3 },
+            { id: 'etapa-4', nome: 'Fechado (ganho)', ordem: 4 },
+            { id: 'etapa-5', nome: 'Fechado (perdido)', ordem: 5 }
+        ]);
+    },
+
+    getNegocios() {
+        return DB.get('negocios', []);
+    },
+
+    getServicos() {
+        return DB.get('servicos', ['Emissão de Passagens', 'Pacote de Viagem', 'Hotel', 'Seguro Viagem', 'Aluguel de Carro', 'Consultoria']);
+    },
 
     render() {
-        const config = DB.get('config', {});
-        const etapas = config.pipeline || [];
-        const negocios = DB.get('negocios', []);
-
         const board = document.getElementById('pipeline-board');
         if (!board) return;
+        const etapas = this.getEtapas().sort((a, b) => a.ordem - b.ordem);
+        const negocios = this.getNegocios();
 
         board.innerHTML = etapas.map(etapa => {
-            const cards = negocios.filter(n => n.stage === etapa);
-            const total = cards.reduce((s, n) => s + (parseFloat(n.valor) || 0), 0);
-
+            const cards = negocios.filter(n => n.status === etapa.nome);
             return `
-                <div class="pipeline-col" data-stage="${AppModule.escapeHtml(etapa)}">
-                    <div class="pipeline-col-header">
-                        <div>
-                            <div class="pipeline-col-title">${AppModule.escapeHtml(etapa)}</div>
-                            <div class="pipeline-col-total">${AppModule.formatCurrency(total)}</div>
-                        </div>
-                        <div class="pipeline-col-count">${cards.length}</div>
-                    </div>
+                <div class="pipeline-col" data-status="${AppModule.escapeHtml(etapa.nome)}">
+                    <div class="pipeline-col-header">${AppModule.escapeHtml(etapa.nome)}</div>
                     <div class="pipeline-col-body" ondrop="PipelineModule.drop(event)" ondragover="PipelineModule.allowDrop(event)">
                         ${cards.map(n => this.cardHtml(n)).join('')}
                     </div>
-                    <div class="pipeline-add" onclick="PipelineModule.novoNegocio('${AppModule.escapeHtml(etapa)}')">+ Adicionar negócio</div>
                 </div>
             `;
         }).join('');
     },
 
     cardHtml(n) {
-        const cliente = DB.getClienteNome(n.clienteId);
+        const cliente = (DB.get('clientes', []).find(c => c.id === n.clienteId) || {}).nome || '—';
         return `
-            <div class="pipeline-card" draggable="true" ondragstart="PipelineModule.drag(event, '${n.id}')" onclick="PipelineModule.editarNegocio('${n.id}')">
-                <div class="pipeline-card-titulo">${AppModule.escapeHtml(n.titulo)}</div>
-                <div class="pipeline-card-cliente">${AppModule.escapeHtml(cliente)}</div>
-                <div class="pipeline-card-valor">${AppModule.formatCurrency(n.valor)}</div>
+            <div class="pipeline-card" draggable="true" ondragstart="PipelineModule.drag(event)" data-id="${n.id}">
+                <div class="pipeline-card-title">${AppModule.escapeHtml(n.titulo)}</div>
+                <div class="pipeline-card-meta">${AppModule.escapeHtml(cliente)}</div>
+                <div class="pipeline-card-meta">${AppModule.escapeHtml(n.servico)} • ${AppModule.formatCurrency(n.valor)}</div>
             </div>
         `;
     },
 
-    drag(ev, id) {
-        this.negocioDrag = id;
-        ev.dataTransfer.effectAllowed = 'move';
-    },
+    allowDrop(ev) { ev.preventDefault(); },
 
-    allowDrop(ev) {
-        ev.preventDefault();
-    },
+    drag(ev) { ev.dataTransfer.setData('text', ev.target.dataset.id); },
 
     drop(ev) {
         ev.preventDefault();
-        if (!this.negocioDrag) return;
-
+        const id = ev.dataTransfer.getData('text');
         const col = ev.target.closest('.pipeline-col');
         if (!col) return;
+        const novoStatus = col.dataset.status;
+        const negocios = this.getNegocios();
+        const neg = negocios.find(n => n.id === id);
+        if (!neg || neg.status === novoStatus) return;
 
-        const novaEtapa = col.dataset.stage;
-        const negocios = DB.get('negocios', []);
-        const index = negocios.findIndex(n => n.id === this.negocioDrag);
-        if (index < 0) return;
-
-        const negocio = negocios[index];
-        const etapaAnterior = negocio.stage;
-
-        if (etapaAnterior === novaEtapa) {
-            this.negocioDrag = null;
+        if (novoStatus === 'Fechado (ganho)' && this.ehEmissaoPassagens(neg.servico)) {
+            this.abrirModalFechamentoEmissao(neg, novoStatus);
             return;
         }
 
-        negocio.stage = novaEtapa;
-        negocio.atualizadoEm = new Date().toISOString();
+        neg.status = novoStatus;
+        if (novoStatus === 'Fechado (ganho)') neg.dataFechamento = new Date().toISOString().slice(0, 10);
+        DB.set('negocios', negocios);
+        this.render();
+        AppModule.toast(`Negócio movido para ${novoStatus}`);
+    },
+
+    ehEmissaoPassagens(servico) {
+        const s = (servico || '').toLowerCase();
+        return s.includes('emissão') && s.includes('passagen');
+    },
+
+    abrirModalFechamentoEmissao(neg, novoStatus) {
+        this._negocioFechamento = neg;
+        this._novoStatusFechamento = novoStatus;
+
+        const cliente = DB.get('clientes', []).find(c => c.id === neg.clienteId);
+        const programasCliente = (typeof MilhasModule !== 'undefined' && MilhasModule.getProgramasCliente)
+            ? MilhasModule.getProgramasCliente(cliente.id)
+            : [];
+        const programasPadrao = DB.get('programasFidelidade', ['Smiles', 'LATAM Pass', 'TudoAzul', 'Livelo']);
+        const opcoesPrograma = programasCliente.length
+            ? programasCliente.map(p => `<option value="${AppModule.escapeHtml(p.programa || p.nome)}">${AppModule.escapeHtml(p.programa || p.nome)}</option>`).join('')
+            : programasPadrao.map(p => `<option value="${AppModule.escapeHtml(p)}">${AppModule.escapeHtml(p)}</option>`).join('');
+
+        const hoje = new Date().toISOString().slice(0, 10);
+        const html = `
+            <div class="form-group"><label>Cliente</label><input type="text" class="form-control" value="${AppModule.escapeHtml(cliente?.nome || '—')}" disabled></div>
+            <div class="form-group"><label>Serviço</label><input type="text" class="form-control" value="${AppModule.escapeHtml(neg.servico)}" disabled></div>
+            <div class="form-grid">
+                <div class="form-group"><label>Origem *</label><input type="text" id="fech-origem" class="form-control" placeholder="GRU"></div>
+                <div class="form-group"><label>Destino *</label><input type="text" id="fech-destino" class="form-control" placeholder="MIA"></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Data da Ida *</label><input type="date" id="fech-data-ida" class="form-control" value="${hoje}"></div>
+                <div class="form-group"><label>Data da Volta</label><input type="date" id="fech-data-volta" class="form-control"></div>
+            </div>
+            <div class="form-group"><label>Programa de Fidelidade *</label>
+                <select id="fech-programa" class="form-control">${opcoesPrograma}</select>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Milhas Utilizadas *</label><input type="number" id="fech-milhas" class="form-control" value="0"></div>
+                <div class="form-group"><label>Taxas (R$) *</label><input type="number" id="fech-taxas" class="form-control" step="0.01" value="0"></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Valor de Mercado (R$) *</label><input type="number" id="fech-mercado" class="form-control" step="0.01" value="${parseFloat(neg.valor) || 0}"></div>
+                <div class="form-group"><label>Custo da Milha (R$)</label><input type="number" id="fech-custo" class="form-control" step="0.0001" placeholder="Padrão"></div>
+            </div>
+        `;
+
+        const footer = `
+            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="PipelineModule.confirmarFechamentoEmissao()">Confirmar Fechamento</button>
+        `;
+
+        AppModule.openModal('Fechamento - Emissão de Passagens', html, footer);
+    },
+
+    confirmarFechamentoEmissao() {
+        const neg = this._negocioFechamento;
+        const novoStatus = this._novoStatusFechamento;
+        const clienteId = neg.clienteId;
+
+        const origem = document.getElementById('fech-origem').value.trim().toUpperCase();
+        const destino = document.getElementById('fech-destino').value.trim().toUpperCase();
+        const dataIda = document.getElementById('fech-data-ida').value;
+        const dataVolta = document.getElementById('fech-data-volta').value;
+        const programa = document.getElementById('fech-programa').value;
+        const milhas = parseInt(document.getElementById('fech-milhas').value) || 0;
+        const taxas = parseFloat(document.getElementById('fech-taxas').value) || 0;
+        const mercado = parseFloat(document.getElementById('fech-mercado').value) || 0;
+        const custoInput = document.getElementById('fech-custo').value;
+        const custoMilha = custoInput !== '' ? parseFloat(custoInput) : null;
+
+        if (!origem || !destino || !dataIda || !programa || !milhas) {
+            AppModule.toast('Preencha origem, destino, data da ida, programa e milhas.');
+            return;
+        }
+
+        // 1. Criar viagem
+        const viagens = DB.get('viagens', []);
+        const novaViagem = {
+            id: AppModule.generateId(),
+            clienteId,
+            origem,
+            destino,
+            dataIda,
+            dataVolta: dataVolta || null,
+            checkinFeito: false,
+            observacao: `Voo ${origem} → ${destino}`,
+            dataCriacao: new Date().toISOString()
+        };
+        viagens.push(novaViagem);
+        DB.set('viagens', viagens);
+
+        // 2. Criar venda
+        const vendas = DB.get('vendas', []);
+        const novaVenda = {
+            id: AppModule.generateId(),
+            clienteId,
+            servico: neg.servico,
+            status: 'Novo',
+            valor: mercado,
+            data: new Date().toISOString().slice(0, 10),
+            observacoes: `Origem: ${origem} | Destino: ${destino} | Ida: ${dataIda}${dataVolta ? ' | Volta: ' + dataVolta : ''}`,
+            origemPipeline: true
+        };
+        vendas.push(novaVenda);
+        DB.set('vendas', vendas);
+
+        // 3. Criar emissão em milhas
+        const milhasData = DB.get('milhas', {});
+        if (!Array.isArray(milhasData.emissoes)) milhasData.emissoes = [];
+        const novaEmissao = {
+            id: AppModule.generateId(),
+            clienteId,
+            programa,
+            data: new Date().toISOString().slice(0, 10),
+            origem,
+            destino,
+            milhasUtilizadas: milhas,
+            taxas,
+            valorMercado: mercado,
+            custoMilha: custoMilha
+        };
+        milhasData.emissoes.push(novaEmissao);
+        DB.set('milhas', milhasData);
+
+        // 4. Criar eventos no calendário
+        const eventos = DB.get('eventos', []);
+        eventos.push({
+            id: AppModule.generateId(),
+            tipo: 'viagem',
+            titulo: `✈️ Ida: ${origem} → ${destino}`,
+            data: dataIda,
+            clienteId,
+            referenciaId: novaViagem.id
+        });
+        if (dataVolta) {
+            eventos.push({
+                id: AppModule.generateId(),
+                tipo: 'viagem',
+                titulo: `✈️ Volta: ${destino} → ${origem}`,
+                data: dataVolta,
+                clienteId,
+                referenciaId: novaViagem.id
+            });
+        }
+        DB.set('eventos', eventos);
+
+        // Atualiza negócio
+        const negocios = this.getNegocios();
+        const n = negocios.find(x => x.id === neg.id);
+        if (n) {
+            n.status = novoStatus;
+            n.dataFechamento = new Date().toISOString().slice(0, 10);
+            n.viagemId = novaViagem.id;
+            n.vendaId = novaVenda.id;
+            n.emissaoId = novaEmissao.id;
+        }
         DB.set('negocios', negocios);
 
-        AppModule.addAtividade(`Negócio "${negocio.titulo}" movido para ${novaEtapa}`, 'pipeline');
-
-        // Cria tarefa automática se mudou de etapa
-        this.criarTarefaAutomatica(negocio, etapaAnterior, novaEtapa);
-
-        this.negocioDrag = null;
-        AppModule.updateBadgeTarefas();
+        AppModule.closeModal();
         this.render();
+        AppModule.toast('Fechamento realizado: viagem, venda e emissão criadas!');
+
+        delete this._negocioFechamento;
+        delete this._novoStatusFechamento;
     },
 
-    novoNegocio(etapaInicial = '') {
-        const clientes = DB.get('clientes', []);
-        const config = DB.get('config', {});
-        const etapas = config.pipeline || [];
-        const servicos = config.servicos || [];
-
-        const html = `
-            <div class="form-group"><label>Cliente *</label>
-                <select id="neg-cliente" class="form-control">
-                    <option value="">— Selecionar —</option>
-                    ${clientes.map(c => `<option value="${c.id}">${AppModule.escapeHtml(c.nome)}</option>`).join('')}
-                </select>
-            </div>
-            <div class="form-group"><label>Título *</label><input type="text" id="neg-titulo" class="form-control"></div>
-            <div class="form-grid">
-                <div class="form-group"><label>Serviço</label>
-                    <select id="neg-servico" class="form-control">
-                        <option value="">— Selecionar —</option>
-                        ${servicos.map(s => `<option value="${AppModule.escapeHtml(s)}">${AppModule.escapeHtml(s)}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="form-group"><label>Valor (R$)</label><input type="number" id="neg-valor" class="form-control" step="0.01" value="0"></div>
-            </div>
-            <div class="form-grid">
-                <div class="form-group"><label>Etapa</label>
-                    <select id="neg-stage" class="form-control">
-                        ${etapas.map(e => `<option value="${AppModule.escapeHtml(e)}" ${etapaInicial === e ? 'selected' : ''}>${AppModule.escapeHtml(e)}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="form-group"><label>Probabilidade (%)</label><input type="number" id="neg-prob" class="form-control" min="0" max="100" value="10"></div>
-            </div>
-            <div class="form-group"><label>Origem do Lead</label><input type="text" id="neg-origem" class="form-control" placeholder="Ex: Indicação, Instagram, Site"></div>
-            <div class="form-group"><label>Campanha</label><input type="text" id="neg-campanha" class="form-control" placeholder="Ex: Black Friday 2026"></div>
-            <div class="form-group"><label>Descrição</label><textarea id="neg-desc" class="form-control" rows="3"></textarea></div>
-        `;
-
-        const footer = `
-            <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="PipelineModule.salvar('')">Salvar</button>
-        `;
-
-        AppModule.openModal('Nova Cotação', html, footer);
-    },
+    // ============ CRUD NEGÓCIOS ============
+    novoNegocio() { this.abrirFormNegocio(); },
 
     editarNegocio(id) {
-        const negocios = DB.get('negocios', []);
-        const n = negocios.find(x => x.id === id);
-        if (!n) return;
+        const n = this.getNegocios().find(x => x.id === id);
+        if (n) this.abrirFormNegocio(n);
+    },
 
+    abrirFormNegocio(negocio = null) {
+        const isEdit = !!negocio;
         const clientes = DB.get('clientes', []);
-        const config = DB.get('config', {});
-        const etapas = config.pipeline || [];
-        const servicos = config.servicos || [];
+        const etapas = this.getEtapas().sort((a, b) => a.ordem - b.ordem);
+        const servicos = this.getServicos();
 
         const html = `
             <div class="form-group"><label>Cliente *</label>
                 <select id="neg-cliente" class="form-control">
                     <option value="">— Selecionar —</option>
-                    ${clientes.map(c => `<option value="${c.id}" ${n.clienteId === c.id ? 'selected' : ''}>${AppModule.escapeHtml(c.nome)}</option>`).join('')}
+                    ${clientes.map(c => `<option value="${c.id}" ${negocio?.clienteId === c.id ? 'selected' : ''}>${AppModule.escapeHtml(c.nome)}</option>`).join('')}
                 </select>
             </div>
-            <div class="form-group"><label>Título *</label><input type="text" id="neg-titulo" class="form-control" value="${AppModule.escapeHtml(n.titulo)}"></div>
+            <div class="form-group"><label>Título *</label><input type="text" id="neg-titulo" class="form-control" value="${AppModule.escapeHtml(negocio?.titulo || '')}"></div>
             <div class="form-grid">
-                <div class="form-group"><label>Serviço</label>
+                <div class="form-group"><label>Serviço *</label>
                     <select id="neg-servico" class="form-control">
-                        <option value="">— Selecionar —</option>
-                        ${servicos.map(s => `<option value="${AppModule.escapeHtml(s)}" ${n.servico === s ? 'selected' : ''}>${AppModule.escapeHtml(s)}</option>`).join('')}
+                        ${servicos.map(s => `<option value="${AppModule.escapeHtml(s)}" ${negocio?.servico === s ? 'selected' : ''}>${AppModule.escapeHtml(s)}</option>`).join('')}
                     </select>
                 </div>
-                <div class="form-group"><label>Valor (R$)</label><input type="number" id="neg-valor" class="form-control" step="0.01" value="${n.valor || 0}"></div>
+                <div class="form-group"><label>Valor (R$)</label><input type="number" id="neg-valor" class="form-control" step="0.01" value="${negocio?.valor || 0}"></div>
             </div>
             <div class="form-grid">
-                <div class="form-group"><label>Etapa</label>
-                    <select id="neg-stage" class="form-control">
-                        ${etapas.map(e => `<option value="${AppModule.escapeHtml(e)}" ${n.stage === e ? 'selected' : ''}>${AppModule.escapeHtml(e)}</option>`).join('')}
+                <div class="form-group"><label>Status</label>
+                    <select id="neg-status" class="form-control">
+                        ${etapas.map(e => `<option value="${AppModule.escapeHtml(e.nome)}" ${negocio?.status === e.nome ? 'selected' : ''}>${AppModule.escapeHtml(e.nome)}</option>`).join('')}
                     </select>
                 </div>
-                <div class="form-group"><label>Probabilidade (%)</label><input type="number" id="neg-prob" class="form-control" min="0" max="100" value="${n.probabilidade || 0}"></div>
+                <div class="form-group"><label>Data de Fechamento</label><input type="date" id="neg-data-fechamento" class="form-control" value="${negocio?.dataFechamento || ''}"></div>
             </div>
-            <div class="form-group"><label>Origem do Lead</label><input type="text" id="neg-origem" class="form-control" value="${AppModule.escapeHtml(n.origemLead || '')}"></div>
-            <div class="form-group"><label>Campanha</label><input type="text" id="neg-campanha" class="form-control" value="${AppModule.escapeHtml(n.campanha || '')}"></div>
-            <div class="form-group"><label>Descrição</label><textarea id="neg-desc" class="form-control" rows="3">${AppModule.escapeHtml(n.descricao || '')}</textarea></div>
+            <div class="form-group"><label>Observações</label><textarea id="neg-obs" class="form-control" rows="2">${AppModule.escapeHtml(negocio?.observacoes || '')}</textarea></div>
         `;
 
         const footer = `
-            <button class="btn btn-danger" onclick="PipelineModule.excluir('${n.id}')">Excluir</button>
             <button class="btn btn-secondary" onclick="AppModule.closeModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="PipelineModule.salvar('${n.id}')">Salvar</button>
+            <button class="btn btn-primary" onclick="PipelineModule.salvarNegocio('${negocio?.id || ''}')">Salvar</button>
         `;
 
-        AppModule.openModal('Editar Cotação', html, footer);
+        AppModule.openModal(isEdit ? 'Editar Cotação' : 'Nova Cotação', html, footer);
     },
 
-    salvar(id) {
-        const titulo = document.getElementById('neg-titulo').value.trim();
-        if (!titulo) {
-            AppModule.toast('Informe o título da cotação.');
-            return;
-        }
-
-        const negocios = DB.get('negocios', []);
-        const index = negocios.findIndex(n => n.id === id);
+    salvarNegocio(id) {
         const clienteId = document.getElementById('neg-cliente').value;
-        const novaEtapa = document.getElementById('neg-stage').value;
+        const titulo = document.getElementById('neg-titulo').value.trim();
+        const servico = document.getElementById('neg-servico').value;
+        if (!clienteId || !titulo || !servico) { AppModule.toast('Preencha cliente, título e serviço.'); return; }
+
+        const negocios = this.getNegocios();
+        const index = negocios.findIndex(n => n.id === id);
 
         const dados = {
             id: id || AppModule.generateId(),
-            titulo,
             clienteId,
-            servico: document.getElementById('neg-servico').value,
+            titulo,
+            servico,
             valor: parseFloat(document.getElementById('neg-valor').value) || 0,
-            stage: novaEtapa,
-            probabilidade: parseFloat(document.getElementById('neg-prob').value) || 0,
-            descricao: document.getElementById('neg-desc').value.trim(),
-            origemLead: document.getElementById('neg-origem').value.trim(),
-            campanha: document.getElementById('neg-campanha').value.trim(),
-            criadoEm: index >= 0 ? negocios[index].criadoEm : new Date().toISOString(),
-            atualizadoEm: new Date().toISOString()
+            status: document.getElementById('neg-status').value,
+            dataFechamento: document.getElementById('neg-data-fechamento').value || null,
+            observacoes: document.getElementById('neg-obs').value.trim()
         };
-
-        // Detecta mudança de etapa
-        const etapaAnterior = index >= 0 ? negocios[index].stage : null;
-        const mudouEtapa = etapaAnterior && etapaAnterior !== novaEtapa;
 
         if (index >= 0) {
             negocios[index] = { ...negocios[index], ...dados };
@@ -216,85 +316,16 @@ var PipelineModule = {
         }
 
         DB.set('negocios', negocios);
-        AppModule.addAtividade(`Negócio "${titulo}" salvo`, 'pipeline');
-
-        // Cria tarefa automática se mudou de etapa
-        if (mudouEtapa) {
-            this.criarTarefaAutomatica(dados, etapaAnterior, novaEtapa);
-            AppModule.toast('Cotação salva! Tarefa automática criada.');
-        } else {
-            AppModule.toast('Cotação salva!');
-        }
-
         AppModule.closeModal();
-        AppModule.updateBadgeTarefas();
+        AppModule.toast('Cotação salva!');
         this.render();
     },
 
-    excluir(id) {
+    excluirNegocio(id) {
         if (!confirm('Excluir esta cotação?')) return;
-        const negocios = DB.get('negocios', []);
-        const n = negocios.find(x => x.id === id);
-        DB.set('negocios', negocios.filter(n => n.id !== id));
-        AppModule.addAtividade(`Negócio "${n?.titulo}" excluído`, 'pipeline');
+        const negocios = this.getNegocios().filter(n => n.id !== id);
+        DB.set('negocios', negocios);
         AppModule.toast('Cotação excluída.');
-        AppModule.closeModal();
         this.render();
-    },
-
-    // Criar tarefa automática quando negócio muda de etapa
-    criarTarefaAutomatica(negocio, etapaAnterior, novaEtapa) {
-        const tarefas = DB.get('tarefas', []);
-
-        let tarefaTitulo = '';
-        let tarefaDesc = '';
-        let prazoDias = 7;
-        let prioridade = 'media';
-
-        if (etapaAnterior === 'Novo Lead' && novaEtapa === 'Qualificado') {
-            tarefaTitulo = `Qualificar lead: ${negocio.titulo}`;
-            tarefaDesc = 'Entrar em contato e qualificar o lead';
-            prazoDias = 3;
-            prioridade = 'alta';
-        } else if (etapaAnterior === 'Qualificado' && novaEtapa === 'Proposta Enviada') {
-            tarefaTitulo = `Follow-up: ${negocio.titulo}`;
-            tarefaDesc = 'Verificar se cliente recebeu a proposta';
-            prazoDias = 5;
-        } else if (etapaAnterior === 'Proposta Enviada' && novaEtapa === 'Negociação') {
-            tarefaTitulo = `Negociar: ${negocio.titulo}`;
-            tarefaDesc = 'Acompanhar negociação e ajustar proposta';
-            prazoDias = 7;
-        } else if (novaEtapa === 'Fechado (Ganho)') {
-            tarefaTitulo = `Onboarding: ${negocio.titulo}`;
-            tarefaDesc = 'Iniciar processo de entrega do serviço';
-            prazoDias = 2;
-            prioridade = 'alta';
-        } else if (novaEtapa === 'Perdido') {
-            tarefaTitulo = `Reativação: ${negocio.titulo}`;
-            tarefaDesc = 'Entrar em contato para entender motivo da perda';
-            prazoDias = 15;
-            prioridade = 'baixa';
-        }
-
-        if (tarefaTitulo) {
-            const prazo = new Date();
-            prazo.setDate(prazo.getDate() + prazoDias);
-
-            tarefas.push({
-                id: AppModule.generateId(),
-                titulo: tarefaTitulo,
-                descricao: tarefaDesc,
-                status: 'pendente',
-                prioridade,
-                prazo: prazo.toISOString().slice(0, 10),
-                clienteId: negocio.clienteId,
-                negocioId: negocio.id,
-                automatica: true,
-                criadoEm: new Date().toISOString()
-            });
-
-            DB.set('tarefas', tarefas);
-            AppModule.updateBadgeTarefas();
-        }
     }
 };
