@@ -1,132 +1,219 @@
 /**
- * PortalDownload
+ * PortalDownload v2
  * ------------------------------------------------------------------
  * Adiciona uma opção "⬇️ Baixar HTML" dentro do Portal do Cliente
  * (área de Milhas) para baixar o HTML renderizado do portal.
- *
- * COMO USAR:
- * 1. Inclua este arquivo no index.html APÓS js/milhas.js:
- *      <script src="js/portal-download.js"></script>
- * 2. Ajuste as constantes abaixo conforme os IDs/seletores reais
- *    usados no HTML que o milhas.js gera para o portal.
- * 3. Se preferir, dispense a injeção automática e chame
- *    PortalDownload.baixarHTML() no evento do seu próprio botão.
- *
- * OBSERVAÇÃO:
- * O arquivo baixado é a visualização renderizada atual com estilos
- * inline e valores de campos. Scripts interativos do portal não são
- * embutidos automaticamente.
+ * 
+ * MELHORIAS:
+ * - Busca por múltiplos seletores possíveis
+ * - Observa o DOM de forma persistente
+ * - Logs de debug no console
+ * - Fallback para diversos cenários
  */
 var PortalDownload = {
     /* ============================================================
-       CONFIGURAÇÃO — ajuste conforme o HTML real do portal
+       CONFIGURAÇÃO - Múltiplos seletores para encontrar o portal
        ============================================================ */
-    SELETOR_PORTAL: '#portal-cliente',              // container geral do portal
-    SELETOR_CONTEUDO: '',                            // opcional: elemento interno a baixar (vazio = portal inteiro)
-    SELETOR_BOTAO_HOST: '.portal-acoes, .portal-header, .milhas-panel', // onde o botão será inserido primeiro
+    SELETORES_PORTAL: [
+        '#portal-cliente',
+        '.portal-cliente',
+        '[data-portal="cliente"]',
+        '.portal-detalhe',
+        '#portal-detalhe',
+        '.cliente-portal',
+        '#cliente-portal',
+        '.portal-view',
+        '#portal-view'
+    ],
+
+    SELETORES_HOST: [
+        '.portal-acoes',
+        '.portal-header',
+        '.portal-actions',
+        '.portal-toolbar',
+        '.portal-buttons',
+        '.cliente-header',
+        '.portal-container',
+        '#portal-cliente',
+        '.portal-cliente',
+        '.milhas-panel.active'
+    ],
 
     /* ============================================================
        INICIALIZAÇÃO
        ============================================================ */
     init() {
+        console.log('[PortalDownload] Inicializando...');
+        
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.observarPortal());
+            document.addEventListener('DOMContentLoaded', () => this.iniciarObservacao());
         } else {
-            this.observarPortal();
+            this.iniciarObservacao();
         }
     },
 
-    /**
-     * Tenta injetar o botão assim que o portal aparecer no DOM.
-     * Usa MutationObserver para cobrir portais renderizados dinamicamente.
-     */
-    observarPortal() {
-        let jaInjetado = false;
+    iniciarObservacao() {
+        console.log('[PortalDownload] Iniciando observação do DOM...');
+        
+        // Tenta imediatamente
+        if (this.tentarInjetar()) {
+            console.log('[PortalDownload] ✅ Botão injetado com sucesso!');
+            return;
+        }
 
-        const tentar = () => {
-            if (jaInjetado) return true;
+        // Observa mudanças no DOM de forma persistente
+        this.observarDOM();
+    },
 
-            const portal = document.querySelector(this.SELETOR_PORTAL);
-            if (portal) {
-                this.injetarBotao(portal);
-                jaInjetado = true;
-                return true;
+    observarDOM() {
+        let tentativas = 0;
+        const maxTentativas = 100; // 10 segundos com intervalo de 100ms
+
+        const observer = new MutationObserver((mutations) => {
+            tentativas++;
+            
+            if (this.tentarInjetar()) {
+                console.log('[PortalDownload] ✅ Botão injetado após observar DOM!');
+                observer.disconnect();
+                return;
             }
-            return false;
-        };
 
-        if (tentar()) return;
-
-        const observer = new MutationObserver(() => {
-            if (tentar()) observer.disconnect();
+            if (tentativas >= maxTentativas) {
+                console.warn('[PortalDownload] ⚠️ Timeout: não foi possível encontrar o Portal do Cliente após ' + maxTentativas + ' tentativas');
+                observer.disconnect();
+            }
         });
 
-        observer.observe(document.body, { childList: true, subtree: true });
-        setTimeout(() => observer.disconnect(), 15000); // timeout de segurança
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: false
+        });
+
+        // Fallback: tenta periodicamente
+        const intervalId = setInterval(() => {
+            if (this.tentarInjetar()) {
+                console.log('[PortalDownload] ✅ Botão injetado via intervalo!');
+                clearInterval(intervalId);
+            }
+        }, 500);
+
+        // Para o intervalo após 15 segundos
+        setTimeout(() => clearInterval(intervalId), 15000);
+    },
+
+    /* ============================================================
+       BUSCA DO PORTAL
+       ============================================================ */
+    encontrarPortal() {
+        for (const seletor of this.SELETORES_PORTAL) {
+            const el = document.querySelector(seletor);
+            if (el) {
+                console.log('[PortalDownload] Portal encontrado com seletor:', seletor);
+                return el;
+            }
+        }
+
+        // Busca por elementos com texto "Portal" no título
+        const possiveis = document.querySelectorAll('.card, .panel, .container, section, div');
+        for (const el of possiveis) {
+            const titulo = el.querySelector('h1, h2, h3, h4');
+            if (titulo && titulo.textContent.toLowerCase().includes('portal')) {
+                console.log('[PortalDownload] Portal encontrado por título:', titulo.textContent);
+                return el;
+            }
+        }
+
+        return null;
     },
 
     /* ============================================================
        INJEÇÃO DO BOTÃO
        ============================================================ */
-    injetarBotao(portal) {
-        if (document.getElementById('btn-baixar-portal')) return;
+    tentarInjetar() {
+        // Verifica se já foi injetado
+        if (document.getElementById('btn-baixar-portal')) {
+            return true;
+        }
 
-        const host = portal.querySelector(this.SELETOR_BOTAO_HOST) || portal;
+        const portal = this.encontrarPortal();
+        if (!portal) {
+            return false;
+        }
 
+        // Encontra o host para o botão
+        let host = null;
+        for (const seletor of this.SELETORES_HOST) {
+            host = portal.querySelector(seletor);
+            if (host) {
+                console.log('[PortalDownload] Host encontrado com seletor:', seletor);
+                break;
+            }
+        }
+
+        // Fallback: usa o próprio portal como host
+        if (!host) {
+            host = portal;
+            console.log('[PortalDownload] Usando portal como host (fallback)');
+        }
+
+        this.injetarBotao(host);
+        return true;
+    },
+
+    injetarBotao(host) {
         const botao = document.createElement('button');
         botao.id = 'btn-baixar-portal';
         botao.type = 'button';
         botao.className = 'btn btn-sm btn-secondary';
-        botao.style.cssText = 'margin-left:8px;';
+        botao.style.cssText = 'margin-left:8px; margin-bottom:8px;';
         botao.innerHTML = '⬇️ Baixar HTML';
         botao.title = 'Baixar o HTML do Portal do Cliente';
-        botao.addEventListener('click', () => this.baixarHTML());
+        botao.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.baixarHTML();
+        });
 
-        host.prepend(botao);
+        // Insere no início ou após o primeiro elemento
+        if (host.firstChild) {
+            host.insertBefore(botao, host.firstChild);
+        } else {
+            host.appendChild(botao);
+        }
+
+        console.log('[PortalDownload] Botão injetado no host:', host);
     },
 
     /* ============================================================
        DOWNLOAD
        ============================================================ */
     baixarHTML() {
-        const conteudo = this.obterConteudo();
+        console.log('[PortalDownload] Iniciando download...');
+
+        const conteudo = this.encontrarPortal();
 
         if (!conteudo) {
-            // Se AppModule/toast estiver disponível, usa; senão alert simples
-            if (typeof AppModule !== 'undefined' && typeof AppModule.toast === 'function') {
-                AppModule.toast('Portal do Cliente não encontrado para download.');
-            } else {
-                alert('Portal do Cliente não encontrado para download.');
-            }
+            this.mostrarErro('Portal do Cliente não encontrado para download.');
             return;
         }
 
-        const htmlCompleto = this.montarHTMLCompleto(conteudo);
-        const nomeArquivo = this.obterNomeArquivo();
+        try {
+            const htmlCompleto = this.montarHTMLCompleto(conteudo);
+            const nomeArquivo = this.obterNomeArquivo();
 
-        this.downloadArquivo(nomeArquivo, htmlCompleto, 'text/html;charset=utf-8');
+            this.downloadArquivo(nomeArquivo, htmlCompleto, 'text/html;charset=utf-8');
 
-        if (typeof AppModule !== 'undefined' && typeof AppModule.toast === 'function') {
-            AppModule.toast('HTML do portal baixado!');
+            this.mostrarSucesso('HTML do portal baixado com sucesso!');
+            console.log('[PortalDownload] ✅ Download concluído:', nomeArquivo);
+        } catch (erro) {
+            console.error('[PortalDownload] Erro ao baixar:', erro);
+            this.mostrarErro('Erro ao gerar o HTML: ' + erro.message);
         }
-    },
-
-    obterConteudo() {
-        let el = null;
-
-        if (this.SELETOR_CONTEUDO) {
-            el = document.querySelector(this.SELETOR_CONTEUDO);
-        }
-
-        if (!el) {
-            el = document.querySelector(this.SELETOR_PORTAL);
-        }
-
-        return el;
     },
 
     /* ============================================================
-       MONTAGEM DO HTML COMPLETO (self-contained)
+       MONTAGEM DO HTML
        ============================================================ */
     montarHTMLCompleto(conteudo) {
         const corpo = this.serializarComEstilosInline(conteudo);
@@ -138,48 +225,53 @@ var PortalDownload = {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal do Cliente</title>
 <style>
-    /* Reset mínimo para manter a apresentação caso algum estilo não seja propagado */
     * { box-sizing: border-box; }
-    body { margin: 0; }
+    body { 
+        margin: 0; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 </style>
 </head>
 <body>
+<div class="container">
 ${corpo}
+</div>
 </body>
 </html>`;
     },
 
-    /**
-     * Clona o elemento e aplica os estilos computados inline em cada nó,
-     * garantindo que o HTML baixado seja visualmente fiel sem depender
-     * de arquivos CSS externos. Também preserva valores de formulários.
-     */
     serializarComEstilosInline(original) {
         const clone = original.cloneNode(true);
-
-        const aplicar = (orig, copia) => {
-            if (!orig || !copia || copia.nodeType !== 1) return;
-
-            const styleCalculado = window.getComputedStyle(orig);
-            copia.style.cssText = styleCalculado.cssText;
-
-            const filhosOrig = orig.children;
-            const filhosCopia = copia.children;
-
-            for (let i = 0; i < filhosCopia.length; i++) {
-                aplicar(filhosOrig[i], filhosCopia[i]);
-            }
-        };
-
-        aplicar(original, clone);
+        this.aplicarEstilosComputados(original, clone);
         this.sincronizarCampos(original, clone);
-
         return clone.outerHTML;
     },
 
-    /**
-     * Copia valores atuais de inputs, selects e textareas para o clone.
-     */
+    aplicarEstilosComputados(original, copia) {
+        if (!original || !copia || copia.nodeType !== 1) return;
+
+        try {
+            const styleCalculado = window.getComputedStyle(original);
+            copia.style.cssText = styleCalculado.cssText;
+        } catch (e) {
+            console.warn('[PortalDownload] Erro ao aplicar estilos:', e);
+        }
+
+        const filhosOrig = original.children;
+        const filhosCopia = copia.children;
+
+        for (let i = 0; i < filhosCopia.length && i < filhosOrig.length; i++) {
+            this.aplicarEstilosComputados(filhosOrig[i], filhosCopia[i]);
+        }
+    },
+
     sincronizarCampos(original, copia) {
         const origs = original.querySelectorAll('input, textarea, select');
         const copias = copia.querySelectorAll('input, textarea, select');
@@ -188,22 +280,26 @@ ${corpo}
             const orig = origs[i];
             if (!orig) return;
 
-            if (el.tagName === 'INPUT') {
-                if (orig.type === 'checkbox' || orig.type === 'radio') {
-                    if (orig.checked) {
-                        el.setAttribute('checked', 'checked');
+            try {
+                if (el.tagName === 'INPUT') {
+                    if (orig.type === 'checkbox' || orig.type === 'radio') {
+                        if (orig.checked) {
+                            el.setAttribute('checked', 'checked');
+                        } else {
+                            el.removeAttribute('checked');
+                        }
                     } else {
-                        el.removeAttribute('checked');
+                        el.setAttribute('value', orig.value || '');
                     }
-                } else {
-                    el.setAttribute('value', orig.value || '');
+                } else if (el.tagName === 'TEXTAREA') {
+                    el.textContent = orig.value || '';
+                } else if (el.tagName === 'SELECT') {
+                    Array.from(el.options).forEach(opt => {
+                        opt.toggleAttribute('selected', opt.value === orig.value);
+                    });
                 }
-            } else if (el.tagName === 'TEXTAREA') {
-                el.textContent = orig.value || '';
-            } else if (el.tagName === 'SELECT') {
-                Array.from(el.options).forEach(opt => {
-                    opt.toggleAttribute('selected', opt.value === orig.value);
-                });
+            } catch (e) {
+                console.warn('[PortalDownload] Erro ao sincronizar campo:', e);
             }
         });
     },
@@ -212,17 +308,21 @@ ${corpo}
        UTILITÁRIOS
        ============================================================ */
     obterNomeArquivo() {
+        const portal = this.encontrarPortal();
+        if (!portal) return 'portal-do-cliente.html';
+
         const possiveis = [
             '.cliente-nome',
             '.cliente-card .nome',
             '#portal-cliente-nome',
-            '[data-cliente-nome]'
+            '[data-cliente-nome]',
+            'h1', 'h2', 'h3'
         ];
 
         let nome = '';
 
         for (const seletor of possiveis) {
-            const el = document.querySelector(seletor);
+            const el = portal.querySelector(seletor);
             if (el && el.textContent.trim()) {
                 nome = el.textContent.trim();
                 break;
@@ -240,7 +340,8 @@ ${corpo}
             .replace(/[^a-zA-Z0-9_\- ]/g, '')
             .trim()
             .replace(/\s+/g, '-')
-            .toLowerCase();
+            .toLowerCase()
+            .substring(0, 50); // Limita o tamanho
     },
 
     downloadArquivo(nome, conteudo, tipo) {
@@ -257,7 +358,25 @@ ${corpo}
         document.body.removeChild(link);
 
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+
+    mostrarSucesso(msg) {
+        if (typeof AppModule !== 'undefined' && typeof AppModule.toast === 'function') {
+            AppModule.toast(msg);
+        } else {
+            alert(msg);
+        }
+    },
+
+    mostrarErro(msg) {
+        console.error('[PortalDownload]', msg);
+        if (typeof AppModule !== 'undefined' && typeof AppModule.toast === 'function') {
+            AppModule.toast(msg);
+        } else {
+            alert(msg);
+        }
     }
 };
 
+// Inicializa
 PortalDownload.init();
