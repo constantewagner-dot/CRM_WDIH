@@ -1,8 +1,8 @@
 /**
- * PortalDownload v3
+ * PortalDownload v4
  * ------------------------------------------------------------------
  * Gera um HTML standalone do Portal do Cliente com visual moderno,
- * limpo e profissional, fiel ao layout do CRM WDIH.
+ * sem nenhuma dependência externa (CSS, imagens, fontes ou scripts).
  */
 var PortalDownload = {
     /* ============================================================
@@ -150,7 +150,7 @@ var PortalDownload = {
     },
 
     /* ============================================================
-       MONTAGEM DO HTML MODERNO
+       MONTAGEM DO HTML STANDALONE
        ============================================================ */
     montarHTMLCompleto(conteudo) {
         const clienteNome = this.obterNomeCliente(conteudo);
@@ -412,16 +412,19 @@ var PortalDownload = {
     },
 
     obterInfoCliente(conteudo) {
-        const infoEl = conteudo.querySelector('.cliente-info, [style*="display:flex"]');
+        const infoEl = conteudo.querySelector('.cliente-info');
         if (!infoEl) return '';
         
-        return Array.from(infoEl.querySelectorAll('span'))
-            .map(span => span.outerHTML)
-            .join('');
+        // Limpa eventuais atributos onclick/href para evitar dependências
+        const clone = infoEl.cloneNode(true);
+        this.limparAtributosDinamicos(clone);
+        
+        return clone.innerHTML;
     },
 
     extrairKPIs(conteudo) {
-        const kpiCards = conteudo.querySelectorAll('[style*="grid-template-columns"] > div');
+        const kpiContainer = conteudo.querySelector('[style*="grid-template-columns"]');
+        const kpiCards = kpiContainer ? kpiContainer.children : [];
         
         if (!kpiCards.length) {
             return `
@@ -483,12 +486,12 @@ var PortalDownload = {
 
         while (irmao && irmao.tagName !== 'H3') {
             if (irmao.tagName === 'DIV' && irmao.querySelector('[style*="background"]')) {
-                const cards = irmao.querySelectorAll('[style*="background"]');
+                const cards = irmao.querySelectorAll(':scope > [style*="background"]');
                 cards.forEach(card => {
                     html += this.processarCard(card);
                 });
             } else if (irmao.tagName === 'P' && irmao.textContent.includes('Nenhum')) {
-                html += `<div class="item-card"><div class="item-info"><div class="item-titulo">${irmao.textContent}</div></div></div>`;
+                html += `<div class="item-card"><div class="item-info"><div class="item-titulo">${this.escapeHtml(irmao.textContent)}</div></div></div>`;
             }
             irmao = irmao.nextElementSibling;
         }
@@ -497,22 +500,33 @@ var PortalDownload = {
     },
 
     processarCard(card) {
-        const texto = card.textContent;
-        const linhas = texto.split('\n').map(l => l.trim()).filter(l => l);
+        const tituloEl = card.querySelector('strong');
+        const detalheEls = card.querySelectorAll('div');
         
-        let titulo = linhas[0] || '';
-        let detalhes = linhas.slice(1).join(' | ');
+        let titulo = tituloEl ? tituloEl.textContent.trim() : card.textContent.split('\n')[0].trim();
+        let detalhes = '';
         
-        // Tenta extrair valores à direita
+        // Procura detalhes em divs menores
+        detalheEls.forEach(el => {
+            const text = el.textContent.trim();
+            if (text && text !== titulo && !el.querySelector('strong') && text.length < 100) {
+                detalhes += text + ' | ';
+            }
+        });
+        detalhes = detalhes.replace(/\| $/, '');
+        
+        // Valores à direita
         const valores = card.querySelectorAll('[style*="text-align:right"] div');
         let valorHtml = '';
         
         if (valores.length) {
             valorHtml = '<div class="item-valor">';
-            valores.forEach((v, i) => {
-                const classe = v.style.color?.includes('success') ? 'verde' : 
-                              v.style.color?.includes('danger') ? 'vermelho' : '';
-                valorHtml += `<div class="item-valor-principal ${classe}">${v.textContent}</div>`;
+            valores.forEach((v) => {
+                const text = v.textContent.trim();
+                const isVerde = v.style.color?.includes('success') || text.toLowerCase().includes('economia');
+                const isVermelho = v.style.color?.includes('danger');
+                const classe = isVerde ? 'verde' : (isVermelho ? 'vermelho' : '');
+                valorHtml += `<div class="item-valor-principal ${classe}">${this.escapeHtml(text)}</div>`;
             });
             valorHtml += '</div>';
         }
@@ -531,6 +545,22 @@ var PortalDownload = {
     /* ============================================================
        UTILITÁRIOS
        ============================================================ */
+    limparAtributosDinamicos(elemento) {
+        const atributosParaRemover = ['onclick', 'onchange', 'oninput', 'onload', 'onerror', 'href', 'src'];
+        
+        const percorrer = (el) => {
+            if (el.nodeType !== 1) return;
+            
+            atributosParaRemover.forEach(attr => {
+                if (el.hasAttribute(attr)) el.removeAttribute(attr);
+            });
+            
+            Array.from(el.children).forEach(percorrer);
+        };
+        
+        percorrer(elemento);
+    },
+
     obterNomeArquivo() {
         const portal = this.encontrarPortal();
         if (!portal) return 'portal-do-cliente.html';
