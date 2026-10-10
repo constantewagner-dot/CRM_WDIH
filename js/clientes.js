@@ -17,6 +17,46 @@ var ClientesModule = {
         return this.getClientes().find(c => c.id === id) || null;
     },
 
+    obterProximoCodigo() {
+        let max = 0;
+        this.getClientes().forEach(c => {
+            if (c.codigo && /^ID\d+$/.test(c.codigo)) {
+                const num = parseInt(c.codigo.replace('ID', ''), 10);
+                if (!isNaN(num) && num > max) max = num;
+            }
+        });
+        return 'ID' + String(max + 1).padStart(4, '0');
+    },
+
+    garantirCodigos() {
+        const clientes = this.getClientes();
+        const usados = new Set();
+        let max = 0;
+        let alterado = false;
+
+        clientes.forEach(c => {
+            if (c.codigo && /^ID\d+$/.test(c.codigo)) {
+                const num = parseInt(c.codigo.replace('ID', ''), 10);
+                if (!isNaN(num)) {
+                    if (num > max) max = num;
+                    usados.add(c.codigo);
+                }
+            }
+        });
+
+        clientes.forEach(c => {
+            if (!c.codigo || !usados.has(c.codigo)) {
+                max++;
+                c.codigo = 'ID' + String(max).padStart(4, '0');
+                usados.add(c.codigo);
+                alterado = true;
+            }
+        });
+
+        if (alterado) this.saveClientes(clientes);
+        return clientes;
+    },
+
     saveClientes(clientes) {
         DB.set('clientes', clientes);
     },
@@ -38,7 +78,7 @@ var ClientesModule = {
 
         const termoBusca = this.normalizarTexto(document.getElementById('clientes-busca')?.value || '');
 
-        let clientes = this.getClientes();
+        let clientes = this.garantirCodigos();
 
         // Sempre ordena por nome em ordem crescente/alfabética
         clientes = clientes.sort((a, b) => {
@@ -69,6 +109,7 @@ var ClientesModule = {
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>Código</th>
                             <th>Nome</th>
                             <th>E-mail</th>
                             <th>Telefone</th>
@@ -79,6 +120,7 @@ var ClientesModule = {
                     <tbody>
                         ${clientes.map(c => `
                             <tr>
+                                <td><span class="badge badge-info">${AppModule.escapeHtml(c.codigo || '—')}</span></td>
                                 <td><strong>${AppModule.escapeHtml(c.nome)}</strong></td>
                                 <td>${AppModule.escapeHtml(c.email || '-')}</td>
                                 <td>${AppModule.escapeHtml(c.telefone || '-')}</td>
@@ -140,6 +182,7 @@ var ClientesModule = {
         this.abrirModal(
             cliente.nome,
             `
+                <div class="form-group"><label>Código de Registro</label><p><span class="badge badge-info">${AppModule.escapeHtml(cliente.codigo || '—')}</span></p></div>
                 <div class="form-grid">
                     <div class="form-group"><label>E-mail</label><p>${AppModule.escapeHtml(cliente.email || '-')}</p></div>
                     <div class="form-group"><label>Telefone</label><p>${AppModule.escapeHtml(cliente.telefone || '-')}</p></div>
@@ -191,13 +234,17 @@ var ClientesModule = {
         return `
             <div class="form-grid">
                 <div class="form-group">
+                    <label>Código de Registro</label>
+                    <input type="text" id="cli-codigo" class="form-control" value="${AppModule.escapeHtml(c.codigo || (c.id ? '' : this.obterProximoCodigo()))}" readonly style="background:var(--bg-light);">
+                </div>
+                <div class="form-group">
                     <label>Nome completo *</label>
                     <input type="text" id="cli-nome" class="form-control" value="${AppModule.escapeHtml(c.nome || '')}" required>
                 </div>
-                <div class="form-group">
-                    <label>E-mail</label>
-                    <input type="email" id="cli-email" class="form-control" value="${AppModule.escapeHtml(c.email || '')}">
-                </div>
+            </div>
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="cli-email" class="form-control" value="${AppModule.escapeHtml(c.email || '')}">
             </div>
             <div class="form-grid">
                 <div class="form-group">
@@ -260,6 +307,7 @@ var ClientesModule = {
         } else {
             const novo = {
                 id: this.gerarId(),
+                codigo: this.obterProximoCodigo(),
                 ...dados,
                 criadoEm: agora,
                 atualizadoEm: agora
