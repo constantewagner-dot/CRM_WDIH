@@ -1,18 +1,18 @@
 /**
- * PortalDownload v2
+ * PortalDownload v3
  * ------------------------------------------------------------------
- * Adiciona uma opção "⬇️ Baixar HTML" dentro do Portal do Cliente
+ * Adiciona a opção "⬇️ Baixar HTML" dentro do Portal do Cliente
  * (área de Milhas) para baixar o HTML renderizado do portal.
- * 
- * MELHORIAS:
- * - Busca por múltiplos seletores possíveis
- * - Observa o DOM de forma persistente
- * - Logs de debug no console
- * - Fallback para diversos cenários
+ *
+ * Nesta versão:
+ * - O botão é injetado no footer do modal automaticamente pelo milhas.js.
+ * - A exportação captura o conteúdo de #portal-cliente e aplica estilos
+ *   inline computados, preservando 100% o visual exibido no portal.
+ * - O HTML exportado é standalone, com um container que simula o modal.
  */
 var PortalDownload = {
     /* ============================================================
-       CONFIGURAÇÃO - Múltiplos seletores para encontrar o portal
+       CONFIGURAÇÃO — seletores para encontrar o portal
        ============================================================ */
     SELETORES_PORTAL: [
         '#portal-cliente',
@@ -44,7 +44,7 @@ var PortalDownload = {
        ============================================================ */
     init() {
         console.log('[PortalDownload] Inicializando...');
-        
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.iniciarObservacao());
         } else {
@@ -54,10 +54,10 @@ var PortalDownload = {
 
     iniciarObservacao() {
         console.log('[PortalDownload] Iniciando observação do DOM...');
-        
-        // Tenta imediatamente
+
+        // Tenta imediatamente (caso o portal já esteja aberto)
         if (this.tentarInjetar()) {
-            console.log('[PortalDownload] ✅ Botão injetado com sucesso!');
+            console.log('[PortalDownload] ✅ Botão já presente ou injetado.');
             return;
         }
 
@@ -71,7 +71,7 @@ var PortalDownload = {
 
         const observer = new MutationObserver((mutations) => {
             tentativas++;
-            
+
             if (this.tentarInjetar()) {
                 console.log('[PortalDownload] ✅ Botão injetado após observar DOM!');
                 observer.disconnect();
@@ -131,7 +131,7 @@ var PortalDownload = {
        INJEÇÃO DO BOTÃO
        ============================================================ */
     tentarInjetar() {
-        // Verifica se já foi injetado
+        // Se o botão já existe (injetado manualmente pelo milhas.js), nada a fazer
         if (document.getElementById('btn-baixar-portal')) {
             return true;
         }
@@ -175,7 +175,6 @@ var PortalDownload = {
             this.baixarHTML();
         });
 
-        // Insere no início ou após o primeiro elemento
         if (host.firstChild) {
             host.insertBefore(botao, host.firstChild);
         } else {
@@ -226,15 +225,20 @@ var PortalDownload = {
 <title>Portal do Cliente</title>
 <style>
     * { box-sizing: border-box; }
-    body { 
-        margin: 0; 
+    body {
+        margin: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: #f1f5f9;
         color: #1e293b;
+        padding: 20px;
     }
     .container {
-        max-width: 1200px;
+        max-width: 1100px;
         margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         padding: 20px;
     }
 </style>

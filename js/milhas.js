@@ -207,7 +207,7 @@ var MilhasModule = {
         const percentualEconomia = totalValorMercado > 0 ? ((totalEconomia / totalValorMercado) * 100) : 0;
         const totalVoos = emissoes.length;
 
-        let html = `
+        let html = `<div id="portal-cliente">
             <div style="background:var(--bg-card);border:1px solid var(--border);border-bottom:3px solid var(--primary);padding:20px;border-radius:8px;margin-bottom:20px;">
                 <h2 style="margin:0 0 10px 0;font-size:24px;color:var(--primary);font-weight:700;">${AppModule.escapeHtml(c.nome)}</h2>
                 <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--text-muted);">
@@ -330,10 +330,15 @@ var MilhasModule = {
             html += '</div>';
         }
 
+        html += '</div>'; // fecha #portal-cliente
+
         const modalContent = document.querySelector('.modal-content');
         if (modalContent) modalContent.style.maxWidth = '1100px';
 
-        const footer = `<button class="btn btn-primary" onclick="MilhasModule.fecharPortal()">Fechar</button>`;
+        const footer = `
+            <button class="btn btn-secondary" id="btn-baixar-portal" onclick="PortalDownload.baixarHTML()">⬇️ Baixar HTML</button>
+            <button class="btn btn-primary" onclick="MilhasModule.fecharPortal()">Fechar</button>
+        `;
         AppModule.openModal(`Portal do Cliente`, html, footer);
     },
 
