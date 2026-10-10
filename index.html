@@ -185,10 +185,12 @@
                         <h1>Clientes</h1>
                         <button class="btn btn-primary" onclick="ClientesModule.novoCliente()">+ Novo Cliente</button>
                     </div>
-                    <div class="form-group">
-                        <input type="text" id="clientes-busca" class="form-control" placeholder="Buscar clientes..." oninput="ClientesModule.render()">
+                    <div class="card">
+                        <div class="form-group">
+                            <input type="text" id="clientes-busca" class="form-control" placeholder="Buscar clientes..." oninput="ClientesModule.render()">
+                        </div>
+                        <div id="clientes-list"></div>
                     </div>
-                    <div id="clientes-list" data-ordenacao="crescente"></div>
                 </section>
 
                 <!-- PIPELINE -->
@@ -385,34 +387,34 @@
                     <div class="page-header">
                         <h1>Configurações</h1>
                     </div>
-                    <div class="config-sections config-columns">
+                    <div class="config-sections">
                         <div class="card config-card">
                             <h3>Dados da Agência</h3>
                             <div id="config-agencia"></div>
                         </div>
                         <div class="card config-card">
                             <h3>Etapas do Pipeline</h3>
-                            <div id="config-pipeline" class="config-list"></div>
+                            <div id="config-pipeline"></div>
                         </div>
                         <div class="card config-card">
                             <h3>Serviços</h3>
-                            <div id="config-servicos" class="config-list"></div>
+                            <div id="config-servicos"></div>
                         </div>
                         <div class="card config-card">
                             <h3>Companhias Aéreas e CPM</h3>
-                            <div id="config-companhias" class="config-list"></div>
+                            <div id="config-companhias"></div>
                         </div>
                         <div class="card config-card">
                             <h3>Programas de Fidelidade</h3>
-                            <div id="config-programas" class="config-list"></div>
+                            <div id="config-programas"></div>
                         </div>
                         <div class="card config-card">
                             <h3>Cartões (Bandeiras/Bancos)</h3>
-                            <div id="config-cartoes" class="config-list"></div>
+                            <div id="config-cartoes"></div>
                         </div>
                         <div class="card config-card">
                             <h3>Categorias Financeiras</h3>
-                            <div id="config-categorias" class="config-list"></div>
+                            <div id="config-categorias"></div>
                         </div>
                         <div class="card config-card">
                             <h3>Backup e Restauração</h3>
@@ -450,6 +452,7 @@
     <script src="js/viagens.js"></script>
     <script src="js/financeiro.js"></script>
     <script src="js/milhas.js"></script>
+    <script src="js/portal-download.js"></script>
     <script src="js/tarefas.js"></script>
     <script src="js/calendario.js"></script>
     <script src="js/relatorios.js"></script>
